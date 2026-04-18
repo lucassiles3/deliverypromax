@@ -215,7 +215,22 @@ const Admin = () => {
           </Link>
           <span className="text-border">|</span>
           <h1 className="font-display text-xl font-bold">Painel do dono</h1>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={() => {
+                setSoundEnabled((v) => !v);
+                if (!soundEnabled) playDing(); // play sample when turning ON
+              }}
+              className={`flex items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-smooth ${
+                soundEnabled
+                  ? "border-primary/30 bg-primary/5 text-primary"
+                  : "border-border bg-muted text-muted-foreground"
+              }`}
+              title={soundEnabled ? "Som ligado" : "Som desligado"}
+            >
+              {soundEnabled ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
+              Som
+            </button>
             <select
               value={storeId ?? ""}
               onChange={(e) => setStoreId(e.target.value)}
