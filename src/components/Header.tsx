@@ -45,12 +45,30 @@ export const Header = () => {
               {tier.name}
             </div>
           )}
-          <Link
-            to="/admin"
-            className="hidden items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground md:flex"
-          >
-            <LayoutDashboard className="h-3.5 w-3.5" /> Admin
-          </Link>
+          {isOwner && (
+            <Link
+              to="/admin"
+              className="hidden items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground md:flex"
+            >
+              <LayoutDashboard className="h-3.5 w-3.5" /> Admin
+            </Link>
+          )}
+          {user ? (
+            <button
+              onClick={signOut}
+              className="hidden items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground sm:flex"
+              title="Sair"
+            >
+              <LogOut className="h-3.5 w-3.5" /> Sair
+            </button>
+          ) : (
+            <Link
+              to="/auth"
+              className="flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs font-bold hover:bg-primary/10"
+            >
+              <LogIn className="h-3.5 w-3.5" /> Entrar
+            </Link>
+          )}
           <Button
             variant="ghost"
             size="icon"
