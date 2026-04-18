@@ -227,20 +227,48 @@ const Admin = () => {
             {orders.map((o) => {
               const cfg = statusConfig[o.status as DbStatus];
               const Icon = cfg.icon;
-              const itemsCount = (o.order_items as { id: string }[] | null)?.length ?? 0;
+              const orderItems = (o.order_items ?? []) as Array<{
+                id: string;
+                product_name: string;
+                quantity: number;
+                unit_price: number;
+                notes: string | null;
+                customizations: any;
+              }>;
+              const itemsCount = orderItems.length;
               const time = new Date(o.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+              const isOpen = expandedOrder === o.id;
+              const addr = o.address as
+                | { street?: string; number?: string; complement?: string; neighborhood?: string; city?: string; cep?: string }
+                | null;
+              const payIcon =
+                o.payment_method === "pix"
+                  ? QrCode
+                  : o.payment_method === "cash"
+                    ? Banknote
+                    : CreditCard;
+              const PayIcon = payIcon;
+              const payLabel: Record<string, string> = {
+                pix: "Pix",
+                cash: "Dinheiro",
+                credit: "Cartão de crédito",
+                debit: "Cartão de débito",
+              };
               return (
-                <div key={o.id} className="rounded-2xl bg-card p-4 shadow-soft">
-                  <div className="flex flex-wrap items-center gap-3">
+                <div key={o.id} className="overflow-hidden rounded-2xl bg-card shadow-soft">
+                  <div className="flex flex-wrap items-center gap-3 p-4">
                     <div className={`flex h-10 w-10 items-center justify-center rounded-full ${cfg.color}`}>
                       <Icon className="h-5 w-5" />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <strong className="font-display text-lg">#{o.id.slice(0, 6).toUpperCase()}</strong>
                         <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${cfg.color}`}>{cfg.label}</span>
                         <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
                           {o.method === "delivery" ? "🛵 Entrega" : "🏪 Retirada"}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                          <PayIcon className="h-3 w-3" /> {payLabel[o.payment_method ?? "pix"]}
                         </span>
                       </div>
                       <p className="text-sm text-muted-foreground">
@@ -253,6 +281,13 @@ const Admin = () => {
                           R$ {Number(o.total).toFixed(2).replace(".", ",")}
                         </div>
                       </div>
+                      <button
+                        onClick={() => setExpandedOrder(isOpen ? null : o.id)}
+                        className="rounded-lg p-2 hover:bg-muted"
+                        aria-label="Ver detalhes"
+                      >
+                        <ChevronDown className={`h-5 w-5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                      </button>
                       {cfg.next && (
                         <Button
                           onClick={() => advanceStatus(o.id, o.status as DbStatus)}
@@ -264,6 +299,118 @@ const Admin = () => {
                       )}
                     </div>
                   </div>
+
+                  {isOpen && (
+                    <div className="border-t bg-muted/30 p-4 text-sm">
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div>
+                          <h4 className="mb-2 text-xs font-bold uppercase text-muted-foreground">Cliente</h4>
+                          <p className="font-semibold">{o.customer_name}</p>
+                          <a
+                            href={`https://wa.me/55${o.customer_phone.replace(/\D/g, "")}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                          >
+                            <Phone className="h-3 w-3" /> {o.customer_phone}
+                          </a>
+
+                          {o.method === "delivery" && addr && (
+                            <div className="mt-3">
+                              <h4 className="mb-1 text-xs font-bold uppercase text-muted-foreground">Endereço</h4>
+                              <p className="text-sm">
+                                {addr.street}, {addr.number}
+                                {addr.complement ? ` — ${addr.complement}` : ""}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {addr.neighborhood}
+                                {addr.city ? ` — ${addr.city}` : ""} • CEP {addr.cep}
+                              </p>
+                              {o.delivery_lat && o.delivery_lng && (
+                                <a
+                                  href={`https://www.google.com/maps?q=${o.delivery_lat},${o.delivery_lng}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                                >
+                                  <MapPin className="h-3 w-3" /> Abrir no Google Maps
+                                </a>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="mt-3">
+                            <h4 className="mb-1 text-xs font-bold uppercase text-muted-foreground">Pagamento</h4>
+                            <p className="inline-flex items-center gap-1 text-sm">
+                              <PayIcon className="h-4 w-4 text-primary" /> {payLabel[o.payment_method ?? "pix"]}
+                            </p>
+                            {o.payment_method === "cash" && o.change_for && (
+                              <p className="text-xs text-warning">
+                                💵 Troco para R$ {Number(o.change_for).toFixed(2).replace(".", ",")} (devolver R${" "}
+                                {Math.max(0, Number(o.change_for) - Number(o.total)).toFixed(2).replace(".", ",")})
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="mb-2 text-xs font-bold uppercase text-muted-foreground">Itens</h4>
+                          <ul className="space-y-1.5">
+                            {orderItems.map((it) => (
+                              <li key={it.id} className="text-sm">
+                                <div className="flex justify-between gap-2">
+                                  <span>
+                                    <strong>{it.quantity}×</strong> {it.product_name}
+                                  </span>
+                                  <span className="shrink-0 font-semibold">
+                                    R$ {(Number(it.unit_price) * it.quantity).toFixed(2).replace(".", ",")}
+                                  </span>
+                                </div>
+                                {Array.isArray(it.customizations) &&
+                                  it.customizations.map((c: any, ci: number) => (
+                                    <p key={ci} className="ml-5 text-xs text-muted-foreground">
+                                      ↳ {c.groupName}: {(c.selections ?? []).map((s: any) => s.name).join(", ")}
+                                    </p>
+                                  ))}
+                                {it.notes && (
+                                  <p className="ml-5 text-xs text-muted-foreground">📝 {it.notes}</p>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+
+                          <div className="mt-3 space-y-0.5 border-t pt-2 text-xs">
+                            <div className="flex justify-between text-muted-foreground">
+                              <span>Subtotal</span>
+                              <span>R$ {Number(o.subtotal).toFixed(2).replace(".", ",")}</span>
+                            </div>
+                            {Number(o.delivery_fee) > 0 && (
+                              <div className="flex justify-between text-muted-foreground">
+                                <span>Entrega</span>
+                                <span>R$ {Number(o.delivery_fee).toFixed(2).replace(".", ",")}</span>
+                              </div>
+                            )}
+                            {Number(o.coupon_discount) > 0 && (
+                              <div className="flex justify-between text-success">
+                                <span>Cupom {o.coupon_code}</span>
+                                <span>-R$ {Number(o.coupon_discount).toFixed(2).replace(".", ",")}</span>
+                              </div>
+                            )}
+                            {Number(o.cashback_used) > 0 && (
+                              <div className="flex justify-between text-success">
+                                <span>Cashback</span>
+                                <span>-R$ {Number(o.cashback_used).toFixed(2).replace(".", ",")}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between border-t pt-1 font-bold">
+                              <span>Total</span>
+                              <span>R$ {Number(o.total).toFixed(2).replace(".", ",")}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
