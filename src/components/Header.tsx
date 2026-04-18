@@ -1,5 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, MapPin, Sparkles, LayoutDashboard, LogIn, LogOut } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ShoppingBag, MapPin, Sparkles, LayoutDashboard, LogIn, LogOut, Store as StoreIcon, User as UserIcon } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { useLoyalty, tierOf } from "@/hooks/useLoyalty";
@@ -11,7 +11,9 @@ export const Header = () => {
   const { user, signOut, isOwner } = useAuth();
   const tier = tierOf(loyalty.totalSpent);
   const location = useLocation();
+  const navigate = useNavigate();
   const isHome = location.pathname === "/";
+  const isAdminView = location.pathname.startsWith("/admin");
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/85 backdrop-blur-xl">
@@ -46,12 +48,27 @@ export const Header = () => {
             </div>
           )}
           {isOwner && (
-            <Link
-              to="/admin"
-              className="hidden items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground md:flex"
+            <button
+              onClick={() => navigate(isAdminView ? "/" : "/admin")}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-bounce hover:scale-105 ${
+                isAdminView
+                  ? "bg-primary text-primary-foreground shadow-glow"
+                  : "bg-accent/15 text-accent-foreground hover:bg-accent/25"
+              }`}
+              title={isAdminView ? "Ver como cliente" : "Ver como lojista"}
             >
-              <LayoutDashboard className="h-3.5 w-3.5" /> Admin
-            </Link>
+              {isAdminView ? (
+                <>
+                  <UserIcon className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Modo Cliente</span>
+                </>
+              ) : (
+                <>
+                  <StoreIcon className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Modo Lojista</span>
+                </>
+              )}
+            </button>
           )}
           {user ? (
             <button
