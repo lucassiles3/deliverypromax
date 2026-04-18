@@ -1,10 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, Search, MapPin } from "lucide-react";
+import { ShoppingBag, MapPin, Sparkles, LayoutDashboard } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
+import { useLoyalty } from "@/hooks/useLoyalty";
+import { tierOf } from "@/lib/loyalty";
 
 export const Header = () => {
   const { count, setOpen } = useCart();
+  const loyalty = useLoyalty();
+  const tier = tierOf(loyalty.totalSpent);
   const location = useLocation();
   const isHome = location.pathname === "/";
 
@@ -28,6 +32,24 @@ export const Header = () => {
         )}
 
         <div className="flex flex-1 items-center justify-end gap-2">
+          {loyalty.cashback > 0 && (
+            <div className="hidden items-center gap-1.5 rounded-full bg-success/10 px-3 py-1.5 text-xs font-bold text-success sm:flex">
+              <Sparkles className="h-3.5 w-3.5" />
+              R$ {loyalty.cashback.toFixed(2).replace(".", ",")}
+            </div>
+          )}
+          {loyalty.totalSpent > 0 && (
+            <div className="hidden items-center gap-1 rounded-full bg-accent/15 px-3 py-1.5 text-xs font-bold text-accent-foreground md:flex">
+              <span>{tier.emoji}</span>
+              {tier.name}
+            </div>
+          )}
+          <Link
+            to="/admin"
+            className="hidden items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground md:flex"
+          >
+            <LayoutDashboard className="h-3.5 w-3.5" /> Admin
+          </Link>
           <Button
             variant="ghost"
             size="icon"
