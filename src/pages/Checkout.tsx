@@ -123,16 +123,21 @@ const Checkout = () => {
             </div>
 
             <div className="mx-auto mt-5 flex h-56 w-56 items-center justify-center rounded-2xl border-2 border-dashed bg-background">
-              {/* Mock QR using SVG pattern */}
               <svg viewBox="0 0 100 100" className="h-48 w-48">
-                {Array.from({ length: 20 }).map((_, i) =>
-                  Array.from({ length: 20 }).map((_, j) => {
-                    const seed = (i * 31 + j * 17 + Math.floor(total)) % 7;
-                    return seed < 3 ? (
-                      <rect key={`${i}-${j}`} x={i * 5} y={j * 5} width="5" height="5" fill="hsl(var(--foreground))" />
-                    ) : null;
-                  }),
-                )}
+                {(() => {
+                  const cells: JSX.Element[] = [];
+                  for (let i = 0; i < 20; i++) {
+                    for (let j = 0; j < 20; j++) {
+                      const seed = (i * 31 + j * 17 + Math.floor(total)) % 7;
+                      if (seed < 3) {
+                        cells.push(
+                          <rect key={`${i}-${j}`} x={i * 5} y={j * 5} width="5" height="5" fill="hsl(var(--foreground))" />,
+                        );
+                      }
+                    }
+                  }
+                  return cells;
+                })()}
                 <rect x="0" y="0" width="25" height="25" fill="none" stroke="hsl(var(--foreground))" strokeWidth="3" />
                 <rect x="75" y="0" width="25" height="25" fill="none" stroke="hsl(var(--foreground))" strokeWidth="3" />
                 <rect x="0" y="75" width="25" height="25" fill="none" stroke="hsl(var(--foreground))" strokeWidth="3" />
