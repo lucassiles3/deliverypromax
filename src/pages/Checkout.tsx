@@ -90,6 +90,18 @@ const Checkout = () => {
     [total],
   );
 
+  const qrCells = useMemo(() => {
+    const cells: { k: string; x: number; y: number }[] = [];
+    const t = Math.floor(total);
+    for (let i = 0; i < 20; i++) {
+      for (let j = 0; j < 20; j++) {
+        const seed = (i * 31 + j * 17 + t) % 7;
+        if (seed < 3) cells.push({ k: `${i}-${j}`, x: i * 5, y: j * 5 });
+      }
+    }
+    return cells;
+  }, [total]);
+
   if (!store || items.length === 0) return <Navigate to="/" replace />;
 
   return (
@@ -124,20 +136,9 @@ const Checkout = () => {
 
             <div className="mx-auto mt-5 flex h-56 w-56 items-center justify-center rounded-2xl border-2 border-dashed bg-background">
               <svg viewBox="0 0 100 100" className="h-48 w-48">
-                {(() => {
-                  const cells: JSX.Element[] = [];
-                  for (let i = 0; i < 20; i++) {
-                    for (let j = 0; j < 20; j++) {
-                      const seed = (i * 31 + j * 17 + Math.floor(total)) % 7;
-                      if (seed < 3) {
-                        cells.push(
-                          <rect key={`${i}-${j}`} x={i * 5} y={j * 5} width="5" height="5" fill="hsl(var(--foreground))" />,
-                        );
-                      }
-                    }
-                  }
-                  return cells;
-                })()}
+                {qrCells.map((c) => (
+                  <rect key={c.k} x={c.x} y={c.y} width="5" height="5" fill="hsl(var(--foreground))" />
+                ))}
                 <rect x="0" y="0" width="25" height="25" fill="none" stroke="hsl(var(--foreground))" strokeWidth="3" />
                 <rect x="75" y="0" width="25" height="25" fill="none" stroke="hsl(var(--foreground))" strokeWidth="3" />
                 <rect x="0" y="75" width="25" height="25" fill="none" stroke="hsl(var(--foreground))" strokeWidth="3" />
