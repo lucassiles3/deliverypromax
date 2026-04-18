@@ -17,7 +17,8 @@ const Store = () => {
 
   useEffect(() => {
     document.title = store ? `${store.name} • FoodFlash` : "FoodFlash";
-  }, [store]);
+    if (store && !activeCat) setActiveCat(store.categories[0] ?? "");
+  }, [store, activeCat]);
 
   const grouped = useMemo(() => {
     if (!store) return {};
@@ -29,6 +30,8 @@ const Store = () => {
       return acc;
     }, {});
   }, [store, query]);
+
+  if (isLoading) return <div className="min-h-screen" />;
 
   if (!store) return <Navigate to="/" replace />;
 
