@@ -82,6 +82,46 @@ const Checkout = () => {
     setStep("pix");
   };
 
+  const buildWhatsappUrl = (orderId: string): string | null => {
+    if (!store?.whatsappPhone) return null;
+    const phone = store.whatsappPhone.replace(/\D/g, "");
+    if (!phone) return null;
+    const lines: string[] = [];
+    lines.push(`*🛵 Novo pedido — ${store.name}*`);
+    lines.push(`Pedido #${orderId.slice(0, 8).toUpperCase()}`);
+    lines.push("");
+    lines.push(`*Cliente:* ${name}`);
+    lines.push(`*WhatsApp:* ${phone}`);
+    lines.push(`*Tipo:* ${method === "delivery" ? "Entrega 🛵" : "Retirada na loja 🏪"}`);
+    if (method === "delivery") {
+      lines.push(
+        `*Endereço:* ${address.street}, ${address.number}${
+          address.complement ? ` — ${address.complement}` : ""
+        } — ${address.neighborhood} — CEP ${address.cep}`,
+      );
+    }
+    lines.push("");
+    lines.push("*🍔 Itens:*");
+    items.forEach((it) => {
+      lines.push(`• ${it.quantity}× ${it.product.name} — R$ ${(it.unitPrice * it.quantity).toFixed(2).replace(".", ",")}`);
+      it.customizations.forEach((c) => {
+        const sels = c.selections.map((s) => s.name).join(", ");
+        if (sels) lines.push(`   ↳ ${c.groupName}: ${sels}`);
+      });
+      if (it.notes) lines.push(`   📝 ${it.notes}`);
+    });
+    lines.push("");
+    lines.push(`Subtotal: R$ ${subtotal.toFixed(2).replace(".", ",")}`);
+    if (fee > 0) lines.push(`Entrega: R$ ${fee.toFixed(2).replace(".", ",")}`);
+    if (couponDiscount > 0)
+      lines.push(`Cupom (${appliedCoupon?.code}): -R$ ${couponDiscount.toFixed(2).replace(".", ",")}`);
+    if (cashbackUsed > 0) lines.push(`Cashback: -R$ ${cashbackUsed.toFixed(2).replace(".", ",")}`);
+    lines.push(`*Total: R$ ${total.toFixed(2).replace(".", ",")}*`);
+    lines.push("");
+    lines.push(`💳 Pagamento: Pix (já confirmado pelo app)`);
+    return `https://wa.me/55${phone}?text=${encodeURIComponent(lines.join("\n"))}`;
+  };
+
   const confirmPayment = async () => {
     if (!store || !user) return;
     setSubmitting(true);
@@ -125,6 +165,12 @@ const Checkout = () => {
         _cashback_used: cashbackUsed,
       });
       if (loyaltyErr) throw loyaltyErr;
+
+      // Send order to store via WhatsApp (opens in new tab)
+      const waUrl = buildWhatsappUrl(order.id);
+      if (waUrl) {
+        window.open(waUrl, "_blank", "noopener,noreferrer");
+      }
 
       setStep("done");
       toast.success(`Pedido confirmado! Você ganhou R$ ${earned.toFixed(2).replace(".", ",")} de cashback 🎉`);
