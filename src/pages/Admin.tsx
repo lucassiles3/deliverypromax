@@ -120,7 +120,19 @@ const Admin = () => {
 
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
-  // Realtime: refresh on new orders
+  // Pending orders count (active = not delivered/cancelled)
+  const pendingCount = useMemo(
+    () => orders.filter((o) => o.status !== "delivered" && o.status !== "cancelled").length,
+    [orders],
+  );
+
+  // Dynamic tab title with pending count
+  useEffect(() => {
+    const base = "Painel Admin • FoodFlash";
+    document.title = pendingCount > 0 ? `(${pendingCount}) ${base}` : base;
+  }, [pendingCount]);
+
+  // Realtime: refresh on new orders + ding
   useEffect(() => {
     if (!storeId) return;
     const ch = supabase
@@ -130,14 +142,18 @@ const Admin = () => {
         { event: "*", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
         (payload) => {
           qc.invalidateQueries({ queryKey: ["admin-orders", storeId] });
-          if (payload.eventType === "INSERT") toast.success("Novo pedido recebido!");
+          if (payload.eventType === "INSERT") {
+            toast.success("🔔 Novo pedido recebido!");
+            playDing();
+          }
         },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [storeId, qc]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId, qc, soundEnabled]);
 
   const advanceStatus = async (id: string, current: DbStatus) => {
     const next = statusConfig[current].next;
