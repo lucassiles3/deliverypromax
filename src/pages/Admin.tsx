@@ -11,6 +11,12 @@ import {
   Clock,
   CheckCircle2,
   Truck,
+  ChevronDown,
+  MapPin,
+  Phone,
+  CreditCard,
+  Banknote,
+  QrCode,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
