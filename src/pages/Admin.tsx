@@ -17,6 +17,8 @@ import {
   CreditCard,
   Banknote,
   QrCode,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -41,10 +43,33 @@ const Admin = () => {
   const qc = useQueryClient();
   const [storeId, setStoreId] = useState<string | null>(null);
   const [tab, setTab] = useState<"orders" | "products" | "reports">("orders");
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
-  useEffect(() => {
-    document.title = "Painel Admin • FoodFlash";
-  }, []);
+  // Play a quick "ding" via WebAudio (no asset needed)
+  const playDing = () => {
+    if (!soundEnabled) return;
+    try {
+      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new Ctx();
+      const now = ctx.currentTime;
+      const tones = [880, 1320]; // two-tone ding
+      tones.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, now + i * 0.18);
+        gain.gain.linearRampToValueAtTime(0.25, now + i * 0.18 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.18 + 0.35);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now + i * 0.18);
+        osc.stop(now + i * 0.18 + 0.4);
+      });
+      setTimeout(() => ctx.close(), 1200);
+    } catch {
+      /* ignore */
+    }
+  };
 
   // Stores owned by current user (or all, if admin)
   const { data: stores = [], isLoading: storesLoading } = useQuery({
@@ -97,7 +122,19 @@ const Admin = () => {
 
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
-  // Realtime: refresh on new orders
+  // Pending orders count (active = not delivered/cancelled)
+  const pendingCount = useMemo(
+    () => orders.filter((o) => o.status !== "delivered" && o.status !== "cancelled").length,
+    [orders],
+  );
+
+  // Dynamic tab title with pending count
+  useEffect(() => {
+    const base = "Painel Admin • FoodFlash";
+    document.title = pendingCount > 0 ? `(${pendingCount}) ${base}` : base;
+  }, [pendingCount]);
+
+  // Realtime: refresh on new orders + ding
   useEffect(() => {
     if (!storeId) return;
     const ch = supabase
@@ -107,14 +144,18 @@ const Admin = () => {
         { event: "*", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
         (payload) => {
           qc.invalidateQueries({ queryKey: ["admin-orders", storeId] });
-          if (payload.eventType === "INSERT") toast.success("Novo pedido recebido!");
+          if (payload.eventType === "INSERT") {
+            toast.success("🔔 Novo pedido recebido!");
+            playDing();
+          }
         },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [storeId, qc]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId, qc, soundEnabled]);
 
   const advanceStatus = async (id: string, current: DbStatus) => {
     const next = statusConfig[current].next;
@@ -174,7 +215,22 @@ const Admin = () => {
           </Link>
           <span className="text-border">|</span>
           <h1 className="font-display text-xl font-bold">Painel do dono</h1>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={() => {
+                setSoundEnabled((v) => !v);
+                if (!soundEnabled) playDing(); // play sample when turning ON
+              }}
+              className={`flex items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-smooth ${
+                soundEnabled
+                  ? "border-primary/30 bg-primary/5 text-primary"
+                  : "border-border bg-muted text-muted-foreground"
+              }`}
+              title={soundEnabled ? "Som ligado" : "Som desligado"}
+            >
+              {soundEnabled ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
+              Som
+            </button>
             <select
               value={storeId ?? ""}
               onChange={(e) => setStoreId(e.target.value)}
@@ -207,11 +263,16 @@ const Admin = () => {
             <button
               key={t.id}
               onClick={() => setTab(t.id as typeof tab)}
-              className={`relative px-4 py-2.5 text-sm font-bold transition-smooth ${
+              className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-bold transition-smooth ${
                 tab === t.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {t.label}
+              {t.id === "orders" && pendingCount > 0 && (
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground animate-pulse">
+                  {pendingCount}
+                </span>
+              )}
               {tab === t.id && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
             </button>
           ))}
