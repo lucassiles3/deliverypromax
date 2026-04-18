@@ -1,8 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { ArrowLeft, Bike, Store as StoreIcon, MapPin, Tag, Sparkles, CheckCircle2, Copy, QrCode } from "lucide-react";
+import {
+  ArrowLeft,
+  Bike,
+  Store as StoreIcon,
+  MapPin,
+  Tag,
+  Sparkles,
+  CheckCircle2,
+  Copy,
+  QrCode,
+  Banknote,
+  CreditCard,
+  Loader2,
+} from "lucide-react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
+import { LocationPicker } from "@/components/LocationPicker";
 import { useCart } from "@/context/CartContext";
 import { useStoreBySlug, useCoupons } from "@/hooks/useStores";
 import type { Coupon } from "@/data/stores";
@@ -10,9 +24,11 @@ import { useLoyalty, CASHBACK_RATE } from "@/hooks/useLoyalty";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { isStoreOpen } from "@/lib/storeHours";
+import { lookupCep, geocodeAddress, formatCep } from "@/lib/cep";
 import { toast } from "sonner";
 
 type Method = "delivery" | "pickup";
+type PaymentMethod = "pix" | "cash" | "credit" | "debit";
 
 const Checkout = () => {
   const { items, subtotal, storeSlug, clear } = useCart();
@@ -23,7 +39,18 @@ const Checkout = () => {
   const { data: coupons = [] } = useCoupons();
 
   const [method, setMethod] = useState<Method>("delivery");
-  const [address, setAddress] = useState({ cep: "", street: "", number: "", complement: "", neighborhood: "" });
+  const [payment, setPayment] = useState<PaymentMethod>("pix");
+  const [changeFor, setChangeFor] = useState("");
+  const [address, setAddress] = useState({
+    cep: "",
+    street: "",
+    number: "",
+    complement: "",
+    neighborhood: "",
+    city: "",
+  });
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [cepLoading, setCepLoading] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [couponCode, setCouponCode] = useState("");
@@ -35,6 +62,36 @@ const Checkout = () => {
   useEffect(() => {
     document.title = "Checkout • FoodFlash";
   }, []);
+
+  // Auto-lookup on CEP complete
+  useEffect(() => {
+    const digits = address.cep.replace(/\D/g, "");
+    if (digits.length !== 8) return;
+    let cancelled = false;
+    setCepLoading(true);
+    lookupCep(digits).then(async (res) => {
+      if (cancelled) return;
+      if (!res) {
+        setCepLoading(false);
+        toast.error("CEP não encontrado");
+        return;
+      }
+      setAddress((a) => ({
+        ...a,
+        street: res.street || a.street,
+        neighborhood: res.neighborhood || a.neighborhood,
+        city: res.city || a.city,
+      }));
+      // Geocode to center the map
+      const q = `${res.street}, ${res.city}, ${res.state}, Brasil`;
+      const geo = await geocodeAddress(q);
+      if (!cancelled && geo) setCoords(geo);
+      setCepLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [address.cep]);
 
   const fee =
     !store
@@ -68,7 +125,14 @@ const Checkout = () => {
     toast.success(`Cupom aplicado: ${c.label}`);
   };
 
-  const goPix = () => {
+  const paymentLabel: Record<PaymentMethod, string> = {
+    pix: "Pix",
+    cash: "Dinheiro",
+    credit: "Cartão de crédito (na entrega)",
+    debit: "Cartão de débito (na entrega)",
+  };
+
+  const proceed = () => {
     if (!store) return;
     if (!isStoreOpen(store.openingHours)) {
       return toast.error("A loja está fechada no momento. Tente novamente no horário de funcionamento.");
@@ -81,15 +145,27 @@ const Checkout = () => {
     if (subtotal < store.minOrder)
       return toast.error(`Pedido mínimo: R$ ${store.minOrder.toFixed(2).replace(".", ",")}`);
     if (!name.trim() || !phone.trim()) return toast.error("Preencha nome e telefone");
-    if (method === "delivery" && (!address.cep || !address.street || !address.number))
-      return toast.error("Preencha o endereço");
-    setStep("pix");
+    if (method === "delivery") {
+      if (!address.cep || !address.street || !address.number)
+        return toast.error("Preencha o endereço");
+      if (!coords) return toast.error("Marque sua localização no mapa");
+    }
+    if (payment === "cash" && changeFor) {
+      const v = parseFloat(changeFor.replace(",", "."));
+      if (isNaN(v) || v < total) return toast.error("Troco deve ser maior ou igual ao total");
+    }
+    if (payment === "pix") {
+      setStep("pix");
+    } else {
+      // Cash / card on delivery → confirm directly
+      void confirmPayment();
+    }
   };
 
   const buildWhatsappUrl = (orderId: string): string | null => {
     if (!store?.whatsappPhone) return null;
-    const phone = store.whatsappPhone.replace(/\D/g, "");
-    if (!phone) return null;
+    const waPhone = store.whatsappPhone.replace(/\D/g, "");
+    if (!waPhone) return null;
     const lines: string[] = [];
     lines.push(`*🛵 Novo pedido — ${store.name}*`);
     lines.push(`Pedido #${orderId.slice(0, 8).toUpperCase()}`);
@@ -101,8 +177,13 @@ const Checkout = () => {
       lines.push(
         `*Endereço:* ${address.street}, ${address.number}${
           address.complement ? ` — ${address.complement}` : ""
-        } — ${address.neighborhood} — CEP ${address.cep}`,
+        } — ${address.neighborhood}${address.city ? ` — ${address.city}` : ""} — CEP ${address.cep}`,
       );
+      if (coords) {
+        lines.push(
+          `*📍 Mapa:* https://www.google.com/maps?q=${coords.lat},${coords.lng}`,
+        );
+      }
     }
     lines.push("");
     lines.push("*🍔 Itens:*");
@@ -122,8 +203,15 @@ const Checkout = () => {
     if (cashbackUsed > 0) lines.push(`Cashback: -R$ ${cashbackUsed.toFixed(2).replace(".", ",")}`);
     lines.push(`*Total: R$ ${total.toFixed(2).replace(".", ",")}*`);
     lines.push("");
-    lines.push(`💳 Pagamento: Pix (já confirmado pelo app)`);
-    return `https://wa.me/55${phone}?text=${encodeURIComponent(lines.join("\n"))}`;
+    lines.push(`💳 *Pagamento:* ${paymentLabel[payment]}${
+      payment === "pix" ? " (já confirmado pelo app)" : ""
+    }`);
+    if (payment === "cash" && changeFor) {
+      const v = parseFloat(changeFor.replace(",", "."));
+      const troco = Math.max(0, v - total);
+      lines.push(`💵 Troco para R$ ${v.toFixed(2).replace(".", ",")} (devolver R$ ${troco.toFixed(2).replace(".", ",")})`);
+    }
+    return `https://wa.me/55${waPhone}?text=${encodeURIComponent(lines.join("\n"))}`;
   };
 
   const confirmPayment = async () => {
@@ -138,7 +226,11 @@ const Checkout = () => {
           customer_name: name,
           customer_phone: phone,
           method,
+          payment_method: payment,
+          change_for: payment === "cash" && changeFor ? parseFloat(changeFor.replace(",", ".")) : null,
           address: method === "delivery" ? address : null,
+          delivery_lat: method === "delivery" ? coords?.lat ?? null : null,
+          delivery_lng: method === "delivery" ? coords?.lng ?? null : null,
           subtotal,
           delivery_fee: fee,
           coupon_code: appliedCoupon?.code ?? null,
@@ -146,7 +238,7 @@ const Checkout = () => {
           cashback_used: cashbackUsed,
           cashback_earned: earned,
           total,
-          status: "received",
+          status: payment === "pix" ? "received" : "pending_payment",
         })
         .select("id")
         .single();
@@ -170,11 +262,8 @@ const Checkout = () => {
       });
       if (loyaltyErr) throw loyaltyErr;
 
-      // Send order to store via WhatsApp (opens in new tab)
       const waUrl = buildWhatsappUrl(order.id);
-      if (waUrl) {
-        window.open(waUrl, "_blank", "noopener,noreferrer");
-      }
+      if (waUrl) window.open(waUrl, "_blank", "noopener,noreferrer");
 
       setStep("done");
       toast.success(`Pedido confirmado! Você ganhou R$ ${earned.toFixed(2).replace(".", ",")} de cashback 🎉`);
@@ -211,6 +300,11 @@ const Checkout = () => {
 
   if (isLoading) return <div className="min-h-screen" />;
   if (!store || items.length === 0) return <Navigate to="/" replace />;
+
+  const ctaLabel =
+    payment === "pix"
+      ? `Pagar com Pix • R$ ${total.toFixed(2).replace(".", ",")}`
+      : `Confirmar pedido • R$ ${total.toFixed(2).replace(".", ",")}`;
 
   return (
     <div className="min-h-screen bg-muted/40 pb-24">
@@ -328,19 +422,25 @@ const Checkout = () => {
                 </div>
               </section>
 
-              {/* Address */}
+              {/* Address + Map */}
               {method === "delivery" && (
                 <section className="rounded-2xl bg-card p-5 shadow-soft">
                   <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold">
                     <MapPin className="h-5 w-5 text-primary" /> Endereço de entrega
                   </h2>
                   <div className="grid gap-3 sm:grid-cols-3">
-                    <input
-                      placeholder="CEP"
-                      value={address.cep}
-                      onChange={(e) => setAddress({ ...address, cep: e.target.value })}
-                      className="rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
-                    />
+                    <div className="relative">
+                      <input
+                        placeholder="CEP"
+                        value={address.cep}
+                        onChange={(e) => setAddress({ ...address, cep: formatCep(e.target.value) })}
+                        maxLength={9}
+                        className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
+                      />
+                      {cepLoading && (
+                        <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />
+                      )}
+                    </div>
                     <input
                       placeholder="Rua"
                       value={address.street}
@@ -366,8 +466,59 @@ const Checkout = () => {
                       className="rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
                     />
                   </div>
+
+                  <div className="mt-4">
+                    <LocationPicker value={coords} onChange={setCoords} />
+                  </div>
                 </section>
               )}
+
+              {/* Payment method */}
+              <section className="rounded-2xl bg-card p-5 shadow-soft">
+                <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold">
+                  <CreditCard className="h-5 w-5 text-primary" /> Forma de pagamento
+                </h2>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {([
+                    { v: "pix", label: "Pix", icon: QrCode, hint: "Aprovação instantânea" },
+                    { v: "cash", label: "Dinheiro", icon: Banknote, hint: "Na entrega" },
+                    { v: "credit", label: "Crédito", icon: CreditCard, hint: "Maquininha" },
+                    { v: "debit", label: "Débito", icon: CreditCard, hint: "Maquininha" },
+                  ] as const).map((opt) => {
+                    const Icon = opt.icon;
+                    const active = payment === opt.v;
+                    return (
+                      <button
+                        key={opt.v}
+                        onClick={() => setPayment(opt.v)}
+                        className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
+                          active ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                        }`}
+                      >
+                        <Icon className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                        <span className="text-sm font-bold">{opt.label}</span>
+                        <span className="text-[10px] text-muted-foreground">{opt.hint}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {payment === "cash" && (
+                  <div className="mt-4 rounded-xl border-2 border-dashed border-warning/40 bg-warning/5 p-3">
+                    <label className="text-xs font-bold text-foreground">
+                      Precisa de troco? Para quanto?
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder={`Ex: ${(Math.ceil(total / 10) * 10).toFixed(2).replace(".", ",")} (deixe vazio se não precisa)`}
+                      value={changeFor}
+                      onChange={(e) => setChangeFor(e.target.value)}
+                      className="mt-2 w-full rounded-lg border-2 border-border bg-background p-2.5 text-sm outline-none focus:border-primary"
+                    />
+                  </div>
+                )}
+              </section>
 
               {/* Coupon + cashback */}
               <section className="rounded-2xl bg-card p-5 shadow-soft">
@@ -451,17 +602,21 @@ const Checkout = () => {
                   <span>Total</span>
                   <span>R$ {total.toFixed(2).replace(".", ",")}</span>
                 </div>
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  Pagamento: <strong className="text-foreground">{paymentLabel[payment]}</strong>
+                </p>
                 {earned > 0 && (
-                  <p className="mt-2 text-center text-xs font-semibold text-success">
+                  <p className="mt-1 text-center text-xs font-semibold text-success">
                     Você vai ganhar R$ {earned.toFixed(2).replace(".", ",")} de cashback ✨
                   </p>
                 )}
                 <Button
-                  onClick={goPix}
+                  onClick={proceed}
+                  disabled={submitting}
                   size="lg"
                   className="mt-4 h-14 w-full rounded-xl gradient-primary text-base font-bold shadow-glow transition-bounce hover:scale-[1.02]"
                 >
-                  Pagar com Pix • R$ {total.toFixed(2).replace(".", ",")}
+                  {submitting ? "Enviando..." : ctaLabel}
                 </Button>
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                   Pagamento seguro • SSL criptografado
