@@ -263,11 +263,16 @@ const Admin = () => {
             <button
               key={t.id}
               onClick={() => setTab(t.id as typeof tab)}
-              className={`relative px-4 py-2.5 text-sm font-bold transition-smooth ${
+              className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-bold transition-smooth ${
                 tab === t.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {t.label}
+              {t.id === "orders" && pendingCount > 0 && (
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground animate-pulse">
+                  {pendingCount}
+                </span>
+              )}
               {tab === t.id && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
             </button>
           ))}
