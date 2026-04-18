@@ -184,15 +184,19 @@ export type Database = {
           address: Json | null
           cashback_earned: number
           cashback_used: number
+          change_for: number | null
           coupon_code: string | null
           coupon_discount: number
           created_at: string
           customer_name: string
           customer_phone: string
           delivery_fee: number
+          delivery_lat: number | null
+          delivery_lng: number | null
           id: string
           method: Database["public"]["Enums"]["delivery_method"]
           notes: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
           status: Database["public"]["Enums"]["order_status"]
           store_id: string
           subtotal: number
@@ -204,15 +208,19 @@ export type Database = {
           address?: Json | null
           cashback_earned?: number
           cashback_used?: number
+          change_for?: number | null
           coupon_code?: string | null
           coupon_discount?: number
           created_at?: string
           customer_name: string
           customer_phone: string
           delivery_fee?: number
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           id?: string
           method?: Database["public"]["Enums"]["delivery_method"]
           notes?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           status?: Database["public"]["Enums"]["order_status"]
           store_id: string
           subtotal: number
@@ -224,15 +232,19 @@ export type Database = {
           address?: Json | null
           cashback_earned?: number
           cashback_used?: number
+          change_for?: number | null
           coupon_code?: string | null
           coupon_discount?: number
           created_at?: string
           customer_name?: string
           customer_phone?: string
           delivery_fee?: number
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           id?: string
           method?: Database["public"]["Enums"]["delivery_method"]
           notes?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           status?: Database["public"]["Enums"]["order_status"]
           store_id?: string
           subtotal?: number
@@ -533,6 +545,7 @@ export type Database = {
         | "out_for_delivery"
         | "delivered"
         | "cancelled"
+      payment_method: "pix" | "cash" | "credit" | "debit"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -672,6 +685,7 @@ export const Constants = {
         "delivered",
         "cancelled",
       ],
+      payment_method: ["pix", "cash", "credit", "debit"],
     },
   },
 } as const
