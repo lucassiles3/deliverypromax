@@ -4,10 +4,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ShoppingBag, Truck } from "lucide-react";
-import { stores } from "@/data/stores";
+import { useStores } from "@/hooks/useStores";
 
 export const CartDrawer = () => {
   const { items, isOpen, setOpen, updateQty, remove, subtotal, storeSlug } = useCart();
+  const { data: stores = [] } = useStores();
 
   const store = stores.find((s) => s.slug === storeSlug);
   const threshold = store?.freeShippingThreshold ?? 50;

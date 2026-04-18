@@ -5,18 +5,20 @@ import { Header } from "@/components/Header";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductModal } from "@/components/ProductModal";
 import { PromoCountdown } from "@/components/PromoCountdown";
-import { getStoreBySlug, type Product } from "@/data/stores";
+import { useStoreBySlug } from "@/hooks/useStores";
+import type { Product } from "@/data/stores";
 
 const Store = () => {
   const { slug = "" } = useParams();
-  const store = getStoreBySlug(slug);
-  const [activeCat, setActiveCat] = useState(store?.categories[0] ?? "");
+  const { data: store, isLoading } = useStoreBySlug(slug);
+  const [activeCat, setActiveCat] = useState("");
   const [query, setQuery] = useState("");
   const [openProduct, setOpenProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     document.title = store ? `${store.name} • FoodFlash` : "FoodFlash";
-  }, [store]);
+    if (store && !activeCat) setActiveCat(store.categories[0] ?? "");
+  }, [store, activeCat]);
 
   const grouped = useMemo(() => {
     if (!store) return {};
@@ -28,6 +30,8 @@ const Store = () => {
       return acc;
     }, {});
   }, [store, query]);
+
+  if (isLoading) return <div className="min-h-screen" />;
 
   if (!store) return <Navigate to="/" replace />;
 

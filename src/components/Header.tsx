@@ -1,13 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, MapPin, Sparkles, LayoutDashboard } from "lucide-react";
+import { ShoppingBag, MapPin, Sparkles, LayoutDashboard, LogIn, LogOut } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
-import { useLoyalty } from "@/hooks/useLoyalty";
-import { tierOf } from "@/lib/loyalty";
+import { useLoyalty, tierOf } from "@/hooks/useLoyalty";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Header = () => {
   const { count, setOpen } = useCart();
   const loyalty = useLoyalty();
+  const { user, signOut, isOwner } = useAuth();
   const tier = tierOf(loyalty.totalSpent);
   const location = useLocation();
   const isHome = location.pathname === "/";
@@ -44,12 +45,30 @@ export const Header = () => {
               {tier.name}
             </div>
           )}
-          <Link
-            to="/admin"
-            className="hidden items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground md:flex"
-          >
-            <LayoutDashboard className="h-3.5 w-3.5" /> Admin
-          </Link>
+          {isOwner && (
+            <Link
+              to="/admin"
+              className="hidden items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground md:flex"
+            >
+              <LayoutDashboard className="h-3.5 w-3.5" /> Admin
+            </Link>
+          )}
+          {user ? (
+            <button
+              onClick={signOut}
+              className="hidden items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground sm:flex"
+              title="Sair"
+            >
+              <LogOut className="h-3.5 w-3.5" /> Sair
+            </button>
+          ) : (
+            <Link
+              to="/auth"
+              className="flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs font-bold hover:bg-primary/10"
+            >
+              <LogIn className="h-3.5 w-3.5" /> Entrar
+            </Link>
+          )}
           <Button
             variant="ghost"
             size="icon"

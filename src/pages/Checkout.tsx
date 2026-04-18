@@ -4,9 +4,12 @@ import { ArrowLeft, Bike, Store as StoreIcon, MapPin, Tag, Sparkles, CheckCircle
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
-import { coupons, stores } from "@/data/stores";
-import { applyOrder, getLoyalty, CASHBACK_RATE } from "@/lib/loyalty";
-import { useLoyalty } from "@/hooks/useLoyalty";
+import { useStores, useCoupons } from "@/hooks/useStores";
+import type { Coupon } from "@/data/stores";
+import { useLoyalty, CASHBACK_RATE } from "@/hooks/useLoyalty";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 import { toast } from "sonner";
 
 type Method = "delivery" | "pickup";
