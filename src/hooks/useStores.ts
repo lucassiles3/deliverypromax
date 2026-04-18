@@ -54,7 +54,7 @@ export const useStores = () =>
     queryFn: async (): Promise<Store[]> => {
       const { data, error } = await supabase.from("stores").select("*").order("name");
       if (error) throw error;
-      return (data as DbStore[]).map((s) => mapStore(s));
+      return (data as unknown as DbStore[]).map((s) => mapStore(s));
     },
   });
 
@@ -113,7 +113,7 @@ export const useStoreBySlug = (slug: string) =>
           ),
       }));
 
-      return mapStore(s as DbStore, mapped);
+      return mapStore(s as unknown as DbStore, mapped);
     },
   });
 
