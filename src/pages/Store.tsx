@@ -6,6 +6,8 @@ import { ProductCard } from "@/components/ProductCard";
 import { ProductModal } from "@/components/ProductModal";
 import { PromoCountdown } from "@/components/PromoCountdown";
 import { useStoreBySlug } from "@/hooks/useStores";
+import { isStoreOpen, nextOpeningLabel, formatHoursList } from "@/lib/storeHours";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Product } from "@/data/stores";
 
 const Store = () => {
@@ -81,11 +83,41 @@ const Store = () => {
                 </div>
               </div>
             </div>
-            {store.open && (
-              <div className="hidden shrink-0 items-center gap-1.5 rounded-full bg-success/10 px-3 py-1.5 text-xs font-bold text-success md:flex">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-success" /> Aberto agora
-              </div>
-            )}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className={`hidden shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-bounce hover:scale-105 md:flex ${
+                    isStoreOpen(store.openingHours)
+                      ? "bg-success/10 text-success"
+                      : "bg-destructive/10 text-destructive"
+                  }`}
+                >
+                  <span
+                    className={`h-2 w-2 rounded-full ${
+                      isStoreOpen(store.openingHours) ? "animate-pulse bg-success" : "bg-destructive"
+                    }`}
+                  />
+                  {isStoreOpen(store.openingHours) ? "Aberto agora" : "Fechado"}
+                  <Clock className="h-3.5 w-3.5 opacity-70" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-3">
+                <p className="mb-2 text-xs font-bold uppercase text-muted-foreground">Horários</p>
+                <ul className="space-y-1 text-sm">
+                  {formatHoursList(store.openingHours).map((h) => (
+                    <li key={h.day} className="flex justify-between">
+                      <span className="font-medium">{h.day}</span>
+                      <span className="text-muted-foreground">{h.range}</span>
+                    </li>
+                  ))}
+                </ul>
+                {!isStoreOpen(store.openingHours) && (
+                  <p className="mt-2 rounded-md bg-muted p-2 text-xs font-bold text-foreground">
+                    {nextOpeningLabel(store.openingHours)}
+                  </p>
+                )}
+              </PopoverContent>
+            </Popover>
           </div>
 
           {store.promo && (

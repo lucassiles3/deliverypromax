@@ -25,6 +25,12 @@ export type Product = {
   addonGroups?: AddonGroup[];
 };
 
+export type DayHours = { open: string; close: string } | null;
+export type OpeningHours = {
+  mon: DayHours; tue: DayHours; wed: DayHours; thu: DayHours;
+  fri: DayHours; sat: DayHours; sun: DayHours;
+};
+
 export type Store = {
   id: string;
   slug: string;
@@ -44,6 +50,8 @@ export type Store = {
   promo?: string;
   categories: string[];
   products: Product[];
+  whatsappPhone?: string;
+  openingHours?: OpeningHours;
 };
 
 export type Coupon = {
