@@ -76,14 +76,16 @@ const Admin = () => {
     },
   });
 
-  // Orders of the selected store
+  // Orders of the selected store (with full details for the expandable card)
   const { data: orders = [] } = useQuery({
     queryKey: ["admin-orders", storeId],
     enabled: !!storeId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("id, customer_name, total, status, method, created_at, order_items(id)")
+        .select(
+          "id, customer_name, customer_phone, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, status, method, payment_method, change_for, address, delivery_lat, delivery_lng, created_at, order_items(id, product_name, quantity, unit_price, notes, customizations)",
+        )
         .eq("store_id", storeId!)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -92,6 +94,8 @@ const Admin = () => {
     },
     refetchInterval: 15000,
   });
+
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
   // Realtime: refresh on new orders
   useEffect(() => {
