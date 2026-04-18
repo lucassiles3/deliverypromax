@@ -41,10 +41,33 @@ const Admin = () => {
   const qc = useQueryClient();
   const [storeId, setStoreId] = useState<string | null>(null);
   const [tab, setTab] = useState<"orders" | "products" | "reports">("orders");
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
-  useEffect(() => {
-    document.title = "Painel Admin • FoodFlash";
-  }, []);
+  // Play a quick "ding" via WebAudio (no asset needed)
+  const playDing = () => {
+    if (!soundEnabled) return;
+    try {
+      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new Ctx();
+      const now = ctx.currentTime;
+      const tones = [880, 1320]; // two-tone ding
+      tones.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, now + i * 0.18);
+        gain.gain.linearRampToValueAtTime(0.25, now + i * 0.18 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.18 + 0.35);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now + i * 0.18);
+        osc.stop(now + i * 0.18 + 0.4);
+      });
+      setTimeout(() => ctx.close(), 1200);
+    } catch {
+      /* ignore */
+    }
+  };
 
   // Stores owned by current user (or all, if admin)
   const { data: stores = [], isLoading: storesLoading } = useQuery({
