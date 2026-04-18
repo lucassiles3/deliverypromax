@@ -7,6 +7,8 @@ import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/CartDrawer";
 import Index from "./pages/Index.tsx";
 import Store from "./pages/Store.tsx";
+import Checkout from "./pages/Checkout.tsx";
+import Admin from "./pages/Admin.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -21,6 +23,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/loja/:slug" element={<Store />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CartDrawer />

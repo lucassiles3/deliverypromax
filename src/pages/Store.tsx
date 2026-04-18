@@ -3,14 +3,16 @@ import { useParams, Link, Navigate } from "react-router-dom";
 import { ArrowLeft, Star, Clock, Bike, MapPin, Search, Flame } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductModal } from "@/components/ProductModal";
 import { PromoCountdown } from "@/components/PromoCountdown";
-import { getStoreBySlug } from "@/data/stores";
+import { getStoreBySlug, type Product } from "@/data/stores";
 
 const Store = () => {
   const { slug = "" } = useParams();
   const store = getStoreBySlug(slug);
   const [activeCat, setActiveCat] = useState(store?.categories[0] ?? "");
   const [query, setQuery] = useState("");
+  const [openProduct, setOpenProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     document.title = store ? `${store.name} • FoodFlash` : "FoodFlash";
@@ -139,13 +141,19 @@ const Store = () => {
               <h2 className="mb-4 font-display text-xl font-bold md:text-2xl">{c}</h2>
               <div className="grid gap-3 md:grid-cols-2">
                 {list.map((p) => (
-                  <ProductCard key={p.id} product={p} storeSlug={store.slug} />
+                  <ProductCard key={p.id} product={p} storeSlug={store.slug} onOpen={setOpenProduct} />
                 ))}
               </div>
             </section>
           );
         })}
       </div>
+
+      <ProductModal
+        product={openProduct}
+        storeSlug={store.slug}
+        onClose={() => setOpenProduct(null)}
+      />
     </div>
   );
 };

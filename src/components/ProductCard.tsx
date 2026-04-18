@@ -1,12 +1,18 @@
 import { Star, Plus, Flame } from "lucide-react";
-import { useCart } from "@/context/CartContext";
 import type { Product } from "@/data/stores";
 
-export const ProductCard = ({ product, storeSlug }: { product: Product; storeSlug: string }) => {
-  const { add } = useCart();
+type Props = {
+  product: Product;
+  storeSlug: string;
+  onOpen: (product: Product) => void;
+};
 
+export const ProductCard = ({ product, onOpen }: Props) => {
   return (
-    <article className="group flex gap-4 rounded-2xl bg-card p-3 shadow-soft transition-smooth hover:shadow-card">
+    <article
+      onClick={() => onOpen(product)}
+      className="group flex cursor-pointer gap-4 rounded-2xl bg-card p-3 shadow-soft transition-smooth hover:shadow-card"
+    >
       <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl">
         <img
           src={product.image}
@@ -45,7 +51,10 @@ export const ProductCard = ({ product, storeSlug }: { product: Product; storeSlu
             </div>
           </div>
           <button
-            onClick={() => add(product, storeSlug)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpen(product);
+            }}
             aria-label={`Adicionar ${product.name}`}
             className="flex h-10 w-10 items-center justify-center rounded-full gradient-primary text-primary-foreground shadow-glow transition-bounce hover:scale-110 active:scale-95"
           >

@@ -5,6 +5,16 @@ import fries from "@/assets/fries.jpg";
 import soda from "@/assets/soda.jpg";
 import dessert from "@/assets/dessert.jpg";
 
+export type AddonOption = { id: string; name: string; price: number };
+export type AddonGroup = {
+  id: string;
+  name: string;
+  type: "single" | "multi";
+  required?: boolean;
+  max?: number;
+  options: AddonOption[];
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -17,6 +27,7 @@ export type Product = {
   reviews: number;
   bestseller?: boolean;
   promo?: boolean;
+  addonGroups?: AddonGroup[];
 };
 
 export type Store = {
@@ -40,6 +51,67 @@ export type Store = {
   products: Product[];
 };
 
+const burgerAddons: AddonGroup[] = [
+  {
+    id: "size",
+    name: "Escolha o tamanho",
+    type: "single",
+    required: true,
+    options: [
+      { id: "single", name: "Simples (1 carne)", price: 0 },
+      { id: "double", name: "Duplo (2 carnes)", price: 8 },
+      { id: "triple", name: "Triplo (3 carnes)", price: 14 },
+    ],
+  },
+  {
+    id: "extras",
+    name: "Adicionais",
+    type: "multi",
+    max: 5,
+    options: [
+      { id: "bacon", name: "Bacon extra", price: 4.5 },
+      { id: "cheese", name: "Cheddar extra", price: 3.5 },
+      { id: "egg", name: "Ovo", price: 3 },
+      { id: "onion", name: "Cebola caramelizada", price: 2.5 },
+    ],
+  },
+  {
+    id: "drink",
+    name: "Adicione uma bebida (+R$5)",
+    type: "single",
+    options: [
+      { id: "none", name: "Não, obrigado", price: 0 },
+      { id: "coke", name: "Coca-Cola Lata", price: 5 },
+      { id: "guarana", name: "Guaraná Lata", price: 5 },
+    ],
+  },
+];
+
+const pizzaAddons: AddonGroup[] = [
+  {
+    id: "size",
+    name: "Tamanho da pizza",
+    type: "single",
+    required: true,
+    options: [
+      { id: "m", name: "Média (6 fatias)", price: 0 },
+      { id: "g", name: "Grande (8 fatias)", price: 12 },
+      { id: "f", name: "Família (12 fatias)", price: 22 },
+    ],
+  },
+  {
+    id: "border",
+    name: "Borda recheada",
+    type: "single",
+    options: [
+      { id: "no", name: "Sem borda", price: 0 },
+      { id: "catupiry", name: "Catupiry", price: 8 },
+      { id: "cheddar", name: "Cheddar", price: 8 },
+      { id: "choco", name: "Chocolate (doces)", price: 9 },
+    ],
+  },
+];
+
 export const stores: Store[] = [
   {
     id: "1",
@@ -60,8 +132,8 @@ export const stores: Store[] = [
     promo: "20% OFF no primeiro pedido",
     categories: ["Mais vendidos", "Burgers", "Acompanhamentos", "Bebidas", "Sobremesas"],
     products: [
-      { id: "b1", name: "Smash Bacon Duplo", description: "Dois smash burgers, bacon crocante, cheddar derretido e molho da casa", price: 32.9, oldPrice: 42.9, image: burger, category: "Mais vendidos", rating: 4.9, reviews: 1240, bestseller: true, promo: true },
-      { id: "b2", name: "Cheese Clássico", description: "Burger 160g, cheddar, alface, tomate e maionese verde", price: 24.9, image: burger, category: "Burgers", rating: 4.8, reviews: 890 },
+      { id: "b1", name: "Smash Bacon Duplo", description: "Dois smash burgers, bacon crocante, cheddar derretido e molho da casa", price: 32.9, oldPrice: 42.9, image: burger, category: "Mais vendidos", rating: 4.9, reviews: 1240, bestseller: true, promo: true, addonGroups: burgerAddons },
+      { id: "b2", name: "Cheese Clássico", description: "Burger 160g, cheddar, alface, tomate e maionese verde", price: 24.9, image: burger, category: "Burgers", rating: 4.8, reviews: 890, addonGroups: burgerAddons },
       { id: "b3", name: "Fritas Crocantes", description: "Batata rústica frita na hora, porção generosa", price: 14.9, image: fries, category: "Acompanhamentos", rating: 4.9, reviews: 654, bestseller: true },
       { id: "b4", name: "Onion Rings", description: "Anéis de cebola empanados, dourados e crocantes", price: 16.9, image: fries, category: "Acompanhamentos", rating: 4.7, reviews: 312 },
       { id: "b5", name: "Coca-Cola Lata", description: "350ml geladinha", price: 6.9, image: soda, category: "Bebidas", rating: 4.9, reviews: 980 },
@@ -87,10 +159,10 @@ export const stores: Store[] = [
     promo: "Pizza grande + refri por R$59",
     categories: ["Mais vendidos", "Pizzas Salgadas", "Pizzas Doces", "Bebidas", "Sobremesas"],
     products: [
-      { id: "p1", name: "Pepperoni Especial", description: "Molho artesanal, mussarela de búfala, pepperoni importado e manjericão", price: 64.9, oldPrice: 79.9, image: pizza, category: "Mais vendidos", rating: 4.9, reviews: 1502, bestseller: true, promo: true },
-      { id: "p2", name: "Margherita", description: "Molho de tomate San Marzano, mussarela fresca e manjericão", price: 54.9, image: pizza, category: "Pizzas Salgadas", rating: 4.8, reviews: 845 },
-      { id: "p3", name: "Quatro Queijos", description: "Mussarela, gorgonzola, parmesão e provolone", price: 62.9, image: pizza, category: "Pizzas Salgadas", rating: 4.7, reviews: 612 },
-      { id: "p4", name: "Chocolate com Morango", description: "Chocolate ao leite, morangos frescos e leite condensado", price: 49.9, image: dessert, category: "Pizzas Doces", rating: 4.9, reviews: 380, bestseller: true },
+      { id: "p1", name: "Pepperoni Especial", description: "Molho artesanal, mussarela de búfala, pepperoni importado e manjericão", price: 64.9, oldPrice: 79.9, image: pizza, category: "Mais vendidos", rating: 4.9, reviews: 1502, bestseller: true, promo: true, addonGroups: pizzaAddons },
+      { id: "p2", name: "Margherita", description: "Molho de tomate San Marzano, mussarela fresca e manjericão", price: 54.9, image: pizza, category: "Pizzas Salgadas", rating: 4.8, reviews: 845, addonGroups: pizzaAddons },
+      { id: "p3", name: "Quatro Queijos", description: "Mussarela, gorgonzola, parmesão e provolone", price: 62.9, image: pizza, category: "Pizzas Salgadas", rating: 4.7, reviews: 612, addonGroups: pizzaAddons },
+      { id: "p4", name: "Chocolate com Morango", description: "Chocolate ao leite, morangos frescos e leite condensado", price: 49.9, image: dessert, category: "Pizzas Doces", rating: 4.9, reviews: 380, bestseller: true, addonGroups: pizzaAddons },
       { id: "p5", name: "Coca-Cola 2L", description: "Garrafa 2 litros gelada", price: 14.9, image: soda, category: "Bebidas", rating: 4.9, reviews: 720 },
     ],
   },
@@ -145,3 +217,11 @@ export const stores: Store[] = [
 ];
 
 export const getStoreBySlug = (slug: string) => stores.find((s) => s.slug === slug);
+
+// ===== Cupons =====
+export type Coupon = { code: string; type: "percent" | "fixed"; value: number; minOrder?: number; label: string };
+export const coupons: Coupon[] = [
+  { code: "BEMVINDO20", type: "percent", value: 20, label: "20% OFF — boas-vindas" },
+  { code: "FRETEGRATIS", type: "fixed", value: 999, label: "Frete grátis (qualquer valor)" }, // sentinel handled in checkout
+  { code: "FOME10", type: "fixed", value: 10, minOrder: 40, label: "R$10 OFF acima de R$40" },
+];
