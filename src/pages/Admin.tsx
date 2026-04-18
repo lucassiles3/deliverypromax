@@ -17,6 +17,8 @@ import {
   CreditCard,
   Banknote,
   QrCode,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
