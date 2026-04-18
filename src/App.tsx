@@ -9,6 +9,8 @@ import Index from "./pages/Index.tsx";
 import Store from "./pages/Store.tsx";
 import Checkout from "./pages/Checkout.tsx";
 import Admin from "./pages/Admin.tsx";
+import Auth from "./pages/Auth.tsx";
+import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -25,6 +27,8 @@ const App = () => (
             <Route path="/loja/:slug" element={<Store />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CartDrawer />
