@@ -27,12 +27,18 @@ const Checkout = () => {
   const [step, setStep] = useState<"form" | "pix" | "done">("form");
 
   useEffect(() => {
+  useEffect(() => {
     document.title = "Checkout • FoodFlash";
   }, []);
 
-  if (!store || items.length === 0) return <Navigate to="/" replace />;
-
-  const fee = method === "pickup" ? 0 : subtotal >= store.freeShippingThreshold ? 0 : store.deliveryFee;
+  const fee =
+    !store
+      ? 0
+      : method === "pickup"
+        ? 0
+        : subtotal >= store.freeShippingThreshold
+          ? 0
+          : store.deliveryFee;
 
   const couponDiscount = useMemo(() => {
     if (!appliedCoupon) return 0;
@@ -83,6 +89,8 @@ const Checkout = () => {
         .padStart(6, "0")}5802BR5913FoodFlash6009Sao Paulo62070503***6304ABCD`,
     [total],
   );
+
+  if (!store || items.length === 0) return <Navigate to="/" replace />;
 
   return (
     <div className="min-h-screen bg-muted/40 pb-24">
