@@ -357,6 +357,7 @@ export type Database = {
           min_order: number | null
           name: string
           open: boolean
+          opening_hours: Json | null
           owner_id: string | null
           promo: string | null
           rating: number | null
@@ -364,6 +365,7 @@ export type Database = {
           slug: string
           tagline: string | null
           updated_at: string
+          whatsapp_phone: string | null
         }
         Insert: {
           categories?: string[] | null
@@ -379,6 +381,7 @@ export type Database = {
           min_order?: number | null
           name: string
           open?: boolean
+          opening_hours?: Json | null
           owner_id?: string | null
           promo?: string | null
           rating?: number | null
@@ -386,6 +389,7 @@ export type Database = {
           slug: string
           tagline?: string | null
           updated_at?: string
+          whatsapp_phone?: string | null
         }
         Update: {
           categories?: string[] | null
@@ -401,6 +405,7 @@ export type Database = {
           min_order?: number | null
           name?: string
           open?: boolean
+          opening_hours?: Json | null
           owner_id?: string | null
           promo?: string | null
           rating?: number | null
@@ -408,6 +413,7 @@ export type Database = {
           slug?: string
           tagline?: string | null
           updated_at?: string
+          whatsapp_phone?: string | null
         }
         Relationships: []
       }

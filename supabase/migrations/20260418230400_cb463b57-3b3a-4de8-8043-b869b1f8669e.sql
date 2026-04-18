@@ -1,0 +1,3 @@
+ALTER TABLE public.stores 
+  ADD COLUMN IF NOT EXISTS whatsapp_phone TEXT,
+  ADD COLUMN IF NOT EXISTS opening_hours JSONB DEFAULT '{"mon":{"open":"10:00","close":"23:00"},"tue":{"open":"10:00","close":"23:00"},"wed":{"open":"10:00","close":"23:00"},"thu":{"open":"10:00","close":"23:00"},"fri":{"open":"10:00","close":"00:00"},"sat":{"open":"11:00","close":"00:00"},"sun":{"open":"11:00","close":"23:00"}}'::jsonb;
