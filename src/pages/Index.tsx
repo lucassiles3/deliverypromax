@@ -3,8 +3,8 @@ import { Header } from "@/components/Header";
 import { StoreCard } from "@/components/StoreCard";
 import { SocialProof } from "@/components/SocialProof";
 import { PromoCountdown } from "@/components/PromoCountdown";
-import { stores } from "@/data/stores";
-import { Search, Sparkles } from "lucide-react";
+import { useStores } from "@/hooks/useStores";
+import { Search, Sparkles, Loader2 } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
 
 const categories = [
@@ -18,20 +18,23 @@ const categories = [
 const Index = () => {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("Todos");
+  const { data: stores = [], isLoading } = useStores();
 
   const filtered = useMemo(() => {
     return stores.filter((s) => {
       const matchCat = filter === "Todos" || s.cuisine === filter;
-      const matchQuery = !query || s.name.toLowerCase().includes(query.toLowerCase()) || s.cuisine.toLowerCase().includes(query.toLowerCase());
+      const matchQuery =
+        !query ||
+        s.name.toLowerCase().includes(query.toLowerCase()) ||
+        s.cuisine.toLowerCase().includes(query.toLowerCase());
       return matchCat && matchQuery;
     });
-  }, [query, filter]);
+  }, [stores, query, filter]);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
-      {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <img src={heroBanner} alt="" width={1600} height={800} className="h-full w-full object-cover" />
@@ -75,7 +78,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Categories */}
       <section className="container py-8">
         <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4">
           {categories.map((c) => (
@@ -95,7 +97,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Stores */}
       <section className="container pb-20">
         <div className="mb-5 flex items-end justify-between">
           <div>
@@ -104,7 +105,11 @@ const Index = () => {
           </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed py-16 text-center text-muted-foreground">
             Nenhuma loja encontrada.
           </div>
