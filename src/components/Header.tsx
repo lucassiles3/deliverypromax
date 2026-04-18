@@ -1,13 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, MapPin, Sparkles, LayoutDashboard } from "lucide-react";
+import { ShoppingBag, MapPin, Sparkles, LayoutDashboard, LogIn, LogOut } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
-import { useLoyalty } from "@/hooks/useLoyalty";
-import { tierOf } from "@/lib/loyalty";
+import { useLoyalty, tierOf } from "@/hooks/useLoyalty";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Header = () => {
   const { count, setOpen } = useCart();
   const loyalty = useLoyalty();
+  const { user, signOut, isOwner } = useAuth();
   const tier = tierOf(loyalty.totalSpent);
   const location = useLocation();
   const isHome = location.pathname === "/";
