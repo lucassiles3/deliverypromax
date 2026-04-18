@@ -13,7 +13,7 @@ type AuthState = {
 
 export const useAuth = (): AuthState & {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, displayName?: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, displayName?: string, phone?: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   isOwner: boolean;
 } => {
@@ -56,13 +56,16 @@ export const useAuth = (): AuthState & {
     return { error: error?.message ?? null };
   };
 
-  const signUp = async (email: string, password: string, displayName?: string) => {
+  const signUp = async (email: string, password: string, displayName?: string, phone?: string) => {
+    const meta: Record<string, string> = {};
+    if (displayName) meta.display_name = displayName;
+    if (phone) meta.phone = phone;
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/`,
-        data: displayName ? { display_name: displayName } : undefined,
+        data: Object.keys(meta).length ? meta : undefined,
       },
     });
     return { error: error?.message ?? null };
