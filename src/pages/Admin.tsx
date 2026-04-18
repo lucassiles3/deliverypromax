@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import {
   ArrowLeft,
   Package,
@@ -7,151 +7,156 @@ import {
   TrendingUp,
   Pause,
   Play,
-  Pencil,
-  Plus,
   DollarSign,
   Clock,
   CheckCircle2,
   Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { stores as seedStores } from "@/data/stores";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { resolveAsset } from "@/lib/assetMap";
 
-type AdminProduct = {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  active: boolean;
-  stock: number | null;
-  image: string;
-};
+type DbStatus = "pending_payment" | "received" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
 
-type OrderStatus = "received" | "preparing" | "out" | "delivered";
-
-type AdminOrder = {
-  id: string;
-  customer: string;
-  items: number;
-  total: number;
-  status: OrderStatus;
-  time: string;
-  method: "delivery" | "pickup";
-};
-
-const initialOrders: AdminOrder[] = [
-  { id: "#1247", customer: "João S.", items: 3, total: 87.5, status: "received", time: "agora", method: "delivery" },
-  { id: "#1246", customer: "Maria O.", items: 2, total: 54.9, status: "preparing", time: "5 min", method: "delivery" },
-  { id: "#1245", customer: "Pedro L.", items: 4, total: 119.8, status: "out", time: "18 min", method: "delivery" },
-  { id: "#1244", customer: "Ana C.", items: 1, total: 24.9, status: "delivered", time: "32 min", method: "pickup" },
-  { id: "#1243", customer: "Carlos M.", items: 5, total: 142.3, status: "delivered", time: "45 min", method: "delivery" },
-];
-
-const statusConfig: Record<OrderStatus, { label: string; color: string; icon: typeof Clock; next?: OrderStatus }> = {
+const statusConfig: Record<DbStatus, { label: string; color: string; icon: typeof Clock; next?: DbStatus }> = {
+  pending_payment: { label: "Aguardando pgto", color: "bg-muted text-muted-foreground", icon: Clock, next: "received" },
   received: { label: "Recebido", color: "bg-blue-500/10 text-blue-600", icon: Clock, next: "preparing" },
-  preparing: { label: "Em preparo", color: "bg-amber-500/10 text-amber-600", icon: Package, next: "out" },
-  out: { label: "Saiu p/ entrega", color: "bg-purple-500/10 text-purple-600", icon: Truck, next: "delivered" },
+  preparing: { label: "Em preparo", color: "bg-amber-500/10 text-amber-600", icon: Package, next: "out_for_delivery" },
+  out_for_delivery: { label: "Saiu p/ entrega", color: "bg-purple-500/10 text-purple-600", icon: Truck, next: "delivered" },
   delivered: { label: "Entregue", color: "bg-green-500/10 text-green-600", icon: CheckCircle2 },
+  cancelled: { label: "Cancelado", color: "bg-destructive/10 text-destructive", icon: Clock },
 };
 
 const Admin = () => {
-  const [storeIdx, setStoreIdx] = useState(0);
+  const { user, loading: authLoading } = useAuth();
+  const qc = useQueryClient();
+  const [storeId, setStoreId] = useState<string | null>(null);
   const [tab, setTab] = useState<"orders" | "products" | "reports">("orders");
-  const store = seedStores[storeIdx];
-
-  const [products, setProducts] = useState<AdminProduct[]>(() =>
-    store.products.map((p) => ({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      price: p.price,
-      active: true,
-      stock: null,
-      image: p.image,
-    })),
-  );
-
-  // Reload products when store changes
-  useEffect(() => {
-    setProducts(
-      store.products.map((p) => ({
-        id: p.id,
-        name: p.name,
-        category: p.category,
-        price: p.price,
-        active: true,
-        stock: null,
-        image: p.image,
-      })),
-    );
-  }, [store]);
-
-  const [orders, setOrders] = useState<AdminOrder[]>(initialOrders);
 
   useEffect(() => {
     document.title = "Painel Admin • FoodFlash";
   }, []);
 
-  // simulate live order coming in every ~25s
-  useEffect(() => {
-    const t = setInterval(() => {
-      const id = `#${1247 + orders.length}`;
-      setOrders((prev) => [
-        {
-          id,
-          customer: ["Lucas", "Carla", "Bruno", "Fernanda", "Rafa"][Math.floor(Math.random() * 5)] + ".",
-          items: 1 + Math.floor(Math.random() * 4),
-          total: Math.round((30 + Math.random() * 120) * 100) / 100,
-          status: "received",
-          time: "agora",
-          method: Math.random() > 0.3 ? "delivery" : "pickup",
-        },
-        ...prev,
-      ]);
-      toast.success(`Novo pedido ${id} recebido!`, { description: "Toque para ver os detalhes" });
-    }, 30000);
-    return () => clearInterval(t);
-  }, [orders.length]);
+  // Stores owned by current user (or all, if admin)
+  const { data: stores = [], isLoading: storesLoading } = useQuery({
+    queryKey: ["admin-stores", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("stores").select("id, name, logo, slug").order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
-  const advanceStatus = (id: string) => {
-    setOrders((prev) =>
-      prev.map((o) => {
-        if (o.id !== id) return o;
-        const next = statusConfig[o.status].next;
-        if (!next) return o;
-        toast.success(`Pedido ${id}: ${statusConfig[next].label}`);
-        return { ...o, status: next };
-      }),
-    );
+  useEffect(() => {
+    if (!storeId && stores.length) setStoreId(stores[0].id);
+  }, [stores, storeId]);
+
+  // Products of the selected store
+  const { data: products = [] } = useQuery({
+    queryKey: ["admin-products", storeId],
+    enabled: !!storeId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, category, price, active, image_url")
+        .eq("store_id", storeId!)
+        .order("position");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  // Orders of the selected store
+  const { data: orders = [] } = useQuery({
+    queryKey: ["admin-orders", storeId],
+    enabled: !!storeId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("id, customer_name, total, status, method, created_at, order_items(id)")
+        .eq("store_id", storeId!)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data ?? [];
+    },
+    refetchInterval: 15000,
+  });
+
+  // Realtime: refresh on new orders
+  useEffect(() => {
+    if (!storeId) return;
+    const ch = supabase
+      .channel(`orders:${storeId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
+        (payload) => {
+          qc.invalidateQueries({ queryKey: ["admin-orders", storeId] });
+          if (payload.eventType === "INSERT") toast.success("Novo pedido recebido!");
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [storeId, qc]);
+
+  const advanceStatus = async (id: string, current: DbStatus) => {
+    const next = statusConfig[current].next;
+    if (!next) return;
+    const { error } = await supabase.from("orders").update({ status: next }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success(`Pedido: ${statusConfig[next].label}`);
+    qc.invalidateQueries({ queryKey: ["admin-orders", storeId] });
   };
 
-  const togglePause = (id: string) =>
-    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, active: !p.active } : p)));
+  const togglePause = async (id: string, active: boolean) => {
+    const { error } = await supabase.from("products").update({ active: !active }).eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["admin-products", storeId] });
+  };
 
-  const updatePrice = (id: string, price: number) =>
-    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, price } : p)));
+  const updatePrice = async (id: string, price: number) => {
+    const { error } = await supabase.from("products").update({ price }).eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["admin-products", storeId] });
+  };
 
-  // KPIs
   const kpis = useMemo(() => {
-    const today = orders.reduce((s, o) => s + o.total, 0);
-    const active = orders.filter((o) => o.status !== "delivered").length;
+    const today = orders.reduce((s, o) => s + Number(o.total), 0);
+    const active = orders.filter((o) => o.status !== "delivered" && o.status !== "cancelled").length;
     const avg = orders.length ? today / orders.length : 0;
     return { revenue: today, active, avg, count: orders.length };
   }, [orders]);
 
   const topProducts = useMemo(
-    () =>
-      [...products]
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 5)
-        .map((p, i) => ({ ...p, sold: 50 - i * 7 })),
+    () => products.slice(0, 5).map((p, i) => ({ ...p, sold: 50 - i * 7 })),
     [products],
   );
 
+  if (authLoading) return <div className="min-h-screen" />;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!storesLoading && stores.length === 0) {
+    return (
+      <div className="min-h-screen bg-muted/40 p-6">
+        <div className="container mx-auto max-w-md rounded-2xl bg-card p-8 text-center shadow-soft">
+          <h1 className="font-display text-2xl font-bold">Sem lojas atribuídas</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Sua conta ainda não é dona de nenhuma loja. Fale com o administrador.
+          </p>
+          <Link to="/" className="mt-4 inline-block text-sm font-bold text-primary">← Voltar</Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-muted/40 pb-20">
-      {/* Topbar */}
       <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-xl">
         <div className="container flex h-16 items-center gap-3">
           <Link to="/" className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground">
@@ -161,12 +166,12 @@ const Admin = () => {
           <h1 className="font-display text-xl font-bold">Painel do dono</h1>
           <div className="ml-auto">
             <select
-              value={storeIdx}
-              onChange={(e) => setStoreIdx(Number(e.target.value))}
+              value={storeId ?? ""}
+              onChange={(e) => setStoreId(e.target.value)}
               className="rounded-xl border-2 border-border bg-card px-3 py-1.5 text-sm font-semibold outline-none focus:border-primary"
             >
-              {seedStores.map((s, i) => (
-                <option key={s.id} value={i}>
+              {stores.map((s) => (
+                <option key={s.id} value={s.id}>
                   {s.logo} {s.name}
                 </option>
               ))}
@@ -176,15 +181,13 @@ const Admin = () => {
       </header>
 
       <div className="container py-6">
-        {/* KPIs */}
         <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Kpi icon={DollarSign} label="Faturamento hoje" value={`R$ ${kpis.revenue.toFixed(2).replace(".", ",")}`} accent="primary" />
-          <Kpi icon={ShoppingBag} label="Pedidos hoje" value={String(kpis.count)} />
+          <Kpi icon={DollarSign} label="Faturamento" value={`R$ ${kpis.revenue.toFixed(2).replace(".", ",")}`} accent="primary" />
+          <Kpi icon={ShoppingBag} label="Pedidos" value={String(kpis.count)} />
           <Kpi icon={Package} label="Em andamento" value={String(kpis.active)} />
           <Kpi icon={TrendingUp} label="Ticket médio" value={`R$ ${kpis.avg.toFixed(2).replace(".", ",")}`} />
         </div>
 
-        {/* Tabs */}
         <div className="mb-5 flex gap-2 border-b">
           {[
             { id: "orders", label: "Pedidos ao vivo" },
@@ -206,9 +209,16 @@ const Admin = () => {
 
         {tab === "orders" && (
           <div className="space-y-3">
+            {orders.length === 0 && (
+              <p className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground shadow-soft">
+                Nenhum pedido ainda. Faça um pedido de teste pelo app!
+              </p>
+            )}
             {orders.map((o) => {
-              const cfg = statusConfig[o.status];
+              const cfg = statusConfig[o.status as DbStatus];
               const Icon = cfg.icon;
+              const itemsCount = (o.order_items as { id: string }[] | null)?.length ?? 0;
+              const time = new Date(o.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
               return (
                 <div key={o.id} className="rounded-2xl bg-card p-4 shadow-soft">
                   <div className="flex flex-wrap items-center gap-3">
@@ -217,22 +227,28 @@ const Admin = () => {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <strong className="font-display text-lg">{o.id}</strong>
+                        <strong className="font-display text-lg">#{o.id.slice(0, 6).toUpperCase()}</strong>
                         <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${cfg.color}`}>{cfg.label}</span>
                         <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
                           {o.method === "delivery" ? "🛵 Entrega" : "🏪 Retirada"}
                         </span>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {o.customer} • {o.items} itens • {o.time}
+                        {o.customer_name} • {itemsCount} itens • {time}
                       </p>
                     </div>
                     <div className="ml-auto flex items-center gap-3">
                       <div className="text-right">
-                        <div className="font-display text-lg font-bold">R$ {o.total.toFixed(2).replace(".", ",")}</div>
+                        <div className="font-display text-lg font-bold">
+                          R$ {Number(o.total).toFixed(2).replace(".", ",")}
+                        </div>
                       </div>
                       {cfg.next && (
-                        <Button onClick={() => advanceStatus(o.id)} size="sm" className="rounded-xl gradient-primary font-bold">
+                        <Button
+                          onClick={() => advanceStatus(o.id, o.status as DbStatus)}
+                          size="sm"
+                          className="rounded-xl gradient-primary font-bold"
+                        >
                           Avançar →
                         </Button>
                       )}
@@ -247,10 +263,9 @@ const Admin = () => {
         {tab === "products" && (
           <div>
             <div className="mb-4 flex justify-between">
-              <p className="text-sm text-muted-foreground">{products.filter((p) => p.active).length} ativos de {products.length}</p>
-              <Button className="gap-2 rounded-xl gradient-primary font-bold">
-                <Plus className="h-4 w-4" /> Novo produto
-              </Button>
+              <p className="text-sm text-muted-foreground">
+                {products.filter((p) => p.active).length} ativos de {products.length}
+              </p>
             </div>
             <div className="overflow-hidden rounded-2xl bg-card shadow-soft">
               <table className="w-full text-sm">
@@ -268,7 +283,7 @@ const Admin = () => {
                     <tr key={p.id} className={`border-t ${!p.active ? "opacity-50" : ""}`}>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <img src={p.image} alt={p.name} className="h-10 w-10 rounded-lg object-cover" />
+                          <img src={resolveAsset(p.image_url)} alt={p.name} className="h-10 w-10 rounded-lg object-cover" />
                           <strong>{p.name}</strong>
                         </div>
                       </td>
@@ -276,9 +291,12 @@ const Admin = () => {
                       <td className="px-4 py-3 text-right">
                         <input
                           type="number"
-                          value={p.price}
+                          defaultValue={Number(p.price)}
                           step="0.10"
-                          onChange={(e) => updatePrice(p.id, Number(e.target.value))}
+                          onBlur={(e) => {
+                            const v = Number(e.target.value);
+                            if (v !== Number(p.price)) updatePrice(p.id, v);
+                          }}
                           className="w-24 rounded-md border bg-background px-2 py-1 text-right font-bold outline-none focus:border-primary"
                         />
                       </td>
@@ -292,18 +310,13 @@ const Admin = () => {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <div className="inline-flex gap-1">
-                          <button
-                            onClick={() => togglePause(p.id)}
-                            className="rounded-md p-1.5 hover:bg-muted"
-                            aria-label="Pausar/ativar"
-                          >
-                            {p.active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                          </button>
-                          <button className="rounded-md p-1.5 hover:bg-muted" aria-label="Editar">
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => togglePause(p.id, p.active)}
+                          className="rounded-md p-1.5 hover:bg-muted"
+                          aria-label="Pausar/ativar"
+                        >
+                          {p.active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -330,57 +343,21 @@ const Admin = () => {
                   </div>
                 ))}
               </div>
-              <div className="mt-4 flex justify-between border-t pt-3 text-sm">
-                <span className="text-muted-foreground">Total</span>
-                <strong className="font-display text-lg">R$ 4.872,30</strong>
-              </div>
             </section>
 
             <section className="rounded-2xl bg-card p-5 shadow-soft">
-              <h3 className="mb-4 font-display text-lg font-bold">Produtos mais vendidos</h3>
+              <h3 className="mb-4 font-display text-lg font-bold">Produtos do cardápio</h3>
               <ul className="space-y-3">
                 {topProducts.map((p, i) => (
                   <li key={p.id} className="flex items-center gap-3">
                     <span className="font-display text-2xl font-bold text-muted-foreground">#{i + 1}</span>
-                    <img src={p.image} alt="" className="h-10 w-10 rounded-lg object-cover" />
+                    <img src={resolveAsset(p.image_url)} alt="" className="h-10 w-10 rounded-lg object-cover" />
                     <div className="flex-1">
                       <p className="text-sm font-bold">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">{p.sold} pedidos</p>
+                      <p className="text-xs text-muted-foreground">R$ {Number(p.price).toFixed(2).replace(".", ",")}</p>
                     </div>
-                    <strong className="text-primary">R$ {(p.price * p.sold).toFixed(0)}</strong>
                   </li>
                 ))}
-              </ul>
-            </section>
-
-            <section className="rounded-2xl bg-card p-5 shadow-soft lg:col-span-2">
-              <h3 className="mb-3 flex items-center gap-2 font-display text-lg font-bold">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full gradient-primary text-xs text-primary-foreground">
-                  IA
-                </span>
-                Sugestões inteligentes
-              </h3>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start gap-2 rounded-lg bg-muted/50 p-3">
-                  <span className="text-lg">💡</span>
-                  <span>
-                    O <strong>Smash Bacon Duplo</strong> tem caído 12% nas últimas 2 semanas. Considere uma promoção
-                    relâmpago de 15% OFF nos próximos 3 dias.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2 rounded-lg bg-muted/50 p-3">
-                  <span className="text-lg">📈</span>
-                  <span>
-                    Pedidos crescem 38% nas sextas entre 19h-21h. Recomendado ativar combo "Burger + Fritas + Coca por
-                    R$45".
-                  </span>
-                </li>
-                <li className="flex items-start gap-2 rounded-lg bg-muted/50 p-3">
-                  <span className="text-lg">🎯</span>
-                  <span>
-                    Você tem <strong>23 clientes VIP</strong> que não pedem há 30+ dias. Envie cupom exclusivo de 25% OFF.
-                  </span>
-                </li>
               </ul>
             </section>
           </div>

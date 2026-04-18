@@ -4,12 +4,11 @@ import { ArrowLeft, Bike, Store as StoreIcon, MapPin, Tag, Sparkles, CheckCircle
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
-import { useStores, useCoupons } from "@/hooks/useStores";
+import { useStoreBySlug, useCoupons } from "@/hooks/useStores";
 import type { Coupon } from "@/data/stores";
 import { useLoyalty, CASHBACK_RATE } from "@/hooks/useLoyalty";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
 import { toast } from "sonner";
 
 type Method = "delivery" | "pickup";
@@ -17,17 +16,20 @@ type Method = "delivery" | "pickup";
 const Checkout = () => {
   const { items, subtotal, storeSlug, clear } = useCart();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const loyalty = useLoyalty();
-  const store = stores.find((s) => s.slug === storeSlug);
+  const { data: store, isLoading } = useStoreBySlug(storeSlug ?? "");
+  const { data: coupons = [] } = useCoupons();
 
   const [method, setMethod] = useState<Method>("delivery");
   const [address, setAddress] = useState({ cep: "", street: "", number: "", complement: "", neighborhood: "" });
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<(typeof coupons)[number] | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [useCashback, setUseCashback] = useState(false);
   const [step, setStep] = useState<"form" | "pix" | "done">("form");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     document.title = "Checkout • FoodFlash";
@@ -45,7 +47,7 @@ const Checkout = () => {
   const couponDiscount = useMemo(() => {
     if (!appliedCoupon) return 0;
     if (appliedCoupon.minOrder && subtotal < appliedCoupon.minOrder) return 0;
-    if (appliedCoupon.code === "FRETEGRATIS") return method === "delivery" ? fee : 0;
+    if (appliedCoupon.type === "free_shipping") return method === "delivery" ? fee : 0;
     if (appliedCoupon.type === "percent") return Math.round(subtotal * (appliedCoupon.value / 100) * 100) / 100;
     return appliedCoupon.value;
   }, [appliedCoupon, subtotal, fee, method]);
@@ -66,6 +68,12 @@ const Checkout = () => {
   };
 
   const goPix = () => {
+    if (!store) return;
+    if (!user) {
+      toast.error("Faça login para finalizar o pedido");
+      navigate("/auth");
+      return;
+    }
     if (subtotal < store.minOrder)
       return toast.error(`Pedido mínimo: R$ ${store.minOrder.toFixed(2).replace(".", ",")}`);
     if (!name.trim() || !phone.trim()) return toast.error("Preencha nome e telefone");
@@ -74,14 +82,61 @@ const Checkout = () => {
     setStep("pix");
   };
 
-  const confirmPayment = () => {
-    const e = applyOrder(total, cashbackUsed);
-    setStep("done");
-    toast.success(`Pedido confirmado! Você ganhou R$ ${e.toFixed(2).replace(".", ",")} de cashback 🎉`);
-    setTimeout(() => {
-      clear();
-      navigate("/");
-    }, 3500);
+  const confirmPayment = async () => {
+    if (!store || !user) return;
+    setSubmitting(true);
+    try {
+      const { data: order, error: orderErr } = await supabase
+        .from("orders")
+        .insert({
+          user_id: user.id,
+          store_id: store.id,
+          customer_name: name,
+          customer_phone: phone,
+          method,
+          address: method === "delivery" ? address : null,
+          subtotal,
+          delivery_fee: fee,
+          coupon_code: appliedCoupon?.code ?? null,
+          coupon_discount: couponDiscount,
+          cashback_used: cashbackUsed,
+          cashback_earned: earned,
+          total,
+          status: "received",
+        })
+        .select("id")
+        .single();
+      if (orderErr) throw orderErr;
+
+      const itemsPayload = items.map((it) => ({
+        order_id: order.id,
+        product_id: it.product.id,
+        product_name: it.product.name,
+        unit_price: it.unitPrice,
+        quantity: it.quantity,
+        notes: it.notes ?? null,
+        customizations: it.customizations as any,
+      }));
+      const { error: itemsErr } = await supabase.from("order_items").insert(itemsPayload);
+      if (itemsErr) throw itemsErr;
+
+      const { error: loyaltyErr } = await supabase.rpc("apply_order_loyalty", {
+        _order_total: total,
+        _cashback_used: cashbackUsed,
+      });
+      if (loyaltyErr) throw loyaltyErr;
+
+      setStep("done");
+      toast.success(`Pedido confirmado! Você ganhou R$ ${earned.toFixed(2).replace(".", ",")} de cashback 🎉`);
+      setTimeout(() => {
+        clear();
+        navigate("/");
+      }, 3500);
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao salvar pedido");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const pixCode = useMemo(
@@ -104,6 +159,7 @@ const Checkout = () => {
     return cells;
   }, [total]);
 
+  if (isLoading) return <div className="min-h-screen" />;
   if (!store || items.length === 0) return <Navigate to="/" replace />;
 
   return (
@@ -159,10 +215,11 @@ const Checkout = () => {
 
             <Button
               onClick={confirmPayment}
+              disabled={submitting}
               size="lg"
               className="mt-4 h-14 w-full rounded-xl gradient-primary text-base font-bold shadow-glow"
             >
-              Já paguei • Confirmar pedido
+              {submitting ? "Salvando..." : "Já paguei • Confirmar pedido"}
             </Button>
             <button
               onClick={() => setStep("form")}
@@ -284,20 +341,20 @@ const Checkout = () => {
                   </p>
                 )}
 
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  <span className="text-xs text-muted-foreground">Tente:</span>
-                  {coupons.map((c) => (
-                    <button
-                      key={c.code}
-                      onClick={() => {
-                        setCouponCode(c.code);
-                      }}
-                      className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-mono font-bold hover:bg-primary/10"
-                    >
-                      {c.code}
-                    </button>
-                  ))}
-                </div>
+                {coupons.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    <span className="text-xs text-muted-foreground">Tente:</span>
+                    {coupons.map((c) => (
+                      <button
+                        key={c.code}
+                        onClick={() => setCouponCode(c.code)}
+                        className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-mono font-bold hover:bg-primary/10"
+                      >
+                        {c.code}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {loyalty.cashback > 0 && (
                   <label className="mt-4 flex cursor-pointer items-center justify-between rounded-xl border-2 border-dashed border-success/40 bg-success/5 p-3">
