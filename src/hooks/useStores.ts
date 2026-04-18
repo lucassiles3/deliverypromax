@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAsset } from "@/lib/assetMap";
-import type { Store, Product, AddonGroup, Coupon } from "@/data/stores";
+import type { Store, Product, AddonGroup, Coupon, OpeningHours } from "@/data/stores";
 
 type DbStore = {
   id: string;
@@ -21,6 +21,8 @@ type DbStore = {
   open: boolean;
   promo: string | null;
   categories: string[] | null;
+  whatsapp_phone?: string | null;
+  opening_hours?: OpeningHours | null;
 };
 
 const mapStore = (s: DbStore, products: Product[] = []): Store => ({
@@ -42,6 +44,8 @@ const mapStore = (s: DbStore, products: Product[] = []): Store => ({
   promo: s.promo ?? undefined,
   categories: s.categories ?? [],
   products,
+  whatsappPhone: s.whatsapp_phone ?? undefined,
+  openingHours: s.opening_hours ?? undefined,
 });
 
 export const useStores = () =>
