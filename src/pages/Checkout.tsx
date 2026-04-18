@@ -9,6 +9,7 @@ import type { Coupon } from "@/data/stores";
 import { useLoyalty, CASHBACK_RATE } from "@/hooks/useLoyalty";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { isStoreOpen } from "@/lib/storeHours";
 import { toast } from "sonner";
 
 type Method = "delivery" | "pickup";
@@ -69,6 +70,9 @@ const Checkout = () => {
 
   const goPix = () => {
     if (!store) return;
+    if (!isStoreOpen(store.openingHours)) {
+      return toast.error("A loja está fechada no momento. Tente novamente no horário de funcionamento.");
+    }
     if (!user) {
       toast.error("Faça login para finalizar o pedido");
       navigate("/auth");
