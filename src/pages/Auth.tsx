@@ -29,11 +29,14 @@ const Auth = () => {
       mode === "signup" ? "Cadastre-se • FoodFlash" : mode === "forgot" ? "Recuperar senha • FoodFlash" : "Entrar • FoodFlash";
   }, [mode]);
 
-  // Promote to store_owner if needed, then redirect by account type.
+  // Promote to store_owner when "Sou lojista" is selected, then redirect.
   useEffect(() => {
     if (!user) return;
     const finalize = async () => {
-      if (pendingOwner) {
+      const isOwner = roles.includes("store_owner") || roles.includes("admin");
+
+      // If user picked "Lojista" and isn't owner yet → promote
+      if (account === "owner" && !isOwner) {
         const { error } = await supabase.functions.invoke("claim-owner-role");
         setPendingOwner(false);
         if (error) {
@@ -41,14 +44,13 @@ const Auth = () => {
           return;
         }
         toast.success("Conta de lojista ativada! 🏪");
-        // Force a session refresh so role is reloaded
         window.location.href = "/admin";
         return;
       }
-      // Existing user — redirect based on actual roles
-      const isOwner = roles.includes("store_owner") || roles.includes("admin");
+
+      setPendingOwner(false);
       if (account === "owner" && isOwner) navigate("/admin");
-      else navigate("/");
+      else if (account === "customer") navigate("/");
     };
     finalize();
   }, [user, roles, pendingOwner, account, navigate]);
