@@ -5,14 +5,16 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Mail, Lock, User as UserIcon, Phone } from "lucide-react";
+import { Sparkles, Mail, Lock, User as UserIcon, Phone, Store as StoreIcon, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 
 type Mode = "signin" | "signup" | "forgot";
+type Account = "customer" | "owner";
 
 const Auth = () => {
-  const { user, signIn, signUp } = useAuth();
+  const { user, roles, signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const [account, setAccount] = useState<Account>("customer");
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,15 +22,36 @@ const Auth = () => {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [pendingOwner, setPendingOwner] = useState(false);
 
   useEffect(() => {
     document.title =
       mode === "signup" ? "Cadastre-se • FoodFlash" : mode === "forgot" ? "Recuperar senha • FoodFlash" : "Entrar • FoodFlash";
   }, [mode]);
 
+  // Promote to store_owner if needed, then redirect by account type.
   useEffect(() => {
-    if (user) navigate("/");
-  }, [user, navigate]);
+    if (!user) return;
+    const finalize = async () => {
+      if (pendingOwner) {
+        const { error } = await supabase.functions.invoke("claim-owner-role");
+        setPendingOwner(false);
+        if (error) {
+          toast.error("Não foi possível ativar sua conta de lojista");
+          return;
+        }
+        toast.success("Conta de lojista ativada! 🏪");
+        // Force a session refresh so role is reloaded
+        window.location.href = "/admin";
+        return;
+      }
+      // Existing user — redirect based on actual roles
+      const isOwner = roles.includes("store_owner") || roles.includes("admin");
+      if (account === "owner" && isOwner) navigate("/admin");
+      else navigate("/");
+    };
+    finalize();
+  }, [user, roles, pendingOwner, account, navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,12 +69,15 @@ const Auth = () => {
       return;
     }
 
+    if (mode === "signup" && account === "owner") setPendingOwner(true);
+
     const { error } =
       mode === "signin"
         ? await signIn(email, password)
         : await signUp(email, password, name, phone);
     setLoading(false);
     if (error) {
+      setPendingOwner(false);
       toast.error(error);
       return;
     }
@@ -60,13 +86,15 @@ const Auth = () => {
 
   const signInWithGoogle = async () => {
     if (googleLoading) return;
+    if (mode === "signup" && account === "owner") setPendingOwner(true);
     setGoogleLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: window.location.origin + "/auth",
       });
       if (result.error) {
         toast.error("Não foi possível entrar com Google");
+        setPendingOwner(false);
         setGoogleLoading(false);
         return;
       }
@@ -74,20 +102,27 @@ const Auth = () => {
       toast.success("Bem-vindo! 🎉");
     } catch {
       toast.error("Erro ao conectar com Google");
+      setPendingOwner(false);
       setGoogleLoading(false);
     }
   };
 
   const titles: Record<Mode, { title: string; subtitle: string; cta: string }> = {
     signin: {
-      title: "Bem-vindo de volta",
-      subtitle: "Entre para acessar pedidos e cashback",
+      title: account === "owner" ? "Acesso do lojista" : "Bem-vindo de volta",
+      subtitle:
+        account === "owner"
+          ? "Entre para gerenciar pedidos da sua loja"
+          : "Entre para acessar pedidos e cashback",
       cta: "Entrar",
     },
     signup: {
-      title: "Criar conta",
-      subtitle: "Cadastre-se em 30 segundos e ganhe cashback",
-      cta: "Criar minha conta",
+      title: account === "owner" ? "Cadastrar minha loja" : "Criar conta",
+      subtitle:
+        account === "owner"
+          ? "Cadastre-se grátis e comece a vender hoje"
+          : "Cadastre-se em 30 segundos e ganhe cashback",
+      cta: account === "owner" ? "Criar conta de lojista" : "Criar minha conta",
     },
     forgot: {
       title: "Esqueceu a senha?",
@@ -102,9 +137,43 @@ const Auth = () => {
       <Header />
       <div className="container flex items-center justify-center py-10 md:py-16">
         <div className="w-full max-w-md rounded-3xl bg-card p-7 shadow-float">
+          {/* Account type selector */}
+          {mode !== "forgot" && (
+            <div className="mb-6 grid grid-cols-2 gap-2 rounded-2xl bg-muted p-1">
+              <button
+                type="button"
+                onClick={() => setAccount("customer")}
+                className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition-bounce ${
+                  account === "customer"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <ShoppingBag className="h-4 w-4" />
+                Sou cliente
+              </button>
+              <button
+                type="button"
+                onClick={() => setAccount("owner")}
+                className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition-bounce ${
+                  account === "owner"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <StoreIcon className="h-4 w-4" />
+                Sou lojista
+              </button>
+            </div>
+          )}
+
           <div className="mb-6 text-center">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl gradient-primary text-2xl font-bold text-primary-foreground shadow-glow">
-              F
+            <div
+              className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl text-2xl font-bold text-primary-foreground shadow-glow ${
+                account === "owner" ? "bg-accent" : "gradient-primary"
+              }`}
+            >
+              {account === "owner" ? <StoreIcon className="h-6 w-6" /> : "F"}
             </div>
             <h1 className="font-display text-3xl font-bold">{t.title}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{t.subtitle}</p>
@@ -140,7 +209,7 @@ const Auth = () => {
                 <Field icon={UserIcon}>
                   <input
                     required
-                    placeholder="Seu nome completo"
+                    placeholder={account === "owner" ? "Seu nome (responsável)" : "Seu nome completo"}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full bg-transparent outline-none"
@@ -148,7 +217,8 @@ const Auth = () => {
                 </Field>
                 <Field icon={Phone}>
                   <input
-                    placeholder="WhatsApp (opcional)"
+                    placeholder={account === "owner" ? "WhatsApp da loja" : "WhatsApp (opcional)"}
+                    required={account === "owner"}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full bg-transparent outline-none"
@@ -194,16 +264,24 @@ const Auth = () => {
               type="submit"
               size="lg"
               disabled={loading}
-              className="h-12 w-full rounded-xl gradient-primary font-bold shadow-glow transition-bounce hover:scale-[1.02]"
+              className={`h-12 w-full rounded-xl font-bold shadow-glow transition-bounce hover:scale-[1.02] ${
+                account === "owner" ? "bg-accent text-accent-foreground hover:bg-accent/90" : "gradient-primary"
+              }`}
             >
               {loading ? "Aguarde..." : t.cta}
             </Button>
           </form>
 
           {mode === "signup" && (
-            <div className="mt-5 rounded-xl bg-success/5 p-3 text-center text-xs text-success">
+            <div
+              className={`mt-5 rounded-xl p-3 text-center text-xs ${
+                account === "owner" ? "bg-accent/10 text-accent-foreground" : "bg-success/5 text-success"
+              }`}
+            >
               <Sparkles className="mr-1 inline h-3.5 w-3.5" />
-              Ganhe 5% de cashback em todos os pedidos
+              {account === "owner"
+                ? "0% de mensalidade • Receba pedidos no WhatsApp"
+                : "Ganhe 5% de cashback em todos os pedidos"}
             </div>
           )}
 
@@ -215,7 +293,10 @@ const Auth = () => {
           >
             {mode === "signin" ? (
               <>
-                Não tem conta? <strong className="text-primary">Cadastre-se grátis</strong>
+                {account === "owner" ? "Ainda não tem loja cadastrada?" : "Não tem conta?"}{" "}
+                <strong className="text-primary">
+                  {account === "owner" ? "Cadastrar minha loja" : "Cadastre-se grátis"}
+                </strong>
               </>
             ) : mode === "signup" ? (
               <>

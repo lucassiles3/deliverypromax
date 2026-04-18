@@ -1,1 +1,4 @@
 project_id = "wguhkvnzoklrivydgrda"
+
+[functions.claim-owner-role]
+verify_jwt = true
