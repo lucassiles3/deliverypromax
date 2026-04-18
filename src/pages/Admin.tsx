@@ -19,6 +19,11 @@ import {
   QrCode,
   Bell,
   BellOff,
+  Plus,
+  Pencil,
+  Search,
+  History,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,8 +31,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { resolveAsset } from "@/lib/assetMap";
+import { ProductFormModal, ProductFormData } from "@/components/admin/ProductFormModal";
+import { CustomerHistoryDrawer } from "@/components/admin/CustomerHistoryDrawer";
+import { ReportsTab } from "@/components/admin/ReportsTab";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
+type Tab = "orders" | "products" | "reports";
+type StatusFilter = "all" | "active" | DbStatus;
+type MethodFilter = "all" | "delivery" | "pickup";
 
 const statusConfig: Record<DbStatus, { label: string; color: string; icon: typeof Clock; next?: DbStatus }> = {
   pending_payment: { label: "Aguardando pgto", color: "bg-muted text-muted-foreground", icon: Clock, next: "received" },
@@ -42,18 +53,27 @@ const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const qc = useQueryClient();
   const [storeId, setStoreId] = useState<string | null>(null);
-  const [tab, setTab] = useState<"orders" | "products" | "reports">("orders");
+  const [tab, setTab] = useState<Tab>("orders");
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // Play a quick "ding" via WebAudio (no asset needed)
+  // Filtros pedidos
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
+  const [methodFilter, setMethodFilter] = useState<MethodFilter>("all");
+  const [search, setSearch] = useState("");
+  const [historyPhone, setHistoryPhone] = useState<string | null>(null);
+
+  // Produtos
+  const [productSearch, setProductSearch] = useState("");
+  const [productModalOpen, setProductModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
+
   const playDing = () => {
     if (!soundEnabled) return;
     try {
       const Ctx = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new Ctx();
       const now = ctx.currentTime;
-      const tones = [880, 1320]; // two-tone ding
-      tones.forEach((freq, i) => {
+      [880, 1320].forEach((freq, i) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = "sine";
@@ -71,7 +91,6 @@ const Admin = () => {
     }
   };
 
-  // Stores owned by current user (or all, if admin)
   const { data: stores = [], isLoading: storesLoading } = useQuery({
     queryKey: ["admin-stores", user?.id],
     enabled: !!user,
@@ -86,14 +105,13 @@ const Admin = () => {
     if (!storeId && stores.length) setStoreId(stores[0].id);
   }, [stores, storeId]);
 
-  // Products of the selected store
   const { data: products = [] } = useQuery({
     queryKey: ["admin-products", storeId],
     enabled: !!storeId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, category, price, active, image_url")
+        .select("id, name, category, description, price, old_price, active, image_url, bestseller, promo, stock, track_stock")
         .eq("store_id", storeId!)
         .order("position");
       if (error) throw error;
@@ -101,7 +119,6 @@ const Admin = () => {
     },
   });
 
-  // Orders of the selected store (with full details for the expandable card)
   const { data: orders = [] } = useQuery({
     queryKey: ["admin-orders", storeId],
     enabled: !!storeId,
@@ -113,7 +130,7 @@ const Admin = () => {
         )
         .eq("store_id", storeId!)
         .order("created_at", { ascending: false })
-        .limit(50);
+        .limit(100);
       if (error) throw error;
       return data ?? [];
     },
@@ -122,19 +139,16 @@ const Admin = () => {
 
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
-  // Pending orders count (active = not delivered/cancelled)
   const pendingCount = useMemo(
     () => orders.filter((o) => o.status !== "delivered" && o.status !== "cancelled").length,
     [orders],
   );
 
-  // Dynamic tab title with pending count
   useEffect(() => {
     const base = "Painel Admin • FoodFlash";
     document.title = pendingCount > 0 ? `(${pendingCount}) ${base}` : base;
   }, [pendingCount]);
 
-  // Realtime: refresh on new orders + ding
   useEffect(() => {
     if (!storeId) return;
     const ch = supabase
@@ -166,6 +180,14 @@ const Admin = () => {
     qc.invalidateQueries({ queryKey: ["admin-orders", storeId] });
   };
 
+  const cancelOrder = async (id: string) => {
+    if (!confirm("Cancelar este pedido?")) return;
+    const { error } = await supabase.from("orders").update({ status: "cancelled" }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Pedido cancelado");
+    qc.invalidateQueries({ queryKey: ["admin-orders", storeId] });
+  };
+
   const togglePause = async (id: string, active: boolean) => {
     const { error } = await supabase.from("products").update({ active: !active }).eq("id", id);
     if (error) return toast.error(error.message);
@@ -178,17 +200,79 @@ const Admin = () => {
     qc.invalidateQueries({ queryKey: ["admin-products", storeId] });
   };
 
+  const updateStock = async (id: string, stock: number) => {
+    const { error } = await supabase.from("products").update({ stock }).eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["admin-products", storeId] });
+  };
+
+  const deleteProduct = async (id: string, name: string) => {
+    if (!confirm(`Excluir "${name}"? Esta ação não pode ser desfeita.`)) return;
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Produto excluído");
+    qc.invalidateQueries({ queryKey: ["admin-products", storeId] });
+  };
+
+  const openNew = () => {
+    setEditingProduct(null);
+    setProductModalOpen(true);
+  };
+  const openEdit = (p: any) => {
+    setEditingProduct({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      description: p.description,
+      price: Number(p.price),
+      old_price: p.old_price !== null ? Number(p.old_price) : null,
+      image_url: p.image_url,
+      active: p.active,
+      bestseller: p.bestseller,
+      promo: p.promo,
+      track_stock: !!p.track_stock,
+      stock: p.stock,
+    });
+    setProductModalOpen(true);
+  };
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter((o) => {
+      if (statusFilter === "active") {
+        if (o.status === "delivered" || o.status === "cancelled") return false;
+      } else if (statusFilter !== "all" && o.status !== statusFilter) {
+        return false;
+      }
+      if (methodFilter !== "all" && o.method !== methodFilter) return false;
+      if (search.trim()) {
+        const q = search.trim().toLowerCase();
+        const hit =
+          o.id.toLowerCase().startsWith(q) ||
+          o.id.toLowerCase().includes(q) ||
+          (o.customer_name ?? "").toLowerCase().includes(q) ||
+          (o.customer_phone ?? "").includes(q);
+        if (!hit) return false;
+      }
+      return true;
+    });
+  }, [orders, statusFilter, methodFilter, search]);
+
+  const filteredProducts = useMemo(() => {
+    if (!productSearch.trim()) return products;
+    const q = productSearch.trim().toLowerCase();
+    return products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.category ?? "").toLowerCase().includes(q),
+    );
+  }, [products, productSearch]);
+
   const kpis = useMemo(() => {
     const today = orders.reduce((s, o) => s + Number(o.total), 0);
     const active = orders.filter((o) => o.status !== "delivered" && o.status !== "cancelled").length;
     const avg = orders.length ? today / orders.length : 0;
     return { revenue: today, active, avg, count: orders.length };
   }, [orders]);
-
-  const topProducts = useMemo(
-    () => products.slice(0, 5).map((p, i) => ({ ...p, sold: 50 - i * 7 })),
-    [products],
-  );
 
   if (authLoading) return <div className="min-h-screen" />;
   if (!user) return <Navigate to="/auth" replace />;
@@ -206,6 +290,8 @@ const Admin = () => {
     );
   }
 
+  const currentStore = stores.find((s) => s.id === storeId);
+
   return (
     <div className="min-h-screen bg-muted/40 pb-20">
       <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-xl">
@@ -219,7 +305,7 @@ const Admin = () => {
             <button
               onClick={() => {
                 setSoundEnabled((v) => !v);
-                if (!soundEnabled) playDing(); // play sample when turning ON
+                if (!soundEnabled) playDing();
               }}
               className={`flex items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-smooth ${
                 soundEnabled
@@ -256,13 +342,13 @@ const Admin = () => {
 
         <div className="mb-5 flex gap-2 border-b">
           {[
-            { id: "orders", label: "Pedidos ao vivo" },
-            { id: "products", label: "Produtos" },
-            { id: "reports", label: "Relatórios" },
+            { id: "orders" as const, label: "Pedidos ao vivo" },
+            { id: "products" as const, label: "Produtos" },
+            { id: "reports" as const, label: "Relatórios" },
           ].map((t) => (
             <button
               key={t.id}
-              onClick={() => setTab(t.id as typeof tab)}
+              onClick={() => setTab(t.id)}
               className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-bold transition-smooth ${
                 tab === t.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
@@ -280,12 +366,47 @@ const Admin = () => {
 
         {tab === "orders" && (
           <div className="space-y-3">
-            {orders.length === 0 && (
+            {/* Filtros */}
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-card p-3 shadow-soft">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar por #, nome ou telefone..."
+                  className="w-full rounded-lg border-2 bg-background py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                className="rounded-lg border-2 bg-background px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+              >
+                <option value="active">Ativos</option>
+                <option value="all">Todos</option>
+                <option value="received">Recebidos</option>
+                <option value="preparing">Em preparo</option>
+                <option value="out_for_delivery">Saiu p/ entrega</option>
+                <option value="delivered">Entregues</option>
+                <option value="cancelled">Cancelados</option>
+              </select>
+              <select
+                value={methodFilter}
+                onChange={(e) => setMethodFilter(e.target.value as MethodFilter)}
+                className="rounded-lg border-2 bg-background px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+              >
+                <option value="all">Todos métodos</option>
+                <option value="delivery">🛵 Entrega</option>
+                <option value="pickup">🏪 Retirada</option>
+              </select>
+            </div>
+
+            {filteredOrders.length === 0 && (
               <p className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground shadow-soft">
-                Nenhum pedido ainda. Faça um pedido de teste pelo app!
+                Nenhum pedido encontrado com esses filtros.
               </p>
             )}
-            {orders.map((o) => {
+            {filteredOrders.map((o) => {
               const cfg = statusConfig[o.status as DbStatus];
               const Icon = cfg.icon;
               const orderItems = (o.order_items ?? []) as Array<{
@@ -302,13 +423,12 @@ const Admin = () => {
               const addr = o.address as
                 | { street?: string; number?: string; complement?: string; neighborhood?: string; city?: string; cep?: string }
                 | null;
-              const payIcon =
+              const PayIcon =
                 o.payment_method === "pix"
                   ? QrCode
                   : o.payment_method === "cash"
                     ? Banknote
                     : CreditCard;
-              const PayIcon = payIcon;
               const payLabel: Record<string, string> = {
                 pix: "Pix",
                 cash: "Dinheiro",
@@ -333,15 +453,29 @@ const Admin = () => {
                         </span>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {o.customer_name} • {itemsCount} itens • {time}
+                        <button
+                          onClick={() => setHistoryPhone(o.customer_phone)}
+                          className="font-semibold hover:text-primary hover:underline"
+                          title="Ver histórico do cliente"
+                        >
+                          {o.customer_name}
+                        </button>
+                        {" "}• {itemsCount} itens • {time}
                       </p>
                     </div>
-                    <div className="ml-auto flex items-center gap-3">
+                    <div className="ml-auto flex items-center gap-2">
                       <div className="text-right">
                         <div className="font-display text-lg font-bold">
                           R$ {Number(o.total).toFixed(2).replace(".", ",")}
                         </div>
                       </div>
+                      <button
+                        onClick={() => setHistoryPhone(o.customer_phone)}
+                        className="rounded-lg p-2 hover:bg-muted"
+                        title="Histórico do cliente"
+                      >
+                        <History className="h-4 w-4" />
+                      </button>
                       <button
                         onClick={() => setExpandedOrder(isOpen ? null : o.id)}
                         className="rounded-lg p-2 hover:bg-muted"
@@ -357,6 +491,15 @@ const Admin = () => {
                         >
                           Avançar →
                         </Button>
+                      )}
+                      {o.status !== "delivered" && o.status !== "cancelled" && (
+                        <button
+                          onClick={() => cancelOrder(o.id)}
+                          className="rounded-lg p-2 text-destructive hover:bg-destructive/10"
+                          title="Cancelar"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       )}
                     </div>
                   </div>
@@ -480,107 +623,177 @@ const Admin = () => {
 
         {tab === "products" && (
           <div>
-            <div className="mb-4 flex justify-between">
+            <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl bg-card p-3 shadow-soft">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  placeholder="Buscar produto ou categoria..."
+                  className="w-full rounded-lg border-2 bg-background py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
+                />
+              </div>
               <p className="text-sm text-muted-foreground">
                 {products.filter((p) => p.active).length} ativos de {products.length}
               </p>
+              <Button onClick={openNew} size="sm" className="gradient-primary font-bold">
+                <Plus className="mr-1 h-4 w-4" /> Novo produto
+              </Button>
             </div>
-            <div className="overflow-hidden rounded-2xl bg-card shadow-soft">
+
+            <div className="overflow-x-auto rounded-2xl bg-card shadow-soft">
               <table className="w-full text-sm">
                 <thead className="bg-muted/60 text-xs uppercase text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left">Produto</th>
                     <th className="px-4 py-3 text-left">Categoria</th>
                     <th className="px-4 py-3 text-right">Preço</th>
+                    <th className="px-4 py-3 text-center">Estoque</th>
                     <th className="px-4 py-3 text-center">Status</th>
                     <th className="px-4 py-3 text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((p) => (
-                    <tr key={p.id} className={`border-t ${!p.active ? "opacity-50" : ""}`}>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <img src={resolveAsset(p.image_url)} alt={p.name} className="h-10 w-10 rounded-lg object-cover" />
-                          <strong>{p.name}</strong>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">{p.category}</td>
-                      <td className="px-4 py-3 text-right">
-                        <input
-                          type="number"
-                          defaultValue={Number(p.price)}
-                          step="0.10"
-                          onBlur={(e) => {
-                            const v = Number(e.target.value);
-                            if (v !== Number(p.price)) updatePrice(p.id, v);
-                          }}
-                          className="w-24 rounded-md border bg-background px-2 py-1 text-right font-bold outline-none focus:border-primary"
-                        />
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                            p.active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {p.active ? "Ativo" : "Pausado"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => togglePause(p.id, p.active)}
-                          className="rounded-md p-1.5 hover:bg-muted"
-                          aria-label="Pausar/ativar"
-                        >
-                          {p.active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                        </button>
+                  {filteredProducts.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                        Nenhum produto. Clique em "Novo produto" para começar.
                       </td>
                     </tr>
-                  ))}
+                  )}
+                  {filteredProducts.map((p) => {
+                    const isOut = p.track_stock && (p.stock ?? 0) <= 0;
+                    return (
+                      <tr key={p.id} className={`border-t ${!p.active ? "opacity-50" : ""}`}>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={resolveAsset(p.image_url)}
+                              alt={p.name}
+                              className="h-10 w-10 rounded-lg object-cover"
+                            />
+                            <div>
+                              <strong>{p.name}</strong>
+                              {p.bestseller && (
+                                <span className="ml-2 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-600">
+                                  ⭐ Top
+                                </span>
+                              )}
+                              {p.promo && (
+                                <span className="ml-1 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-bold text-destructive">
+                                  🔥 Promo
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{p.category ?? "—"}</td>
+                        <td className="px-4 py-3 text-right">
+                          <input
+                            type="number"
+                            defaultValue={Number(p.price)}
+                            step="0.10"
+                            onBlur={(e) => {
+                              const v = Number(e.target.value);
+                              if (v > 0 && v !== Number(p.price)) updatePrice(p.id, v);
+                            }}
+                            className="w-24 rounded-md border bg-background px-2 py-1 text-right font-bold outline-none focus:border-primary"
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {p.track_stock ? (
+                            <input
+                              type="number"
+                              min="0"
+                              defaultValue={p.stock ?? 0}
+                              onBlur={(e) => {
+                                const v = Number(e.target.value);
+                                if (v !== (p.stock ?? 0)) updateStock(p.id, v);
+                              }}
+                              className={`w-20 rounded-md border bg-background px-2 py-1 text-center font-bold outline-none focus:border-primary ${
+                                isOut ? "border-destructive text-destructive" : ""
+                              }`}
+                            />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {isOut ? (
+                            <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-bold text-destructive">
+                              Esgotado
+                            </span>
+                          ) : (
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                                p.active
+                                  ? "bg-success/10 text-success"
+                                  : "bg-muted text-muted-foreground"
+                              }`}
+                            >
+                              {p.active ? "Ativo" : "Pausado"}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex justify-end gap-1">
+                            <button
+                              onClick={() => openEdit(p)}
+                              className="rounded-md p-1.5 hover:bg-muted"
+                              aria-label="Editar"
+                              title="Editar"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => togglePause(p.id, p.active)}
+                              className="rounded-md p-1.5 hover:bg-muted"
+                              aria-label="Pausar/ativar"
+                              title={p.active ? "Pausar" : "Ativar"}
+                            >
+                              {p.active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                            </button>
+                            <button
+                              onClick={() => deleteProduct(p.id, p.name)}
+                              className="rounded-md p-1.5 text-destructive hover:bg-destructive/10"
+                              aria-label="Excluir"
+                              title="Excluir"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </div>
         )}
 
-        {tab === "reports" && (
-          <div className="grid gap-5 lg:grid-cols-2">
-            <section className="rounded-2xl bg-card p-5 shadow-soft">
-              <h3 className="mb-4 font-display text-lg font-bold">Vendas dos últimos 7 dias</h3>
-              <div className="flex h-44 items-end gap-2">
-                {[40, 65, 50, 80, 75, 95, 88].map((h, i) => (
-                  <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                    <div
-                      className="w-full rounded-t-md gradient-primary transition-smooth hover:opacity-80"
-                      style={{ height: `${h}%` }}
-                    />
-                    <span className="text-[10px] text-muted-foreground">
-                      {["S", "T", "Q", "Q", "S", "S", "D"][i]}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="rounded-2xl bg-card p-5 shadow-soft">
-              <h3 className="mb-4 font-display text-lg font-bold">Produtos do cardápio</h3>
-              <ul className="space-y-3">
-                {topProducts.map((p, i) => (
-                  <li key={p.id} className="flex items-center gap-3">
-                    <span className="font-display text-2xl font-bold text-muted-foreground">#{i + 1}</span>
-                    <img src={resolveAsset(p.image_url)} alt="" className="h-10 w-10 rounded-lg object-cover" />
-                    <div className="flex-1">
-                      <p className="text-sm font-bold">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">R$ {Number(p.price).toFixed(2).replace(".", ",")}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          </div>
+        {tab === "reports" && storeId && currentStore && (
+          <ReportsTab storeId={storeId} storeName={currentStore.name} />
         )}
       </div>
+
+      {storeId && (
+        <ProductFormModal
+          open={productModalOpen}
+          initial={editingProduct}
+          storeId={storeId}
+          onClose={() => setProductModalOpen(false)}
+          onSaved={() => qc.invalidateQueries({ queryKey: ["admin-products", storeId] })}
+        />
+      )}
+
+      {storeId && (
+        <CustomerHistoryDrawer
+          phone={historyPhone}
+          storeId={storeId}
+          onClose={() => setHistoryPhone(null)}
+        />
+      )}
     </div>
   );
 };

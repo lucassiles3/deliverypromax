@@ -278,7 +278,9 @@ export type Database = {
           promo: boolean
           rating: number | null
           reviews: number | null
+          stock: number | null
           store_id: string
+          track_stock: boolean
           updated_at: string
         }
         Insert: {
@@ -296,7 +298,9 @@ export type Database = {
           promo?: boolean
           rating?: number | null
           reviews?: number | null
+          stock?: number | null
           store_id: string
+          track_stock?: boolean
           updated_at?: string
         }
         Update: {
@@ -314,7 +318,9 @@ export type Database = {
           promo?: boolean
           rating?: number | null
           reviews?: number | null
+          stock?: number | null
           store_id?: string
+          track_stock?: boolean
           updated_at?: string
         }
         Relationships: [

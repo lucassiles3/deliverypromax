@@ -11,6 +11,7 @@ import Checkout from "./pages/Checkout.tsx";
 import Admin from "./pages/Admin.tsx";
 import Auth from "./pages/Auth.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
+import MyOrders from "./pages/MyOrders.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/meus-pedidos" element={<MyOrders />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CartDrawer />
