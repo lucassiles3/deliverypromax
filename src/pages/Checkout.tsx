@@ -27,7 +27,6 @@ const Checkout = () => {
   const [step, setStep] = useState<"form" | "pix" | "done">("form");
 
   useEffect(() => {
-  useEffect(() => {
     document.title = "Checkout • FoodFlash";
   }, []);
 
