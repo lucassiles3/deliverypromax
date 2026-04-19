@@ -40,9 +40,10 @@ import { OrdersKanban } from "@/components/admin/OrdersKanban";
 import { SettingsTab } from "@/components/admin/SettingsTab";
 import { FinancialTab } from "@/components/admin/FinancialTab";
 import { CustomersTab } from "@/components/admin/CustomersTab";
+import { MarketingTab } from "@/components/admin/MarketingTab";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "products" | "customers" | "financial" | "reports" | "settings";
+type Tab = "dashboard" | "orders" | "products" | "customers" | "marketing" | "financial" | "reports" | "settings";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
@@ -335,6 +336,7 @@ const Admin = () => {
             { id: "orders" as const, label: "Pedidos ao vivo" },
             { id: "products" as const, label: "Cardápio" },
             { id: "customers" as const, label: "Clientes" },
+            { id: "marketing" as const, label: "Marketing" },
             { id: "financial" as const, label: "Financeiro" },
             { id: "reports" as const, label: "Relatórios" },
             { id: "settings" as const, label: "Configurações" },
@@ -364,6 +366,8 @@ const Admin = () => {
         {tab === "products" && storeId && <MenuTab storeId={storeId} />}
 
         {tab === "customers" && storeId && <CustomersTab storeId={storeId} />}
+
+        {tab === "marketing" && storeId && <MarketingTab storeId={storeId} />}
 
         {tab === "financial" && storeId && currentStore && (
           <FinancialTab storeId={storeId} storeName={currentStore.name} />

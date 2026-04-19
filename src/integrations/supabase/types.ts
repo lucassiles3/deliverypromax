@@ -163,42 +163,144 @@ export type Database = {
           },
         ]
       }
+      combo_items: {
+        Row: {
+          combo_id: string
+          id: string
+          position: number | null
+          product_id: string
+          quantity: number
+        }
+        Insert: {
+          combo_id: string
+          id?: string
+          position?: number | null
+          product_id: string
+          quantity?: number
+        }
+        Update: {
+          combo_id?: string
+          id?: string
+          position?: number | null
+          product_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combo_items_combo_id_fkey"
+            columns: ["combo_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combo_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupon_redemptions: {
+        Row: {
+          amount: number
+          coupon_id: string
+          created_at: string
+          customer_phone: string | null
+          id: string
+          order_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number
+          coupon_id: string
+          created_at?: string
+          customer_phone?: string | null
+          id?: string
+          order_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          coupon_id?: string
+          created_at?: string
+          customer_phone?: string | null
+          id?: string
+          order_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
           active: boolean
+          category_ids: string[] | null
           code: string
           created_at: string
           expires_at: string | null
           id: string
           label: string
           min_order: number | null
+          per_user_limit: number
+          starts_at: string | null
           store_id: string | null
           type: Database["public"]["Enums"]["coupon_type"]
+          usage_limit: number | null
+          used_count: number
           value: number
+          visibility: string
         }
         Insert: {
           active?: boolean
+          category_ids?: string[] | null
           code: string
           created_at?: string
           expires_at?: string | null
           id?: string
           label: string
           min_order?: number | null
+          per_user_limit?: number
+          starts_at?: string | null
           store_id?: string | null
           type: Database["public"]["Enums"]["coupon_type"]
+          usage_limit?: number | null
+          used_count?: number
           value?: number
+          visibility?: string
         }
         Update: {
           active?: boolean
+          category_ids?: string[] | null
           code?: string
           created_at?: string
           expires_at?: string | null
           id?: string
           label?: string
           min_order?: number | null
+          per_user_limit?: number
+          starts_at?: string | null
           store_id?: string | null
           type?: Database["public"]["Enums"]["coupon_type"]
+          usage_limit?: number | null
+          used_count?: number
           value?: number
+          visibility?: string
         }
         Relationships: [
           {
@@ -518,13 +620,18 @@ export type Database = {
         Row: {
           active: boolean
           archived_at: string | null
+          available_from: string | null
+          available_to: string | null
           bestseller: boolean
           category: string | null
           category_id: string | null
           created_at: string
           description: string | null
+          flash_discount_percent: number | null
+          flash_promo: boolean
           id: string
           image_url: string | null
+          is_combo: boolean
           is_new: boolean
           name: string
           old_price: number | null
@@ -544,13 +651,18 @@ export type Database = {
         Insert: {
           active?: boolean
           archived_at?: string | null
+          available_from?: string | null
+          available_to?: string | null
           bestseller?: boolean
           category?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
+          flash_discount_percent?: number | null
+          flash_promo?: boolean
           id?: string
           image_url?: string | null
+          is_combo?: boolean
           is_new?: boolean
           name: string
           old_price?: number | null
@@ -570,13 +682,18 @@ export type Database = {
         Update: {
           active?: boolean
           archived_at?: string | null
+          available_from?: string | null
+          available_to?: string | null
           bestseller?: boolean
           category?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
+          flash_discount_percent?: number | null
+          flash_promo?: boolean
           id?: string
           image_url?: string | null
+          is_combo?: boolean
           is_new?: boolean
           name?: string
           old_price?: number | null
@@ -636,6 +753,114 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      reactivation_campaigns: {
+        Row: {
+          active: boolean
+          coupon_validity_days: number
+          created_at: string
+          discount_type: string
+          discount_value: number
+          id: string
+          inactive_days: number
+          name: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          coupon_validity_days?: number
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          inactive_days?: number
+          name: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          coupon_validity_days?: number
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          inactive_days?: number
+          name?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reactivation_campaigns_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reactivation_runs: {
+        Row: {
+          campaign_id: string
+          coupon_code: string
+          coupon_id: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          redeemed: boolean
+          store_id: string
+          user_id: string | null
+        }
+        Insert: {
+          campaign_id: string
+          coupon_code: string
+          coupon_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          redeemed?: boolean
+          store_id: string
+          user_id?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          coupon_code?: string
+          coupon_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          redeemed?: boolean
+          store_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reactivation_runs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "reactivation_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactivation_runs_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactivation_runs_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       store_loyalty_config: {
         Row: {
@@ -872,6 +1097,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      run_reactivation_campaign: {
+        Args: { _campaign_id: string }
+        Returns: number
       }
     }
     Enums: {
