@@ -41,7 +41,7 @@ import { SettingsTab } from "@/components/admin/SettingsTab";
 import { FinancialTab } from "@/components/admin/FinancialTab";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "products" | "reports" | "settings";
+type Tab = "dashboard" | "orders" | "products" | "financial" | "reports" | "settings";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
