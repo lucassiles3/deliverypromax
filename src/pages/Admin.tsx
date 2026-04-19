@@ -366,6 +366,8 @@ const Admin = () => {
           ))}
         </div>
 
+        {tab === "dashboard" && storeId && <DashboardTab storeId={storeId} />}
+
         {tab === "orders" && (
           <div className="space-y-3">
             {/* Filtros */}
