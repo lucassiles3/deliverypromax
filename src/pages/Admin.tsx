@@ -43,10 +43,11 @@ import { FinancialTab } from "@/components/admin/FinancialTab";
 import { CustomersTab } from "@/components/admin/CustomersTab";
 import { MarketingTab } from "@/components/admin/MarketingTab";
 import { TeamTab } from "@/components/admin/TeamTab";
+import { IntegrationsTab } from "@/components/admin/IntegrationsTab";
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team";
+type Tab = "dashboard" | "orders" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team" | "integrations";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
