@@ -87,6 +87,44 @@ export type Database = {
           },
         ]
       }
+      blocked_customers: {
+        Row: {
+          blocked_at: string
+          blocked_by: string | null
+          id: string
+          phone: string | null
+          reason: string | null
+          store_id: string
+          user_id: string | null
+        }
+        Insert: {
+          blocked_at?: string
+          blocked_by?: string | null
+          id?: string
+          phone?: string | null
+          reason?: string | null
+          store_id: string
+          user_id?: string | null
+        }
+        Update: {
+          blocked_at?: string
+          blocked_by?: string | null
+          id?: string
+          phone?: string | null
+          reason?: string | null
+          store_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_customers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           active: boolean
@@ -165,6 +203,54 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "coupons_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_points: {
+        Row: {
+          created_at: string
+          delta: number
+          expires_at: string | null
+          id: string
+          order_id: string | null
+          reason: string
+          store_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          expires_at?: string | null
+          id?: string
+          order_id?: string | null
+          reason: string
+          store_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          expires_at?: string | null
+          id?: string
+          order_id?: string | null
+          reason?: string
+          store_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_points_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_points_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
@@ -551,6 +637,44 @@ export type Database = {
         }
         Relationships: []
       }
+      store_loyalty_config: {
+        Row: {
+          enabled: boolean
+          points_per_real: number
+          redeem_points: number
+          redeem_value: number
+          store_id: string
+          updated_at: string
+          validity_days: number | null
+        }
+        Insert: {
+          enabled?: boolean
+          points_per_real?: number
+          redeem_points?: number
+          redeem_value?: number
+          store_id: string
+          updated_at?: string
+          validity_days?: number | null
+        }
+        Update: {
+          enabled?: boolean
+          points_per_real?: number
+          redeem_points?: number
+          redeem_value?: number
+          store_id?: string
+          updated_at?: string
+          validity_days?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_loyalty_config_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores: {
         Row: {
           accept_alert_min: number
@@ -735,6 +859,10 @@ export type Database = {
     Functions: {
       apply_order_loyalty: {
         Args: { _cashback_used: number; _order_total: number }
+        Returns: number
+      }
+      customer_points_balance: {
+        Args: { _store_id: string; _user_id: string }
         Returns: number
       }
       generate_weekly_payouts: { Args: { _store_id: string }; Returns: number }
