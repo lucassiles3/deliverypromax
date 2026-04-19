@@ -36,9 +36,11 @@ import { CustomerHistoryDrawer } from "@/components/admin/CustomerHistoryDrawer"
 import { ReportsTab } from "@/components/admin/ReportsTab";
 import { DashboardTab } from "@/components/admin/DashboardTab";
 import { MenuTab } from "@/components/admin/MenuTab";
+import { OrdersKanban } from "@/components/admin/OrdersKanban";
+import { SettingsTab } from "@/components/admin/SettingsTab";
 
-type DbStatus = "pending_payment" | "received" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "products" | "reports";
+type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
+type Tab = "dashboard" | "orders" | "products" | "reports" | "settings";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
