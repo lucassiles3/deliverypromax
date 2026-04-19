@@ -44,10 +44,13 @@ import { CustomersTab } from "@/components/admin/CustomersTab";
 import { MarketingTab } from "@/components/admin/MarketingTab";
 import { TeamTab } from "@/components/admin/TeamTab";
 import { IntegrationsTab } from "@/components/admin/IntegrationsTab";
+import { PDVTab } from "@/components/admin/PDVTab";
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
+import { useStoreToggles } from "@/hooks/useStoreToggles";
+import { Printer } from "lucide-react";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team" | "integrations";
+type Tab = "dashboard" | "orders" | "pdv" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team" | "integrations";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
@@ -66,7 +69,9 @@ const Admin = () => {
   const qc = useQueryClient();
   const [storeId, setStoreId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("dashboard");
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const { toggles, update: updateToggles } = useStoreToggles(storeId);
+  const soundEnabled = toggles.sound_alerts_enabled;
+  const autoPrintEnabled = toggles.auto_print_enabled;
 
   // Filtros pedidos
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
