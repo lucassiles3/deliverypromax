@@ -779,7 +779,7 @@ const FlashSection = ({ storeId }: { storeId: string }) => {
 
 const FlashCard = ({ product, onStop }: { product: any; onStop: () => void }) => {
   const [now, setNow] = useState(Date.now());
-  useMemo(() => {
+  useEffect(() => {
     const i = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(i);
   }, []);
