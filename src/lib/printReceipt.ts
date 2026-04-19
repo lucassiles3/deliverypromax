@@ -37,9 +37,9 @@ const formatBRL = (n: number) =>
 
 const escapeHtml = (s: string | null | undefined) =>
   String(s ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 
 const buildItemsHtml = (items: PrintItem[]) =>
   items
