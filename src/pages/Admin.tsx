@@ -307,8 +307,9 @@ const Admin = () => {
           <div className="ml-auto flex items-center gap-2">
             <button
               onClick={() => {
-                setSoundEnabled((v) => !v);
-                if (!soundEnabled) playDing();
+                const next = !soundEnabled;
+                updateToggles({ sound_alerts_enabled: next });
+                if (next) playDing();
               }}
               className={`flex items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-smooth ${
                 soundEnabled
@@ -319,6 +320,18 @@ const Admin = () => {
             >
               {soundEnabled ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
               Som
+            </button>
+            <button
+              onClick={() => updateToggles({ auto_print_enabled: !autoPrintEnabled })}
+              className={`flex items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-smooth ${
+                autoPrintEnabled
+                  ? "border-primary/30 bg-primary/5 text-primary"
+                  : "border-border bg-muted text-muted-foreground"
+              }`}
+              title={autoPrintEnabled ? "Impressão automática ligada" : "Impressão automática desligada"}
+            >
+              <Printer className="h-3.5 w-3.5" />
+              Imprimir
             </button>
             <select
               value={storeId ?? ""}
@@ -349,6 +362,7 @@ const Admin = () => {
           {[
             { id: "dashboard" as const, label: "Dashboard" },
             { id: "orders" as const, label: "Pedidos ao vivo" },
+            { id: "pdv" as const, label: "PDV" },
             { id: "products" as const, label: "Cardápio" },
             { id: "customers" as const, label: "Clientes" },
             { id: "marketing" as const, label: "Marketing" },
