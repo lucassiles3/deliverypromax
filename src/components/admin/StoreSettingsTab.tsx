@@ -1067,7 +1067,7 @@ const PublicLinkCard = ({ slug, name }: { storeId: string; slug?: string; name?:
     document.body.removeChild(a);
   };
   const downloadQr = () => {
-    const svg = document.getElementById("store-qr") as SVGSVGElement | null;
+    const svg = document.getElementById("store-qr") as unknown as SVGSVGElement | null;
     if (!svg) return;
     const xml = new XMLSerializer().serializeToString(svg);
     const blob = new Blob([xml], { type: "image/svg+xml" });
