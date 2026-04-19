@@ -54,7 +54,7 @@ const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const qc = useQueryClient();
   const [storeId, setStoreId] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("orders");
+  const [tab, setTab] = useState<Tab>("dashboard");
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Filtros pedidos
@@ -343,6 +343,7 @@ const Admin = () => {
 
         <div className="mb-5 flex gap-2 border-b">
           {[
+            { id: "dashboard" as const, label: "Dashboard" },
             { id: "orders" as const, label: "Pedidos ao vivo" },
             { id: "products" as const, label: "Produtos" },
             { id: "reports" as const, label: "Relatórios" },
