@@ -1,0 +1,1 @@
+UPDATE public.stores SET owner_id = '466f20e5-1c58-4c7a-8856-6182539a139b' WHERE owner_id IS NULL AND name IN ('Doce Mania', 'Pizza Nova', 'Sushi Zen');
