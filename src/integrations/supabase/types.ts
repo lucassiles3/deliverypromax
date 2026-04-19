@@ -862,6 +862,50 @@ export type Database = {
           },
         ]
       }
+      staff_activity_log: {
+        Row: {
+          action: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          metadata: Json | null
+          store_id: string
+          user_id: string | null
+          user_label: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json | null
+          store_id: string
+          user_id?: string | null
+          user_label?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json | null
+          store_id?: string
+          user_id?: string | null
+          user_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_activity_log_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_holidays: {
         Row: {
           close_time: string | null
@@ -903,6 +947,53 @@ export type Database = {
           },
         ]
       }
+      store_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          display_name: string | null
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          role: Database["public"]["Enums"]["staff_role"]
+          store_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          display_name?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role: Database["public"]["Enums"]["staff_role"]
+          store_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["staff_role"]
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_invites_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_loyalty_config: {
         Row: {
           enabled: boolean
@@ -936,6 +1027,53 @@ export type Database = {
             foreignKeyName: "store_loyalty_config_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: true
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_members: {
+        Row: {
+          active: boolean
+          created_at: string
+          display_name: string | null
+          id: string
+          invited_by: string | null
+          joined_at: string
+          role: Database["public"]["Enums"]["staff_role"]
+          store_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          invited_by?: string | null
+          joined_at?: string
+          role: Database["public"]["Enums"]["staff_role"]
+          store_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          invited_by?: string | null
+          joined_at?: string
+          role?: Database["public"]["Enums"]["staff_role"]
+          store_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_members_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
             referencedRelation: "stores"
             referencedColumns: ["id"]
           },
@@ -1284,16 +1422,32 @@ export type Database = {
         Args: { _cashback_used: number; _order_total: number }
         Returns: number
       }
+      can_access_section: {
+        Args: { _section: string; _store_id: string; _user_id: string }
+        Returns: boolean
+      }
       customer_points_balance: {
         Args: { _store_id: string; _user_id: string }
         Returns: number
       }
       generate_weekly_payouts: { Args: { _store_id: string }; Returns: number }
+      get_store_role: {
+        Args: { _store_id: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["staff_role"]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_store_access: {
+        Args: { _store_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_store_owner: {
+        Args: { _store_id: string; _user_id: string }
         Returns: boolean
       }
       run_reactivation_campaign: {
@@ -1317,6 +1471,7 @@ export type Database = {
         | "cancelled"
       payment_method: "pix" | "cash" | "credit" | "debit"
       payout_status: "scheduled" | "processing" | "paid"
+      staff_role: "manager" | "attendant" | "kitchen" | "courier"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1460,6 +1615,7 @@ export const Constants = {
       ],
       payment_method: ["pix", "cash", "credit", "debit"],
       payout_status: ["scheduled", "processing", "paid"],
+      staff_role: ["manager", "attendant", "kitchen", "courier"],
     },
   },
 } as const
