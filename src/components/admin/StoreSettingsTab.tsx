@@ -298,7 +298,7 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
             <Field label="UF" cls="sm:col-span-1">
               <Input value={form.address_state ?? ""} onChange={(e) => setForm({ ...form, address_state: e.target.value })} maxLength={2} />
             </Field>
-            <Field label="Latitude" cls="sm:col-span-3">
+            <Field label="Latitude" cls="sm:col-span-2">
               <Input
                 type="number"
                 step="0.000001"
@@ -306,7 +306,7 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
                 onChange={(e) => setForm({ ...form, lat: e.target.value ? Number(e.target.value) : null })}
               />
             </Field>
-            <Field label="Longitude" cls="sm:col-span-3">
+            <Field label="Longitude" cls="sm:col-span-2">
               <Input
                 type="number"
                 step="0.000001"
@@ -314,8 +314,56 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
                 onChange={(e) => setForm({ ...form, lng: e.target.value ? Number(e.target.value) : null })}
               />
             </Field>
+            <Field label="Localização" cls="sm:col-span-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  if (!navigator.geolocation) {
+                    return toast.error("Navegador sem suporte a GPS");
+                  }
+                  toast.loading("Buscando sua localização...", { id: "geo" });
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                      setForm((f: any) => ({
+                        ...f,
+                        lat: Number(pos.coords.latitude.toFixed(6)),
+                        lng: Number(pos.coords.longitude.toFixed(6)),
+                      }));
+                      toast.success("Coordenadas preenchidas!", { id: "geo" });
+                    },
+                    (err) => {
+                      toast.error(
+                        err.code === 1
+                          ? "Permissão negada — habilite o GPS nas configurações do navegador"
+                          : "Não foi possível obter localização",
+                        { id: "geo" },
+                      );
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 },
+                  );
+                }}
+              >
+                <MapPin className="mr-2 h-4 w-4" /> Usar minha localização
+              </Button>
+            </Field>
+            {form.lat && form.lng && (
+              <div className="sm:col-span-6">
+                <a
+                  href={`https://www.google.com/maps?q=${form.lat},${form.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                >
+                  <MapPin className="h-3 w-3" /> Ver no Google Maps
+                </a>
+              </div>
+            )}
           </div>
         </Card>
+
+        <PublicLinkCard storeId={storeId} slug={form.slug} name={form.name} />
 
         <Button onClick={save} className="w-full gradient-primary font-bold" size="lg">
           Salvar perfil
