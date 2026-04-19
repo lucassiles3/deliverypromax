@@ -336,6 +336,7 @@ const Admin = () => {
             { id: "orders" as const, label: "Pedidos ao vivo" },
             { id: "products" as const, label: "Cardápio" },
             { id: "customers" as const, label: "Clientes" },
+            { id: "marketing" as const, label: "Marketing" },
             { id: "financial" as const, label: "Financeiro" },
             { id: "reports" as const, label: "Relatórios" },
             { id: "settings" as const, label: "Configurações" },
