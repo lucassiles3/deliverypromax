@@ -112,6 +112,16 @@ const Admin = () => {
     if (!storeId && stores.length) setStoreId(stores[0].id);
   }, [stores, storeId]);
 
+  // Se o tab atual não é permitido pelo papel, cai na primeira tab válida
+  useEffect(() => {
+    if (!currentRole) return;
+    if (!canAccessSection(currentRole, tab)) {
+      const order: Tab[] = ["dashboard","orders","products","customers","marketing","financial","reports","store","settings","team"];
+      const next = order.find((t) => canAccessSection(currentRole, t));
+      if (next && next !== tab) setTab(next);
+    }
+  }, [currentRole, tab]);
+
   const { data: products = [] } = useQuery({
     queryKey: ["admin-products", storeId],
     enabled: !!storeId,
