@@ -2,3 +2,9 @@ project_id = "wguhkvnzoklrivydgrda"
 
 [functions.claim-owner-role]
 verify_jwt = false
+
+[functions.api-rest]
+verify_jwt = false
+
+[functions.webhook-dispatcher]
+verify_jwt = false
