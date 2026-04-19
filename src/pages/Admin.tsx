@@ -31,7 +31,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { resolveAsset } from "@/lib/assetMap";
-import { ProductFormModal, ProductFormData } from "@/components/admin/ProductFormModal";
+import { ProductFormData } from "@/components/admin/ProductFormModal";
 import { CustomerHistoryDrawer } from "@/components/admin/CustomerHistoryDrawer";
 import { ReportsTab } from "@/components/admin/ReportsTab";
 import { DashboardTab } from "@/components/admin/DashboardTab";
@@ -216,11 +216,7 @@ const Admin = () => {
     qc.invalidateQueries({ queryKey: ["admin-products", storeId] });
   };
 
-  const openNew = () => {
-    setEditingProduct(null);
-    setProductModalOpen(true);
-  };
-  // edição de produto agora vive dentro do MenuTab
+  // criação/edição de produto vive dentro do MenuTab
 
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
