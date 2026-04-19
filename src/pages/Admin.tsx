@@ -38,6 +38,7 @@ import { DashboardTab } from "@/components/admin/DashboardTab";
 import { MenuTab } from "@/components/admin/MenuTab";
 import { OrdersKanban } from "@/components/admin/OrdersKanban";
 import { SettingsTab } from "@/components/admin/SettingsTab";
+import { StoreSettingsTab } from "@/components/admin/StoreSettingsTab";
 import { FinancialTab } from "@/components/admin/FinancialTab";
 import { CustomersTab } from "@/components/admin/CustomersTab";
 import { MarketingTab } from "@/components/admin/MarketingTab";
