@@ -352,6 +352,7 @@ const Admin = () => {
             { id: "store" as const, label: "Loja" },
             { id: "settings" as const, label: "Operação" },
             { id: "team" as const, label: "Equipe" },
+            { id: "integrations" as const, label: "Integrações" },
           ]
             .filter((t) => canAccessSection(currentRole, t.id))
             .map((t) => (
