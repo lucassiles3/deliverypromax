@@ -65,6 +65,15 @@ const COLUMNS: {
   tone: string;
 }[] = [
   {
+    id: "pending_payment",
+    label: "Aguardando pgto",
+    hint: "cliente ainda não pagou",
+    icon: CreditCard,
+    next: "received",
+    nextLabel: "✓ Confirmar pgto",
+    tone: "border-muted-foreground/30 bg-muted/40",
+  },
+  {
     id: "received",
     label: "Novos",
     hint: "aguardando aceite",
@@ -151,7 +160,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
           "id, customer_name, customer_phone, total, status, method, payment_method, created_at, accepted_at, user_id, order_items(product_name, quantity)"
         )
         .eq("store_id", storeId)
-        .in("status", ["received", "preparing", "ready", "out_for_delivery", "delivered"])
+        .in("status", ["pending_payment", "received", "preparing", "ready", "out_for_delivery", "delivered"])
         .gte("created_at", new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString())
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -320,7 +329,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
         onDragEnd={onDragEnd}
         onDragCancel={() => setDraggingId(null)}
       >
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
           {COLUMNS.map((col) => (
             <Column
               key={col.id}
