@@ -363,6 +363,8 @@ const Admin = () => {
 
         {tab === "products" && storeId && <MenuTab storeId={storeId} />}
 
+        {tab === "customers" && storeId && <CustomersTab storeId={storeId} />}
+
         {tab === "financial" && storeId && currentStore && (
           <FinancialTab storeId={storeId} storeName={currentStore.name} />
         )}
