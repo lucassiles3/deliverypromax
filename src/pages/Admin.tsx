@@ -31,10 +31,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { resolveAsset } from "@/lib/assetMap";
-import { ProductFormModal, ProductFormData } from "@/components/admin/ProductFormModal";
+import { ProductFormData } from "@/components/admin/ProductFormModal";
 import { CustomerHistoryDrawer } from "@/components/admin/CustomerHistoryDrawer";
 import { ReportsTab } from "@/components/admin/ReportsTab";
 import { DashboardTab } from "@/components/admin/DashboardTab";
+import { MenuTab } from "@/components/admin/MenuTab";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
 type Tab = "dashboard" | "orders" | "products" | "reports";
@@ -215,27 +216,7 @@ const Admin = () => {
     qc.invalidateQueries({ queryKey: ["admin-products", storeId] });
   };
 
-  const openNew = () => {
-    setEditingProduct(null);
-    setProductModalOpen(true);
-  };
-  const openEdit = (p: any) => {
-    setEditingProduct({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      description: p.description,
-      price: Number(p.price),
-      old_price: p.old_price !== null ? Number(p.old_price) : null,
-      image_url: p.image_url,
-      active: p.active,
-      bestseller: p.bestseller,
-      promo: p.promo,
-      track_stock: !!p.track_stock,
-      stock: p.stock,
-    });
-    setProductModalOpen(true);
-  };
+  // criação/edição de produto vive dentro do MenuTab
 
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
@@ -625,171 +606,12 @@ const Admin = () => {
           </div>
         )}
 
-        {tab === "products" && (
-          <div>
-            <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl bg-card p-3 shadow-soft">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  value={productSearch}
-                  onChange={(e) => setProductSearch(e.target.value)}
-                  placeholder="Buscar produto ou categoria..."
-                  className="w-full rounded-lg border-2 bg-background py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
-                />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {products.filter((p) => p.active).length} ativos de {products.length}
-              </p>
-              <Button onClick={openNew} size="sm" className="gradient-primary font-bold">
-                <Plus className="mr-1 h-4 w-4" /> Novo produto
-              </Button>
-            </div>
-
-            <div className="overflow-x-auto rounded-2xl bg-card shadow-soft">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/60 text-xs uppercase text-muted-foreground">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Produto</th>
-                    <th className="px-4 py-3 text-left">Categoria</th>
-                    <th className="px-4 py-3 text-right">Preço</th>
-                    <th className="px-4 py-3 text-center">Estoque</th>
-                    <th className="px-4 py-3 text-center">Status</th>
-                    <th className="px-4 py-3 text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProducts.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="px-4 py-12 text-center text-sm text-muted-foreground">
-                        Nenhum produto. Clique em "Novo produto" para começar.
-                      </td>
-                    </tr>
-                  )}
-                  {filteredProducts.map((p) => {
-                    const isOut = p.track_stock && (p.stock ?? 0) <= 0;
-                    return (
-                      <tr key={p.id} className={`border-t ${!p.active ? "opacity-50" : ""}`}>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={resolveAsset(p.image_url)}
-                              alt={p.name}
-                              className="h-10 w-10 rounded-lg object-cover"
-                            />
-                            <div>
-                              <strong>{p.name}</strong>
-                              {p.bestseller && (
-                                <span className="ml-2 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-600">
-                                  ⭐ Top
-                                </span>
-                              )}
-                              {p.promo && (
-                                <span className="ml-1 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-bold text-destructive">
-                                  🔥 Promo
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">{p.category ?? "—"}</td>
-                        <td className="px-4 py-3 text-right">
-                          <input
-                            type="number"
-                            defaultValue={Number(p.price)}
-                            step="0.10"
-                            onBlur={(e) => {
-                              const v = Number(e.target.value);
-                              if (v > 0 && v !== Number(p.price)) updatePrice(p.id, v);
-                            }}
-                            className="w-24 rounded-md border bg-background px-2 py-1 text-right font-bold outline-none focus:border-primary"
-                          />
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {p.track_stock ? (
-                            <input
-                              type="number"
-                              min="0"
-                              defaultValue={p.stock ?? 0}
-                              onBlur={(e) => {
-                                const v = Number(e.target.value);
-                                if (v !== (p.stock ?? 0)) updateStock(p.id, v);
-                              }}
-                              className={`w-20 rounded-md border bg-background px-2 py-1 text-center font-bold outline-none focus:border-primary ${
-                                isOut ? "border-destructive text-destructive" : ""
-                              }`}
-                            />
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {isOut ? (
-                            <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-bold text-destructive">
-                              Esgotado
-                            </span>
-                          ) : (
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                                p.active
-                                  ? "bg-success/10 text-success"
-                                  : "bg-muted text-muted-foreground"
-                              }`}
-                            >
-                              {p.active ? "Ativo" : "Pausado"}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex justify-end gap-1">
-                            <button
-                              onClick={() => openEdit(p)}
-                              className="rounded-md p-1.5 hover:bg-muted"
-                              aria-label="Editar"
-                              title="Editar"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => togglePause(p.id, p.active)}
-                              className="rounded-md p-1.5 hover:bg-muted"
-                              aria-label="Pausar/ativar"
-                              title={p.active ? "Pausar" : "Ativar"}
-                            >
-                              {p.active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                            </button>
-                            <button
-                              onClick={() => deleteProduct(p.id, p.name)}
-                              className="rounded-md p-1.5 text-destructive hover:bg-destructive/10"
-                              aria-label="Excluir"
-                              title="Excluir"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+        {tab === "products" && storeId && <MenuTab storeId={storeId} />}
 
         {tab === "reports" && storeId && currentStore && (
           <ReportsTab storeId={storeId} storeName={currentStore.name} />
         )}
       </div>
-
-      {storeId && (
-        <ProductFormModal
-          open={productModalOpen}
-          initial={editingProduct}
-          storeId={storeId}
-          onClose={() => setProductModalOpen(false)}
-          onSaved={() => qc.invalidateQueries({ queryKey: ["admin-products", storeId] })}
-        />
-      )}
 
       {storeId && (
         <CustomerHistoryDrawer

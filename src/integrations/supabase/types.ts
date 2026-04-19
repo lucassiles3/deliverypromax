@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           id: string
           max_select: number | null
+          min_select: number
           name: string
           position: number | null
           product_id: string
@@ -27,6 +28,7 @@ export type Database = {
         Insert: {
           id?: string
           max_select?: number | null
+          min_select?: number
           name: string
           position?: number | null
           product_id: string
@@ -36,6 +38,7 @@ export type Database = {
         Update: {
           id?: string
           max_select?: number | null
+          min_select?: number
           name?: string
           position?: number | null
           product_id?: string
@@ -80,6 +83,44 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "addon_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      categories: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          position: number
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          position?: number
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -265,17 +306,23 @@ export type Database = {
       products: {
         Row: {
           active: boolean
+          archived_at: string | null
           bestseller: boolean
           category: string | null
+          category_id: string | null
           created_at: string
           description: string | null
           id: string
           image_url: string | null
+          is_new: boolean
           name: string
           old_price: number | null
           position: number | null
+          prep_time_min: number | null
           price: number
           promo: boolean
+          promo_ends_at: string | null
+          promo_starts_at: string | null
           rating: number | null
           reviews: number | null
           stock: number | null
@@ -285,17 +332,23 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          archived_at?: string | null
           bestseller?: boolean
           category?: string | null
+          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
+          is_new?: boolean
           name: string
           old_price?: number | null
           position?: number | null
+          prep_time_min?: number | null
           price: number
           promo?: boolean
+          promo_ends_at?: string | null
+          promo_starts_at?: string | null
           rating?: number | null
           reviews?: number | null
           stock?: number | null
@@ -305,17 +358,23 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          archived_at?: string | null
           bestseller?: boolean
           category?: string | null
+          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
+          is_new?: boolean
           name?: string
           old_price?: number | null
           position?: number | null
+          prep_time_min?: number | null
           price?: number
           promo?: boolean
+          promo_ends_at?: string | null
+          promo_starts_at?: string | null
           rating?: number | null
           reviews?: number | null
           stock?: number | null
@@ -324,6 +383,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "products_store_id_fkey"
             columns: ["store_id"]
