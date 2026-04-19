@@ -42,9 +42,11 @@ import { StoreSettingsTab } from "@/components/admin/StoreSettingsTab";
 import { FinancialTab } from "@/components/admin/FinancialTab";
 import { CustomersTab } from "@/components/admin/CustomersTab";
 import { MarketingTab } from "@/components/admin/MarketingTab";
+import { TeamTab } from "@/components/admin/TeamTab";
+import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings";
+type Tab = "dashboard" | "orders" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
@@ -100,15 +102,11 @@ const Admin = () => {
     }
   };
 
-  const { data: stores = [], isLoading: storesLoading } = useQuery({
-    queryKey: ["admin-stores", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data, error } = await supabase.from("stores").select("id, name, logo, slug").order("name");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+  const { data: stores = [], isLoading: storesLoading } = useStoreAccess();
+  const currentRole = useMemo(
+    () => stores.find((s) => s.id === storeId)?.role ?? null,
+    [stores, storeId],
+  );
 
   useEffect(() => {
     if (!storeId && stores.length) setStoreId(stores[0].id);
