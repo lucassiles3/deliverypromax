@@ -47,7 +47,8 @@ type MethodFilter = "all" | "delivery" | "pickup";
 const statusConfig: Record<DbStatus, { label: string; color: string; icon: typeof Clock; next?: DbStatus }> = {
   pending_payment: { label: "Aguardando pgto", color: "bg-muted text-muted-foreground", icon: Clock, next: "received" },
   received: { label: "Recebido", color: "bg-blue-500/10 text-blue-600", icon: Clock, next: "preparing" },
-  preparing: { label: "Em preparo", color: "bg-amber-500/10 text-amber-600", icon: Package, next: "out_for_delivery" },
+  preparing: { label: "Em preparo", color: "bg-amber-500/10 text-amber-600", icon: Package, next: "ready" },
+  ready: { label: "Pronto", color: "bg-blue-500/10 text-blue-600", icon: Package, next: "out_for_delivery" },
   out_for_delivery: { label: "Saiu p/ entrega", color: "bg-purple-500/10 text-purple-600", icon: Truck, next: "delivered" },
   delivered: { label: "Entregue", color: "bg-green-500/10 text-green-600", icon: CheckCircle2 },
   cancelled: { label: "Cancelado", color: "bg-destructive/10 text-destructive", icon: Clock },
