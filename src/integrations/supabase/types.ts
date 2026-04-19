@@ -342,6 +342,92 @@ export type Database = {
           },
         ]
       }
+      payout_orders: {
+        Row: {
+          order_id: string
+          payout_id: string
+        }
+        Insert: {
+          order_id: string
+          payout_id: string
+        }
+        Update: {
+          order_id?: string
+          payout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_orders_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_orders_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "payouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payouts: {
+        Row: {
+          created_at: string
+          fee_amount: number
+          gross_amount: number
+          id: string
+          net_amount: number
+          orders_count: number
+          paid_at: string | null
+          period_end: string
+          period_start: string
+          scheduled_for: string
+          status: Database["public"]["Enums"]["payout_status"]
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fee_amount?: number
+          gross_amount?: number
+          id?: string
+          net_amount?: number
+          orders_count?: number
+          paid_at?: string | null
+          period_end: string
+          period_start: string
+          scheduled_for: string
+          status?: Database["public"]["Enums"]["payout_status"]
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fee_amount?: number
+          gross_amount?: number
+          id?: string
+          net_amount?: number
+          orders_count?: number
+          paid_at?: string | null
+          period_end?: string
+          period_start?: string
+          scheduled_for?: string
+          status?: Database["public"]["Enums"]["payout_status"]
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           active: boolean
@@ -480,6 +566,7 @@ export type Database = {
           free_shipping_threshold: number | null
           id: string
           logo: string | null
+          marketplace_fee_percent: number
           min_order: number | null
           name: string
           open: boolean
@@ -508,6 +595,7 @@ export type Database = {
           free_shipping_threshold?: number | null
           id?: string
           logo?: string | null
+          marketplace_fee_percent?: number
           min_order?: number | null
           name: string
           open?: boolean
@@ -536,6 +624,7 @@ export type Database = {
           free_shipping_threshold?: number | null
           id?: string
           logo?: string | null
+          marketplace_fee_percent?: number
           min_order?: number | null
           name?: string
           open?: boolean
@@ -648,6 +737,7 @@ export type Database = {
         Args: { _cashback_used: number; _order_total: number }
         Returns: number
       }
+      generate_weekly_payouts: { Args: { _store_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -671,6 +761,7 @@ export type Database = {
         | "delivered"
         | "cancelled"
       payment_method: "pix" | "cash" | "credit" | "debit"
+      payout_status: "scheduled" | "processing" | "paid"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -813,6 +904,7 @@ export const Constants = {
         "cancelled",
       ],
       payment_method: ["pix", "cash", "credit", "debit"],
+      payout_status: ["scheduled", "processing", "paid"],
     },
   },
 } as const
