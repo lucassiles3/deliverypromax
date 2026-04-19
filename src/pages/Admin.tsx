@@ -379,6 +379,8 @@ const Admin = () => {
           <ReportsTab storeId={storeId} storeName={currentStore.name} />
         )}
 
+        {tab === "store" && storeId && <StoreSettingsTab storeId={storeId} />}
+
         {tab === "settings" && storeId && <SettingsTab storeId={storeId} />}
       </div>
 
