@@ -395,6 +395,17 @@ const Admin = () => {
 
         {tab === "dashboard" && storeId && canAccessSection(currentRole, "dashboard") && <DashboardTab storeId={storeId} />}
         {tab === "orders" && storeId && canAccessSection(currentRole, "orders") && <OrdersKanban storeId={storeId} />}
+        {tab === "pdv" && storeId && currentStore && canAccessSection(currentRole, "pdv") && toggles.pdv_enabled && (
+          <PDVTab storeId={storeId} storeName={currentStore.name} />
+        )}
+        {tab === "pdv" && storeId && !toggles.pdv_enabled && (
+          <div className="rounded-2xl border-2 border-dashed border-border bg-card p-8 text-center">
+            <h3 className="font-display text-lg font-bold">PDV desabilitado</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Habilite o PDV em <strong>Operação → PDV</strong> para vender no balcão.
+            </p>
+          </div>
+        )}
         {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
         {tab === "customers" && storeId && canAccessSection(currentRole, "customers") && <CustomersTab storeId={storeId} />}
         {tab === "marketing" && storeId && canAccessSection(currentRole, "marketing") && <MarketingTab storeId={storeId} />}
