@@ -31,6 +31,7 @@ import {
 import { differenceInMinutes, differenceInSeconds } from "date-fns";
 import { OrderDetailsModal } from "./OrderDetailsModal";
 import { CancelOrderModal } from "./CancelOrderModal";
+import { printReceipt, type PrintData } from "@/lib/printReceipt";
 
 type DbStatus =
   | "pending_payment"
@@ -133,14 +134,16 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
     return () => clearInterval(t);
   }, []);
 
-  // Store settings
+  // Store settings (incluindo dados pra impressão)
   const { data: settings } = useQuery({
     queryKey: ["store-settings", storeId],
     enabled: !!storeId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stores")
-        .select("accept_alert_min, autocancel_min, autocancel_enabled, sound_alerts_enabled")
+        .select(
+          "name, phone, accept_alert_min, autocancel_min, autocancel_enabled, sound_alerts_enabled, auto_print_enabled, print_format, address_street, address_number, address_neighborhood, city"
+        )
         .eq("id", storeId)
         .maybeSingle();
       if (error) throw error;
