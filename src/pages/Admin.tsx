@@ -40,6 +40,7 @@ import { OrdersKanban } from "@/components/admin/OrdersKanban";
 import { SettingsTab } from "@/components/admin/SettingsTab";
 import { FinancialTab } from "@/components/admin/FinancialTab";
 import { CustomersTab } from "@/components/admin/CustomersTab";
+import { MarketingTab } from "@/components/admin/MarketingTab";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
 type Tab = "dashboard" | "orders" | "products" | "customers" | "financial" | "reports" | "settings";
