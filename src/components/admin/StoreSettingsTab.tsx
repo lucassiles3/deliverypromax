@@ -19,7 +19,13 @@ import {
   Plane,
   MapPin,
   Loader2,
+  Link2,
+  Copy,
+  ExternalLink,
+  QrCode,
+  Share2,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 type Section = "profile" | "hours" | "delivery" | "payment";
 
