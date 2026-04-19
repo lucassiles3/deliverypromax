@@ -34,9 +34,10 @@ import { resolveAsset } from "@/lib/assetMap";
 import { ProductFormModal, ProductFormData } from "@/components/admin/ProductFormModal";
 import { CustomerHistoryDrawer } from "@/components/admin/CustomerHistoryDrawer";
 import { ReportsTab } from "@/components/admin/ReportsTab";
+import { DashboardTab } from "@/components/admin/DashboardTab";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "orders" | "products" | "reports";
+type Tab = "dashboard" | "orders" | "products" | "reports";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
