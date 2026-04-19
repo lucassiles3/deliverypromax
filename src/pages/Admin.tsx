@@ -318,24 +318,27 @@ const Admin = () => {
       </header>
 
       <div className="container py-6">
-        <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Kpi icon={DollarSign} label="Faturamento" value={`R$ ${kpis.revenue.toFixed(2).replace(".", ",")}`} accent="primary" />
-          <Kpi icon={ShoppingBag} label="Pedidos" value={String(kpis.count)} />
-          <Kpi icon={Package} label="Em andamento" value={String(kpis.active)} />
-          <Kpi icon={TrendingUp} label="Ticket médio" value={`R$ ${kpis.avg.toFixed(2).replace(".", ",")}`} />
+        <div className="mb-6 rounded-2xl gradient-primary p-5 text-primary-foreground shadow-soft">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <KpiBlock icon={DollarSign} label="Faturamento" value={`R$ ${kpis.revenue.toFixed(2).replace(".", ",")}`} />
+            <KpiBlock icon={ShoppingBag} label="Pedidos" value={String(kpis.count)} divider />
+            <KpiBlock icon={Package} label="Em andamento" value={String(kpis.active)} divider />
+            <KpiBlock icon={TrendingUp} label="Ticket médio" value={`R$ ${kpis.avg.toFixed(2).replace(".", ",")}`} divider />
+          </div>
         </div>
 
-        <div className="mb-5 flex gap-2 border-b">
+        <div className="mb-5 flex gap-2 border-b overflow-x-auto">
           {[
             { id: "dashboard" as const, label: "Dashboard" },
             { id: "orders" as const, label: "Pedidos ao vivo" },
-            { id: "products" as const, label: "Produtos" },
+            { id: "products" as const, label: "Cardápio" },
             { id: "reports" as const, label: "Relatórios" },
+            { id: "settings" as const, label: "Configurações" },
           ].map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-bold transition-smooth ${
+              className={`relative flex items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-bold transition-smooth ${
                 tab === t.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
