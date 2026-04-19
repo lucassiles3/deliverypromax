@@ -19,7 +19,13 @@ import {
   Plane,
   MapPin,
   Loader2,
+  Link2,
+  Copy,
+  ExternalLink,
+  QrCode,
+  Share2,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 type Section = "profile" | "hours" | "delivery" | "payment";
 
@@ -298,7 +304,7 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
             <Field label="UF" cls="sm:col-span-1">
               <Input value={form.address_state ?? ""} onChange={(e) => setForm({ ...form, address_state: e.target.value })} maxLength={2} />
             </Field>
-            <Field label="Latitude" cls="sm:col-span-3">
+            <Field label="Latitude" cls="sm:col-span-2">
               <Input
                 type="number"
                 step="0.000001"
@@ -306,7 +312,7 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
                 onChange={(e) => setForm({ ...form, lat: e.target.value ? Number(e.target.value) : null })}
               />
             </Field>
-            <Field label="Longitude" cls="sm:col-span-3">
+            <Field label="Longitude" cls="sm:col-span-2">
               <Input
                 type="number"
                 step="0.000001"
@@ -314,8 +320,56 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
                 onChange={(e) => setForm({ ...form, lng: e.target.value ? Number(e.target.value) : null })}
               />
             </Field>
+            <Field label="Localização" cls="sm:col-span-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  if (!navigator.geolocation) {
+                    return toast.error("Navegador sem suporte a GPS");
+                  }
+                  toast.loading("Buscando sua localização...", { id: "geo" });
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                      setForm((f: any) => ({
+                        ...f,
+                        lat: Number(pos.coords.latitude.toFixed(6)),
+                        lng: Number(pos.coords.longitude.toFixed(6)),
+                      }));
+                      toast.success("Coordenadas preenchidas!", { id: "geo" });
+                    },
+                    (err) => {
+                      toast.error(
+                        err.code === 1
+                          ? "Permissão negada — habilite o GPS nas configurações do navegador"
+                          : "Não foi possível obter localização",
+                        { id: "geo" },
+                      );
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 },
+                  );
+                }}
+              >
+                <MapPin className="mr-2 h-4 w-4" /> Usar minha localização
+              </Button>
+            </Field>
+            {form.lat && form.lng && (
+              <div className="sm:col-span-6">
+                <a
+                  href={`https://www.google.com/maps?q=${form.lat},${form.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                >
+                  <MapPin className="h-3 w-3" /> Ver no Google Maps
+                </a>
+              </div>
+            )}
           </div>
         </Card>
+
+        <PublicLinkCard storeId={storeId} slug={form.slug} name={form.name} />
 
         <Button onClick={save} className="w-full gradient-primary font-bold" size="lg">
           Salvar perfil
@@ -988,3 +1042,87 @@ const ImageDropper = ({
     />
   </label>
 );
+
+/* ---------- Link público da loja ---------- */
+const PublicLinkCard = ({ slug, name }: { storeId: string; slug?: string; name?: string }) => {
+  const [showQr, setShowQr] = useState(false);
+  if (!slug) return null;
+  const url = `${window.location.origin}/loja/${slug}`;
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copiado!");
+    } catch {
+      toast.error("Falha ao copiar");
+    }
+  };
+  const shareWa = () => {
+    const msg = `Confira o cardápio de *${name ?? "nossa loja"}* 🍔\n${url}`;
+    const a = document.createElement("a");
+    a.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+  const downloadQr = () => {
+    const svg = document.getElementById("store-qr") as unknown as SVGSVGElement | null;
+    if (!svg) return;
+    const xml = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([xml], { type: "image/svg+xml" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `qrcode-${slug}.svg`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+  return (
+    <Card title="Link público do cardápio" icon={Link2}>
+      <p className="mb-3 text-xs text-muted-foreground">
+        Compartilhe este link para que clientes acessem o cardápio direto.
+      </p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex-1 truncate rounded-lg border bg-muted/40 px-3 py-2 font-mono text-xs">
+          {url}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" size="sm" variant="outline" onClick={copy}>
+            <Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const a = document.createElement("a");
+              a.href = url;
+              a.target = "_blank";
+              a.rel = "noopener noreferrer";
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }}
+          >
+            <ExternalLink className="mr-1.5 h-3.5 w-3.5" /> Abrir
+          </Button>
+          <Button type="button" size="sm" variant="outline" onClick={() => setShowQr((v) => !v)}>
+            <QrCode className="mr-1.5 h-3.5 w-3.5" /> QR Code
+          </Button>
+          <Button type="button" size="sm" className="gradient-primary text-primary-foreground" onClick={shareWa}>
+            <Share2 className="mr-1.5 h-3.5 w-3.5" /> WhatsApp
+          </Button>
+        </div>
+      </div>
+      {showQr && (
+        <div className="mt-4 flex flex-col items-center gap-3 rounded-xl border bg-background p-4">
+          <QRCodeSVG id="store-qr" value={url} size={180} level="M" includeMargin />
+          <Button type="button" size="sm" variant="outline" onClick={downloadQr}>
+            Baixar QR Code
+          </Button>
+        </div>
+      )}
+    </Card>
+  );
+};

@@ -70,7 +70,7 @@ const COLUMNS: {
     hint: "aguardando aceite",
     icon: Bell,
     next: "preparing",
-    nextLabel: "Aceitar",
+    nextLabel: "✓ Aceitar",
     tone: "border-primary/40 bg-primary/5",
   },
   {
@@ -295,8 +295,24 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
 
   const draggingOrder = orders.find((o) => o.id === draggingId);
 
+  const totalActive = orders.length;
+
   return (
     <>
+      {totalActive === 0 && (
+        <div className="mb-4 rounded-2xl border-2 border-dashed border-border bg-card p-6 text-center">
+          <Bell className="mx-auto h-8 w-8 text-muted-foreground" />
+          <h3 className="mt-2 font-display text-lg font-bold">Nenhum pedido ativo nas últimas 12h</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Quando um cliente fizer um pedido, ele aparecerá aqui em <strong>Novos</strong> com os botões{" "}
+            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">✓ Aceitar</span>{" "}
+            e <span className="rounded bg-destructive/10 px-1.5 py-0.5 text-xs font-bold text-destructive">✕ Recusar</span>.
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            💡 Dica: confirme no topo da página se você está na loja certa (seletor ao lado do botão Som).
+          </p>
+        </div>
+      )}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
