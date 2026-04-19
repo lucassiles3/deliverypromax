@@ -34,9 +34,10 @@ import { resolveAsset } from "@/lib/assetMap";
 import { ProductFormModal, ProductFormData } from "@/components/admin/ProductFormModal";
 import { CustomerHistoryDrawer } from "@/components/admin/CustomerHistoryDrawer";
 import { ReportsTab } from "@/components/admin/ReportsTab";
+import { DashboardTab } from "@/components/admin/DashboardTab";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "orders" | "products" | "reports";
+type Tab = "dashboard" | "orders" | "products" | "reports";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
@@ -53,7 +54,7 @@ const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const qc = useQueryClient();
   const [storeId, setStoreId] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("orders");
+  const [tab, setTab] = useState<Tab>("dashboard");
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Filtros pedidos
@@ -342,6 +343,7 @@ const Admin = () => {
 
         <div className="mb-5 flex gap-2 border-b">
           {[
+            { id: "dashboard" as const, label: "Dashboard" },
             { id: "orders" as const, label: "Pedidos ao vivo" },
             { id: "products" as const, label: "Produtos" },
             { id: "reports" as const, label: "Relatórios" },
@@ -363,6 +365,8 @@ const Admin = () => {
             </button>
           ))}
         </div>
+
+        {tab === "dashboard" && storeId && <DashboardTab storeId={storeId} />}
 
         {tab === "orders" && (
           <div className="space-y-3">
