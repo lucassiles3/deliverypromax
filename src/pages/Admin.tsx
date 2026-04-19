@@ -36,16 +36,19 @@ import { CustomerHistoryDrawer } from "@/components/admin/CustomerHistoryDrawer"
 import { ReportsTab } from "@/components/admin/ReportsTab";
 import { DashboardTab } from "@/components/admin/DashboardTab";
 import { MenuTab } from "@/components/admin/MenuTab";
+import { OrdersKanban } from "@/components/admin/OrdersKanban";
+import { SettingsTab } from "@/components/admin/SettingsTab";
 
-type DbStatus = "pending_payment" | "received" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "products" | "reports";
+type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
+type Tab = "dashboard" | "orders" | "products" | "reports" | "settings";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
 const statusConfig: Record<DbStatus, { label: string; color: string; icon: typeof Clock; next?: DbStatus }> = {
   pending_payment: { label: "Aguardando pgto", color: "bg-muted text-muted-foreground", icon: Clock, next: "received" },
   received: { label: "Recebido", color: "bg-blue-500/10 text-blue-600", icon: Clock, next: "preparing" },
-  preparing: { label: "Em preparo", color: "bg-amber-500/10 text-amber-600", icon: Package, next: "out_for_delivery" },
+  preparing: { label: "Em preparo", color: "bg-amber-500/10 text-amber-600", icon: Package, next: "ready" },
+  ready: { label: "Pronto", color: "bg-blue-500/10 text-blue-600", icon: Package, next: "out_for_delivery" },
   out_for_delivery: { label: "Saiu p/ entrega", color: "bg-purple-500/10 text-purple-600", icon: Truck, next: "delivered" },
   delivered: { label: "Entregue", color: "bg-green-500/10 text-green-600", icon: CheckCircle2 },
   cancelled: { label: "Cancelado", color: "bg-destructive/10 text-destructive", icon: Clock },
@@ -315,24 +318,27 @@ const Admin = () => {
       </header>
 
       <div className="container py-6">
-        <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Kpi icon={DollarSign} label="Faturamento" value={`R$ ${kpis.revenue.toFixed(2).replace(".", ",")}`} accent="primary" />
-          <Kpi icon={ShoppingBag} label="Pedidos" value={String(kpis.count)} />
-          <Kpi icon={Package} label="Em andamento" value={String(kpis.active)} />
-          <Kpi icon={TrendingUp} label="Ticket médio" value={`R$ ${kpis.avg.toFixed(2).replace(".", ",")}`} />
+        <div className="mb-6 rounded-2xl gradient-primary p-5 text-primary-foreground shadow-soft">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <KpiBlock icon={DollarSign} label="Faturamento" value={`R$ ${kpis.revenue.toFixed(2).replace(".", ",")}`} />
+            <KpiBlock icon={ShoppingBag} label="Pedidos" value={String(kpis.count)} divider />
+            <KpiBlock icon={Package} label="Em andamento" value={String(kpis.active)} divider />
+            <KpiBlock icon={TrendingUp} label="Ticket médio" value={`R$ ${kpis.avg.toFixed(2).replace(".", ",")}`} divider />
+          </div>
         </div>
 
-        <div className="mb-5 flex gap-2 border-b">
+        <div className="mb-5 flex gap-2 border-b overflow-x-auto">
           {[
             { id: "dashboard" as const, label: "Dashboard" },
             { id: "orders" as const, label: "Pedidos ao vivo" },
-            { id: "products" as const, label: "Produtos" },
+            { id: "products" as const, label: "Cardápio" },
             { id: "reports" as const, label: "Relatórios" },
+            { id: "settings" as const, label: "Configurações" },
           ].map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-bold transition-smooth ${
+              className={`relative flex items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-bold transition-smooth ${
                 tab === t.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -349,268 +355,15 @@ const Admin = () => {
 
         {tab === "dashboard" && storeId && <DashboardTab storeId={storeId} />}
 
-        {tab === "orders" && (
-          <div className="space-y-3">
-            {/* Filtros */}
-            <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-card p-3 shadow-soft">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar por #, nome ou telefone..."
-                  className="w-full rounded-lg border-2 bg-background py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
-                />
-              </div>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                className="rounded-lg border-2 bg-background px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
-              >
-                <option value="active">Ativos</option>
-                <option value="all">Todos</option>
-                <option value="received">Recebidos</option>
-                <option value="preparing">Em preparo</option>
-                <option value="out_for_delivery">Saiu p/ entrega</option>
-                <option value="delivered">Entregues</option>
-                <option value="cancelled">Cancelados</option>
-              </select>
-              <select
-                value={methodFilter}
-                onChange={(e) => setMethodFilter(e.target.value as MethodFilter)}
-                className="rounded-lg border-2 bg-background px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
-              >
-                <option value="all">Todos métodos</option>
-                <option value="delivery">🛵 Entrega</option>
-                <option value="pickup">🏪 Retirada</option>
-              </select>
-            </div>
-
-            {filteredOrders.length === 0 && (
-              <p className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground shadow-soft">
-                Nenhum pedido encontrado com esses filtros.
-              </p>
-            )}
-            {filteredOrders.map((o) => {
-              const cfg = statusConfig[o.status as DbStatus];
-              const Icon = cfg.icon;
-              const orderItems = (o.order_items ?? []) as Array<{
-                id: string;
-                product_name: string;
-                quantity: number;
-                unit_price: number;
-                notes: string | null;
-                customizations: any;
-              }>;
-              const itemsCount = orderItems.length;
-              const time = new Date(o.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-              const isOpen = expandedOrder === o.id;
-              const addr = o.address as
-                | { street?: string; number?: string; complement?: string; neighborhood?: string; city?: string; cep?: string }
-                | null;
-              const PayIcon =
-                o.payment_method === "pix"
-                  ? QrCode
-                  : o.payment_method === "cash"
-                    ? Banknote
-                    : CreditCard;
-              const payLabel: Record<string, string> = {
-                pix: "Pix",
-                cash: "Dinheiro",
-                credit: "Cartão de crédito",
-                debit: "Cartão de débito",
-              };
-              return (
-                <div key={o.id} className="overflow-hidden rounded-2xl bg-card shadow-soft">
-                  <div className="flex flex-wrap items-center gap-3 p-4">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-full ${cfg.color}`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <strong className="font-display text-lg">#{o.id.slice(0, 6).toUpperCase()}</strong>
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${cfg.color}`}>{cfg.label}</span>
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                          {o.method === "delivery" ? "🛵 Entrega" : "🏪 Retirada"}
-                        </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                          <PayIcon className="h-3 w-3" /> {payLabel[o.payment_method ?? "pix"]}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        <button
-                          onClick={() => setHistoryPhone(o.customer_phone)}
-                          className="font-semibold hover:text-primary hover:underline"
-                          title="Ver histórico do cliente"
-                        >
-                          {o.customer_name}
-                        </button>
-                        {" "}• {itemsCount} itens • {time}
-                      </p>
-                    </div>
-                    <div className="ml-auto flex items-center gap-2">
-                      <div className="text-right">
-                        <div className="font-display text-lg font-bold">
-                          R$ {Number(o.total).toFixed(2).replace(".", ",")}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setHistoryPhone(o.customer_phone)}
-                        className="rounded-lg p-2 hover:bg-muted"
-                        title="Histórico do cliente"
-                      >
-                        <History className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => setExpandedOrder(isOpen ? null : o.id)}
-                        className="rounded-lg p-2 hover:bg-muted"
-                        aria-label="Ver detalhes"
-                      >
-                        <ChevronDown className={`h-5 w-5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                      </button>
-                      {cfg.next && (
-                        <Button
-                          onClick={() => advanceStatus(o.id, o.status as DbStatus)}
-                          size="sm"
-                          className="rounded-xl gradient-primary font-bold"
-                        >
-                          Avançar →
-                        </Button>
-                      )}
-                      {o.status !== "delivered" && o.status !== "cancelled" && (
-                        <button
-                          onClick={() => cancelOrder(o.id)}
-                          className="rounded-lg p-2 text-destructive hover:bg-destructive/10"
-                          title="Cancelar"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {isOpen && (
-                    <div className="border-t bg-muted/30 p-4 text-sm">
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div>
-                          <h4 className="mb-2 text-xs font-bold uppercase text-muted-foreground">Cliente</h4>
-                          <p className="font-semibold">{o.customer_name}</p>
-                          <a
-                            href={`https://wa.me/55${o.customer_phone.replace(/\D/g, "")}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                          >
-                            <Phone className="h-3 w-3" /> {o.customer_phone}
-                          </a>
-
-                          {o.method === "delivery" && addr && (
-                            <div className="mt-3">
-                              <h4 className="mb-1 text-xs font-bold uppercase text-muted-foreground">Endereço</h4>
-                              <p className="text-sm">
-                                {addr.street}, {addr.number}
-                                {addr.complement ? ` — ${addr.complement}` : ""}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {addr.neighborhood}
-                                {addr.city ? ` — ${addr.city}` : ""} • CEP {addr.cep}
-                              </p>
-                              {o.delivery_lat && o.delivery_lng && (
-                                <a
-                                  href={`https://www.google.com/maps?q=${o.delivery_lat},${o.delivery_lng}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
-                                >
-                                  <MapPin className="h-3 w-3" /> Abrir no Google Maps
-                                </a>
-                              )}
-                            </div>
-                          )}
-
-                          <div className="mt-3">
-                            <h4 className="mb-1 text-xs font-bold uppercase text-muted-foreground">Pagamento</h4>
-                            <p className="inline-flex items-center gap-1 text-sm">
-                              <PayIcon className="h-4 w-4 text-primary" /> {payLabel[o.payment_method ?? "pix"]}
-                            </p>
-                            {o.payment_method === "cash" && o.change_for && (
-                              <p className="text-xs text-warning">
-                                💵 Troco para R$ {Number(o.change_for).toFixed(2).replace(".", ",")} (devolver R${" "}
-                                {Math.max(0, Number(o.change_for) - Number(o.total)).toFixed(2).replace(".", ",")})
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div>
-                          <h4 className="mb-2 text-xs font-bold uppercase text-muted-foreground">Itens</h4>
-                          <ul className="space-y-1.5">
-                            {orderItems.map((it) => (
-                              <li key={it.id} className="text-sm">
-                                <div className="flex justify-between gap-2">
-                                  <span>
-                                    <strong>{it.quantity}×</strong> {it.product_name}
-                                  </span>
-                                  <span className="shrink-0 font-semibold">
-                                    R$ {(Number(it.unit_price) * it.quantity).toFixed(2).replace(".", ",")}
-                                  </span>
-                                </div>
-                                {Array.isArray(it.customizations) &&
-                                  it.customizations.map((c: any, ci: number) => (
-                                    <p key={ci} className="ml-5 text-xs text-muted-foreground">
-                                      ↳ {c.groupName}: {(c.selections ?? []).map((s: any) => s.name).join(", ")}
-                                    </p>
-                                  ))}
-                                {it.notes && (
-                                  <p className="ml-5 text-xs text-muted-foreground">📝 {it.notes}</p>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-
-                          <div className="mt-3 space-y-0.5 border-t pt-2 text-xs">
-                            <div className="flex justify-between text-muted-foreground">
-                              <span>Subtotal</span>
-                              <span>R$ {Number(o.subtotal).toFixed(2).replace(".", ",")}</span>
-                            </div>
-                            {Number(o.delivery_fee) > 0 && (
-                              <div className="flex justify-between text-muted-foreground">
-                                <span>Entrega</span>
-                                <span>R$ {Number(o.delivery_fee).toFixed(2).replace(".", ",")}</span>
-                              </div>
-                            )}
-                            {Number(o.coupon_discount) > 0 && (
-                              <div className="flex justify-between text-success">
-                                <span>Cupom {o.coupon_code}</span>
-                                <span>-R$ {Number(o.coupon_discount).toFixed(2).replace(".", ",")}</span>
-                              </div>
-                            )}
-                            {Number(o.cashback_used) > 0 && (
-                              <div className="flex justify-between text-success">
-                                <span>Cashback</span>
-                                <span>-R$ {Number(o.cashback_used).toFixed(2).replace(".", ",")}</span>
-                              </div>
-                            )}
-                            <div className="flex justify-between border-t pt-1 font-bold">
-                              <span>Total</span>
-                              <span>R$ {Number(o.total).toFixed(2).replace(".", ",")}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+        {tab === "orders" && storeId && <OrdersKanban storeId={storeId} />}
 
         {tab === "products" && storeId && <MenuTab storeId={storeId} />}
 
         {tab === "reports" && storeId && currentStore && (
           <ReportsTab storeId={storeId} storeName={currentStore.name} />
         )}
+
+        {tab === "settings" && storeId && <SettingsTab storeId={storeId} />}
       </div>
 
       {storeId && (
@@ -624,27 +377,23 @@ const Admin = () => {
   );
 };
 
-const Kpi = ({
+const KpiBlock = ({
   icon: Icon,
   label,
   value,
-  accent,
+  divider,
 }: {
   icon: typeof Clock;
   label: string;
   value: string;
-  accent?: "primary";
+  divider?: boolean;
 }) => (
-  <div
-    className={`rounded-2xl p-4 shadow-soft ${
-      accent === "primary" ? "gradient-primary text-primary-foreground" : "bg-card"
-    }`}
-  >
-    <div className="flex items-center gap-2 text-xs font-medium opacity-90">
-      <Icon className="h-4 w-4" />
+  <div className={divider ? "md:border-l md:border-primary-foreground/20 md:pl-4" : ""}>
+    <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider opacity-80">
+      <Icon className="h-3.5 w-3.5" />
       {label}
     </div>
-    <div className="mt-1 font-display text-2xl font-bold">{value}</div>
+    <div className="mt-1 font-display text-2xl font-bold leading-tight">{value}</div>
   </div>
 );
 

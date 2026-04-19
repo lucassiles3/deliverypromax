@@ -220,9 +220,42 @@ export type Database = {
           },
         ]
       }
+      order_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["order_status"] | null
+          id: string
+          note: string | null
+          order_id: string
+          to_status: Database["public"]["Enums"]["order_status"]
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["order_status"] | null
+          id?: string
+          note?: string | null
+          order_id: string
+          to_status: Database["public"]["Enums"]["order_status"]
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["order_status"] | null
+          id?: string
+          note?: string | null
+          order_id?: string
+          to_status?: Database["public"]["Enums"]["order_status"]
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
+          accepted_at: string | null
           address: Json | null
+          cancel_by: Database["public"]["Enums"]["cancel_source"] | null
+          cancel_reason: string | null
           cashback_earned: number
           cashback_used: number
           change_for: number | null
@@ -246,7 +279,10 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          accepted_at?: string | null
           address?: Json | null
+          cancel_by?: Database["public"]["Enums"]["cancel_source"] | null
+          cancel_reason?: string | null
           cashback_earned?: number
           cashback_used?: number
           change_for?: number | null
@@ -270,7 +306,10 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          accepted_at?: string | null
           address?: Json | null
+          cancel_by?: Database["public"]["Enums"]["cancel_source"] | null
+          cancel_reason?: string | null
           cashback_earned?: number
           cashback_used?: number
           change_for?: number | null
@@ -428,6 +467,9 @@ export type Database = {
       }
       stores: {
         Row: {
+          accept_alert_min: number
+          autocancel_enabled: boolean
+          autocancel_min: number
           categories: string[] | null
           city: string | null
           cover_url: string | null
@@ -447,11 +489,15 @@ export type Database = {
           rating: number | null
           reviews: number | null
           slug: string
+          sound_alerts_enabled: boolean
           tagline: string | null
           updated_at: string
           whatsapp_phone: string | null
         }
         Insert: {
+          accept_alert_min?: number
+          autocancel_enabled?: boolean
+          autocancel_min?: number
           categories?: string[] | null
           city?: string | null
           cover_url?: string | null
@@ -471,11 +517,15 @@ export type Database = {
           rating?: number | null
           reviews?: number | null
           slug: string
+          sound_alerts_enabled?: boolean
           tagline?: string | null
           updated_at?: string
           whatsapp_phone?: string | null
         }
         Update: {
+          accept_alert_min?: number
+          autocancel_enabled?: boolean
+          autocancel_min?: number
           categories?: string[] | null
           city?: string | null
           cover_url?: string | null
@@ -495,6 +545,7 @@ export type Database = {
           rating?: number | null
           reviews?: number | null
           slug?: string
+          sound_alerts_enabled?: boolean
           tagline?: string | null
           updated_at?: string
           whatsapp_phone?: string | null
@@ -608,12 +659,14 @@ export type Database = {
     Enums: {
       addon_type: "single" | "multi"
       app_role: "admin" | "store_owner" | "customer"
+      cancel_source: "store" | "system" | "customer" | "courier"
       coupon_type: "percent" | "fixed" | "free_shipping"
       delivery_method: "delivery" | "pickup"
       order_status:
         | "pending_payment"
         | "received"
         | "preparing"
+        | "ready"
         | "out_for_delivery"
         | "delivered"
         | "cancelled"
@@ -747,12 +800,14 @@ export const Constants = {
     Enums: {
       addon_type: ["single", "multi"],
       app_role: ["admin", "store_owner", "customer"],
+      cancel_source: ["store", "system", "customer", "courier"],
       coupon_type: ["percent", "fixed", "free_shipping"],
       delivery_method: ["delivery", "pickup"],
       order_status: [
         "pending_payment",
         "received",
         "preparing",
+        "ready",
         "out_for_delivery",
         "delivered",
         "cancelled",
