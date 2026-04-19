@@ -38,12 +38,13 @@ import { DashboardTab } from "@/components/admin/DashboardTab";
 import { MenuTab } from "@/components/admin/MenuTab";
 import { OrdersKanban } from "@/components/admin/OrdersKanban";
 import { SettingsTab } from "@/components/admin/SettingsTab";
+import { StoreSettingsTab } from "@/components/admin/StoreSettingsTab";
 import { FinancialTab } from "@/components/admin/FinancialTab";
 import { CustomersTab } from "@/components/admin/CustomersTab";
 import { MarketingTab } from "@/components/admin/MarketingTab";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "products" | "customers" | "marketing" | "financial" | "reports" | "settings";
+type Tab = "dashboard" | "orders" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
@@ -339,7 +340,8 @@ const Admin = () => {
             { id: "marketing" as const, label: "Marketing" },
             { id: "financial" as const, label: "Financeiro" },
             { id: "reports" as const, label: "Relatórios" },
-            { id: "settings" as const, label: "Configurações" },
+            { id: "store" as const, label: "Loja" },
+            { id: "settings" as const, label: "Operação" },
           ].map((t) => (
             <button
               key={t.id}
@@ -376,6 +378,8 @@ const Admin = () => {
         {tab === "reports" && storeId && currentStore && (
           <ReportsTab storeId={storeId} storeName={currentStore.name} />
         )}
+
+        {tab === "store" && storeId && <StoreSettingsTab storeId={storeId} />}
 
         {tab === "settings" && storeId && <SettingsTab storeId={storeId} />}
       </div>
