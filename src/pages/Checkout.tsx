@@ -263,7 +263,16 @@ const Checkout = () => {
       if (loyaltyErr) throw loyaltyErr;
 
       const waUrl = buildWhatsappUrl(order.id);
-      if (waUrl) window.open(waUrl, "_blank", "noopener,noreferrer");
+      if (waUrl) {
+        // Use anchor click to avoid popup blockers / iframe restrictions
+        const a = document.createElement("a");
+        a.href = waUrl;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
 
       setStep("done");
       toast.success(`Pedido confirmado! Você ganhou R$ ${earned.toFixed(2).replace(".", ",")} de cashback 🎉`);
