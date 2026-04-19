@@ -212,12 +212,17 @@ export const AddonGroupsEditor = ({ productId }: { productId: string }) => {
               key={g.id}
               group={g}
               onPatch={(patch) => updateGroup(g.id, patch)}
-              onPersist={() => persistGroup(g)}
+              onPersist={async () => {
+                const id = await persistGroup(g);
+                return id ? String(id) : undefined;
+              }}
               onRemove={() => removeGroup(g.id)}
               onAddOption={() => addOption(g.id)}
               onRemoveOption={(optId) => removeOption(g.id, optId)}
               onPatchOption={(optId, patch) => updateOption(g.id, optId, patch)}
-              onPersistOption={(o) => persistOption(g.id, o)}
+              onPersistOption={async (o) => {
+                await persistOption(g.id, o);
+              }}
             />
           ))}
         </SortableContext>
