@@ -43,10 +43,11 @@ import { FinancialTab } from "@/components/admin/FinancialTab";
 import { CustomersTab } from "@/components/admin/CustomersTab";
 import { MarketingTab } from "@/components/admin/MarketingTab";
 import { TeamTab } from "@/components/admin/TeamTab";
+import { IntegrationsTab } from "@/components/admin/IntegrationsTab";
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team";
+type Tab = "dashboard" | "orders" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team" | "integrations";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
@@ -116,7 +117,7 @@ const Admin = () => {
   useEffect(() => {
     if (!currentRole) return;
     if (!canAccessSection(currentRole, tab)) {
-      const order: Tab[] = ["dashboard","orders","products","customers","marketing","financial","reports","store","settings","team"];
+      const order: Tab[] = ["dashboard","orders","products","customers","marketing","financial","reports","store","settings","team","integrations"];
       const next = order.find((t) => canAccessSection(currentRole, t));
       if (next && next !== tab) setTab(next);
     }
@@ -351,6 +352,7 @@ const Admin = () => {
             { id: "store" as const, label: "Loja" },
             { id: "settings" as const, label: "Operação" },
             { id: "team" as const, label: "Equipe" },
+            { id: "integrations" as const, label: "Integrações" },
           ]
             .filter((t) => canAccessSection(currentRole, t.id))
             .map((t) => (
@@ -386,6 +388,7 @@ const Admin = () => {
         {tab === "store" && storeId && canAccessSection(currentRole, "store") && <StoreSettingsTab storeId={storeId} />}
         {tab === "settings" && storeId && canAccessSection(currentRole, "settings") && <SettingsTab storeId={storeId} />}
         {tab === "team" && storeId && canAccessSection(currentRole, "team") && <TeamTab storeId={storeId} />}
+        {tab === "integrations" && storeId && canAccessSection(currentRole, "integrations") && <IntegrationsTab storeId={storeId} />}
       </div>
 
       {storeId && (
