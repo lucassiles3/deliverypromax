@@ -43,7 +43,7 @@ import { CustomersTab } from "@/components/admin/CustomersTab";
 import { MarketingTab } from "@/components/admin/MarketingTab";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "products" | "customers" | "financial" | "reports" | "settings";
+type Tab = "dashboard" | "orders" | "products" | "customers" | "marketing" | "financial" | "reports" | "settings";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
