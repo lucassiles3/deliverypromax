@@ -862,6 +862,47 @@ export type Database = {
           },
         ]
       }
+      store_holidays: {
+        Row: {
+          close_time: string | null
+          closed: boolean
+          created_at: string
+          date: string
+          id: string
+          label: string | null
+          open_time: string | null
+          store_id: string
+        }
+        Insert: {
+          close_time?: string | null
+          closed?: boolean
+          created_at?: string
+          date: string
+          id?: string
+          label?: string | null
+          open_time?: string | null
+          store_id: string
+        }
+        Update: {
+          close_time?: string | null
+          closed?: boolean
+          created_at?: string
+          date?: string
+          id?: string
+          label?: string | null
+          open_time?: string | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_holidays_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_loyalty_config: {
         Row: {
           enabled: boolean
@@ -900,92 +941,249 @@ export type Database = {
           },
         ]
       }
+      store_neighborhoods: {
+        Row: {
+          active: boolean
+          city: string | null
+          created_at: string
+          estimated_time_min: number | null
+          fee: number
+          id: string
+          name: string
+          store_id: string
+        }
+        Insert: {
+          active?: boolean
+          city?: string | null
+          created_at?: string
+          estimated_time_min?: number | null
+          fee?: number
+          id?: string
+          name: string
+          store_id: string
+        }
+        Update: {
+          active?: boolean
+          city?: string | null
+          created_at?: string
+          estimated_time_min?: number | null
+          fee?: number
+          id?: string
+          name?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_neighborhoods_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_payment_methods: {
+        Row: {
+          active_from: string | null
+          active_to: string | null
+          created_at: string
+          enabled: boolean
+          id: string
+          installments: number | null
+          method: string
+          notes: string | null
+          store_id: string
+        }
+        Insert: {
+          active_from?: string | null
+          active_to?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          installments?: number | null
+          method: string
+          notes?: string | null
+          store_id: string
+        }
+        Update: {
+          active_from?: string | null
+          active_to?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          installments?: number | null
+          method?: string
+          notes?: string | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_payment_methods_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores: {
         Row: {
           accept_alert_min: number
+          address_cep: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
           autocancel_enabled: boolean
           autocancel_min: number
           categories: string[] | null
           city: string | null
+          courier_mode: string
           cover_url: string | null
           created_at: string
           cuisine: string | null
           delivery_fee: number | null
+          delivery_fee_per_km: number | null
+          delivery_mode: string
+          delivery_radius_km: number | null
           delivery_time: string | null
           free_shipping_threshold: number | null
           id: string
+          instagram: string | null
+          lat: number | null
+          lng: number | null
           logo: string | null
           marketplace_fee_percent: number
+          max_orders_per_hour: number | null
           min_order: number | null
           name: string
           open: boolean
           opening_hours: Json | null
           owner_id: string | null
+          phone: string | null
+          pickup_enabled: boolean
+          pickup_prep_time_min: number | null
+          pix_key: string | null
+          preorder_minutes: number | null
           promo: string | null
           rating: number | null
           reviews: number | null
+          short_description: string | null
           slug: string
           sound_alerts_enabled: boolean
           tagline: string | null
           updated_at: string
+          vacation_message: string | null
+          vacation_mode: boolean
+          vacation_until: string | null
+          website: string | null
           whatsapp_phone: string | null
         }
         Insert: {
           accept_alert_min?: number
+          address_cep?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
           autocancel_enabled?: boolean
           autocancel_min?: number
           categories?: string[] | null
           city?: string | null
+          courier_mode?: string
           cover_url?: string | null
           created_at?: string
           cuisine?: string | null
           delivery_fee?: number | null
+          delivery_fee_per_km?: number | null
+          delivery_mode?: string
+          delivery_radius_km?: number | null
           delivery_time?: string | null
           free_shipping_threshold?: number | null
           id?: string
+          instagram?: string | null
+          lat?: number | null
+          lng?: number | null
           logo?: string | null
           marketplace_fee_percent?: number
+          max_orders_per_hour?: number | null
           min_order?: number | null
           name: string
           open?: boolean
           opening_hours?: Json | null
           owner_id?: string | null
+          phone?: string | null
+          pickup_enabled?: boolean
+          pickup_prep_time_min?: number | null
+          pix_key?: string | null
+          preorder_minutes?: number | null
           promo?: string | null
           rating?: number | null
           reviews?: number | null
+          short_description?: string | null
           slug: string
           sound_alerts_enabled?: boolean
           tagline?: string | null
           updated_at?: string
+          vacation_message?: string | null
+          vacation_mode?: boolean
+          vacation_until?: string | null
+          website?: string | null
           whatsapp_phone?: string | null
         }
         Update: {
           accept_alert_min?: number
+          address_cep?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
           autocancel_enabled?: boolean
           autocancel_min?: number
           categories?: string[] | null
           city?: string | null
+          courier_mode?: string
           cover_url?: string | null
           created_at?: string
           cuisine?: string | null
           delivery_fee?: number | null
+          delivery_fee_per_km?: number | null
+          delivery_mode?: string
+          delivery_radius_km?: number | null
           delivery_time?: string | null
           free_shipping_threshold?: number | null
           id?: string
+          instagram?: string | null
+          lat?: number | null
+          lng?: number | null
           logo?: string | null
           marketplace_fee_percent?: number
+          max_orders_per_hour?: number | null
           min_order?: number | null
           name?: string
           open?: boolean
           opening_hours?: Json | null
           owner_id?: string | null
+          phone?: string | null
+          pickup_enabled?: boolean
+          pickup_prep_time_min?: number | null
+          pix_key?: string | null
+          preorder_minutes?: number | null
           promo?: string | null
           rating?: number | null
           reviews?: number | null
+          short_description?: string | null
           slug?: string
           sound_alerts_enabled?: boolean
           tagline?: string | null
           updated_at?: string
+          vacation_message?: string | null
+          vacation_mode?: boolean
+          vacation_until?: string | null
+          website?: string | null
           whatsapp_phone?: string | null
         }
         Relationships: []
