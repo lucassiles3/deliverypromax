@@ -36,7 +36,7 @@ export const useLoyalty = (): LoyaltyState => {
     load();
 
     const ch = supabase
-      .channel(`loyalty:${user.id}`)
+      .channel(`loyalty:${user.id}:${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "user_loyalty", filter: `user_id=eq.${user.id}` },
