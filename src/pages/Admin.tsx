@@ -340,7 +340,8 @@ const Admin = () => {
             { id: "marketing" as const, label: "Marketing" },
             { id: "financial" as const, label: "Financeiro" },
             { id: "reports" as const, label: "Relatórios" },
-            { id: "settings" as const, label: "Configurações" },
+            { id: "store" as const, label: "Loja" },
+            { id: "settings" as const, label: "Operação" },
           ].map((t) => (
             <button
               key={t.id}
