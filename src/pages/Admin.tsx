@@ -340,46 +340,42 @@ const Admin = () => {
             { id: "reports" as const, label: "Relatórios" },
             { id: "store" as const, label: "Loja" },
             { id: "settings" as const, label: "Operação" },
-          ].map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`relative flex items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-bold transition-smooth ${
-                tab === t.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t.label}
-              {t.id === "orders" && pendingCount > 0 && (
-                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground animate-pulse">
-                  {pendingCount}
-                </span>
-              )}
-              {tab === t.id && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
-            </button>
-          ))}
+            { id: "team" as const, label: "Equipe" },
+          ]
+            .filter((t) => canAccessSection(currentRole, t.id))
+            .map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`relative flex items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-bold transition-smooth ${
+                  tab === t.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t.label}
+                {t.id === "orders" && pendingCount > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground animate-pulse">
+                    {pendingCount}
+                  </span>
+                )}
+                {tab === t.id && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
+              </button>
+            ))}
         </div>
 
-        {tab === "dashboard" && storeId && <DashboardTab storeId={storeId} />}
-
-        {tab === "orders" && storeId && <OrdersKanban storeId={storeId} />}
-
-        {tab === "products" && storeId && <MenuTab storeId={storeId} />}
-
-        {tab === "customers" && storeId && <CustomersTab storeId={storeId} />}
-
-        {tab === "marketing" && storeId && <MarketingTab storeId={storeId} />}
-
-        {tab === "financial" && storeId && currentStore && (
+        {tab === "dashboard" && storeId && canAccessSection(currentRole, "dashboard") && <DashboardTab storeId={storeId} />}
+        {tab === "orders" && storeId && canAccessSection(currentRole, "orders") && <OrdersKanban storeId={storeId} />}
+        {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
+        {tab === "customers" && storeId && canAccessSection(currentRole, "customers") && <CustomersTab storeId={storeId} />}
+        {tab === "marketing" && storeId && canAccessSection(currentRole, "marketing") && <MarketingTab storeId={storeId} />}
+        {tab === "financial" && storeId && currentStore && canAccessSection(currentRole, "financial") && (
           <FinancialTab storeId={storeId} storeName={currentStore.name} />
         )}
-
-        {tab === "reports" && storeId && currentStore && (
+        {tab === "reports" && storeId && currentStore && canAccessSection(currentRole, "reports") && (
           <ReportsTab storeId={storeId} storeName={currentStore.name} />
         )}
-
-        {tab === "store" && storeId && <StoreSettingsTab storeId={storeId} />}
-
-        {tab === "settings" && storeId && <SettingsTab storeId={storeId} />}
+        {tab === "store" && storeId && canAccessSection(currentRole, "store") && <StoreSettingsTab storeId={storeId} />}
+        {tab === "settings" && storeId && canAccessSection(currentRole, "settings") && <SettingsTab storeId={storeId} />}
+        {tab === "team" && storeId && canAccessSection(currentRole, "team") && <TeamTab storeId={storeId} />}
       </div>
 
       {storeId && (
