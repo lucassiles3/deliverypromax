@@ -44,10 +44,13 @@ import { CustomersTab } from "@/components/admin/CustomersTab";
 import { MarketingTab } from "@/components/admin/MarketingTab";
 import { TeamTab } from "@/components/admin/TeamTab";
 import { IntegrationsTab } from "@/components/admin/IntegrationsTab";
+import { PDVTab } from "@/components/admin/PDVTab";
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
+import { useStoreToggles } from "@/hooks/useStoreToggles";
+import { Printer } from "lucide-react";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team" | "integrations";
+type Tab = "dashboard" | "orders" | "pdv" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team" | "integrations";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
@@ -66,7 +69,9 @@ const Admin = () => {
   const qc = useQueryClient();
   const [storeId, setStoreId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("dashboard");
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const { toggles, update: updateToggles } = useStoreToggles(storeId);
+  const soundEnabled = toggles.sound_alerts_enabled;
+  const autoPrintEnabled = toggles.auto_print_enabled;
 
   // Filtros pedidos
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
@@ -302,8 +307,9 @@ const Admin = () => {
           <div className="ml-auto flex items-center gap-2">
             <button
               onClick={() => {
-                setSoundEnabled((v) => !v);
-                if (!soundEnabled) playDing();
+                const next = !soundEnabled;
+                updateToggles({ sound_alerts_enabled: next });
+                if (next) playDing();
               }}
               className={`flex items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-smooth ${
                 soundEnabled
@@ -314,6 +320,18 @@ const Admin = () => {
             >
               {soundEnabled ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
               Som
+            </button>
+            <button
+              onClick={() => updateToggles({ auto_print_enabled: !autoPrintEnabled })}
+              className={`flex items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-smooth ${
+                autoPrintEnabled
+                  ? "border-primary/30 bg-primary/5 text-primary"
+                  : "border-border bg-muted text-muted-foreground"
+              }`}
+              title={autoPrintEnabled ? "Impressão automática ligada" : "Impressão automática desligada"}
+            >
+              <Printer className="h-3.5 w-3.5" />
+              Imprimir
             </button>
             <select
               value={storeId ?? ""}
@@ -344,6 +362,7 @@ const Admin = () => {
           {[
             { id: "dashboard" as const, label: "Dashboard" },
             { id: "orders" as const, label: "Pedidos ao vivo" },
+            { id: "pdv" as const, label: "PDV" },
             { id: "products" as const, label: "Cardápio" },
             { id: "customers" as const, label: "Clientes" },
             { id: "marketing" as const, label: "Marketing" },
@@ -376,6 +395,17 @@ const Admin = () => {
 
         {tab === "dashboard" && storeId && canAccessSection(currentRole, "dashboard") && <DashboardTab storeId={storeId} />}
         {tab === "orders" && storeId && canAccessSection(currentRole, "orders") && <OrdersKanban storeId={storeId} />}
+        {tab === "pdv" && storeId && currentStore && canAccessSection(currentRole, "pdv") && toggles.pdv_enabled && (
+          <PDVTab storeId={storeId} storeName={currentStore.name} />
+        )}
+        {tab === "pdv" && storeId && !toggles.pdv_enabled && (
+          <div className="rounded-2xl border-2 border-dashed border-border bg-card p-8 text-center">
+            <h3 className="font-display text-lg font-bold">PDV desabilitado</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Habilite o PDV em <strong>Operação → PDV</strong> para vender no balcão.
+            </p>
+          </div>
+        )}
         {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
         {tab === "customers" && storeId && canAccessSection(currentRole, "customers") && <CustomersTab storeId={storeId} />}
         {tab === "marketing" && storeId && canAccessSection(currentRole, "marketing") && <MarketingTab storeId={storeId} />}

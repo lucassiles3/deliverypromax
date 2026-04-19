@@ -9,6 +9,7 @@ import Index from "./pages/Index.tsx";
 import Store from "./pages/Store.tsx";
 import Checkout from "./pages/Checkout.tsx";
 import Admin from "./pages/Admin.tsx";
+import PDV from "./pages/PDV.tsx";
 import Auth from "./pages/Auth.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import MyOrders from "./pages/MyOrders.tsx";
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/loja/:slug" element={<Store />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/pdv" element={<PDV />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/meus-pedidos" element={<MyOrders />} />

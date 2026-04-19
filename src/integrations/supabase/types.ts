@@ -169,6 +169,129 @@ export type Database = {
           },
         ]
       }
+      cash_movements: {
+        Row: {
+          amount: number
+          cash_register_id: string
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          description: string | null
+          id: string
+          order_id: string | null
+          payment_method: string | null
+          store_id: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          cash_register_id: string
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          payment_method?: string | null
+          store_id: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          cash_register_id?: string
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          payment_method?: string | null
+          store_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_movements_cash_register_id_fkey"
+            columns: ["cash_register_id"]
+            isOneToOne: false
+            referencedRelation: "cash_registers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_movements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_movements_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cash_registers: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          closed_by_name: string | null
+          counted_amount: number | null
+          difference: number | null
+          expected_amount: number | null
+          id: string
+          initial_amount: number
+          notes: string | null
+          opened_at: string
+          opened_by: string | null
+          opened_by_name: string | null
+          status: string
+          store_id: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          closed_by_name?: string | null
+          counted_amount?: number | null
+          difference?: number | null
+          expected_amount?: number | null
+          id?: string
+          initial_amount?: number
+          notes?: string | null
+          opened_at?: string
+          opened_by?: string | null
+          opened_by_name?: string | null
+          status?: string
+          store_id: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          closed_by_name?: string | null
+          counted_amount?: number | null
+          difference?: number | null
+          expected_amount?: number | null
+          id?: string
+          initial_amount?: number
+          notes?: string | null
+          opened_at?: string
+          opened_by?: string | null
+          opened_by_name?: string | null
+          status?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_registers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           active: boolean
@@ -653,6 +776,51 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "payouts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pdv_payments: {
+        Row: {
+          amount: number
+          change_given: number
+          created_at: string
+          id: string
+          method: string
+          order_id: string
+          store_id: string
+        }
+        Insert: {
+          amount: number
+          change_given?: number
+          created_at?: string
+          id?: string
+          method: string
+          order_id: string
+          store_id: string
+        }
+        Update: {
+          amount?: number
+          change_given?: number
+          created_at?: string
+          id?: string
+          method?: string
+          order_id?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdv_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pdv_payments_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
@@ -1217,6 +1385,7 @@ export type Database = {
           address_number: string | null
           address_state: string | null
           address_street: string | null
+          auto_print_enabled: boolean
           autocancel_enabled: boolean
           autocancel_min: number
           categories: string[] | null
@@ -1243,11 +1412,13 @@ export type Database = {
           open: boolean
           opening_hours: Json | null
           owner_id: string | null
+          pdv_enabled: boolean
           phone: string | null
           pickup_enabled: boolean
           pickup_prep_time_min: number | null
           pix_key: string | null
           preorder_minutes: number | null
+          print_format: string
           promo: string | null
           rating: number | null
           reviews: number | null
@@ -1270,6 +1441,7 @@ export type Database = {
           address_number?: string | null
           address_state?: string | null
           address_street?: string | null
+          auto_print_enabled?: boolean
           autocancel_enabled?: boolean
           autocancel_min?: number
           categories?: string[] | null
@@ -1296,11 +1468,13 @@ export type Database = {
           open?: boolean
           opening_hours?: Json | null
           owner_id?: string | null
+          pdv_enabled?: boolean
           phone?: string | null
           pickup_enabled?: boolean
           pickup_prep_time_min?: number | null
           pix_key?: string | null
           preorder_minutes?: number | null
+          print_format?: string
           promo?: string | null
           rating?: number | null
           reviews?: number | null
@@ -1323,6 +1497,7 @@ export type Database = {
           address_number?: string | null
           address_state?: string | null
           address_street?: string | null
+          auto_print_enabled?: boolean
           autocancel_enabled?: boolean
           autocancel_min?: number
           categories?: string[] | null
@@ -1349,11 +1524,13 @@ export type Database = {
           open?: boolean
           opening_hours?: Json | null
           owner_id?: string | null
+          pdv_enabled?: boolean
           phone?: string | null
           pickup_enabled?: boolean
           pickup_prep_time_min?: number | null
           pix_key?: string | null
           preorder_minutes?: number | null
+          print_format?: string
           promo?: string | null
           rating?: number | null
           reviews?: number | null
@@ -1565,11 +1742,16 @@ export type Database = {
         Args: { _section: string; _store_id: string; _user_id: string }
         Returns: boolean
       }
+      cash_register_expected: {
+        Args: { _register_id: string }
+        Returns: number
+      }
       customer_points_balance: {
         Args: { _store_id: string; _user_id: string }
         Returns: number
       }
       generate_weekly_payouts: { Args: { _store_id: string }; Returns: number }
+      get_open_cash_register: { Args: { _store_id: string }; Returns: string }
       get_store_role: {
         Args: { _store_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["staff_role"]
