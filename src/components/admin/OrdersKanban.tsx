@@ -190,7 +190,54 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
     },
   });
 
-  // Realtime
+  // Track de pedidos já vistos pra disparar som/print apenas em novos
+  const seenIdsRef = useRef<Set<string>>(new Set());
+  const initializedRef = useRef(false);
+
+  // Auto-print de um pedido recém-chegado
+  const autoPrintOrder = async (orderId: string) => {
+    if (!settings?.auto_print_enabled) return;
+    try {
+      const { data: ord, error } = await supabase
+        .from("orders")
+        .select(
+          "id, customer_name, customer_phone, total, subtotal, delivery_fee, coupon_discount, method, payment_method, change_for, address, notes, created_at, order_items(quantity, product_name, unit_price, notes, customizations)"
+        )
+        .eq("id", orderId)
+        .maybeSingle();
+      if (error || !ord) return;
+
+      const data: PrintData = {
+        storeName: settings?.name ?? "Loja",
+        storePhone: settings?.phone ?? null,
+        storeAddress: [
+          settings?.address_street && `${settings.address_street}${settings.address_number ? `, ${settings.address_number}` : ""}`,
+          settings?.address_neighborhood,
+          settings?.city,
+        ].filter(Boolean).join(" — ") || null,
+        orderId: ord.id,
+        orderShortId: ord.id.slice(0, 6).toUpperCase(),
+        createdAt: ord.created_at,
+        customerName: ord.customer_name,
+        customerPhone: ord.customer_phone,
+        method: ord.method,
+        paymentMethod: ord.payment_method,
+        changeFor: ord.change_for,
+        address: ord.address,
+        notes: ord.notes,
+        items: (ord.order_items ?? []) as any,
+        subtotal: Number(ord.subtotal),
+        deliveryFee: Number(ord.delivery_fee || 0),
+        discount: Number(ord.coupon_discount || 0),
+        total: Number(ord.total),
+      };
+      printReceipt(data, (settings?.print_format as any) ?? "thermal_80mm");
+    } catch (e) {
+      console.warn("auto-print failed", e);
+    }
+  };
+
+  // Realtime + auto-print on INSERT received
   useEffect(() => {
     if (!storeId) return;
     const ch = supabase
@@ -198,13 +245,38 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
-        () => qc.invalidateQueries({ queryKey: ["kanban-orders", storeId] })
+        (payload: any) => {
+          qc.invalidateQueries({ queryKey: ["kanban-orders", storeId] });
+          if (payload.eventType === "INSERT" && payload.new?.status === "received") {
+            playDing();
+            autoPrintOrder(payload.new.id);
+          }
+          if (
+            payload.eventType === "UPDATE" &&
+            payload.old?.status === "pending_payment" &&
+            payload.new?.status === "received"
+          ) {
+            playDing();
+            autoPrintOrder(payload.new.id);
+          }
+        }
       )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [storeId, qc]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId, qc, settings?.auto_print_enabled, settings?.sound_alerts_enabled, settings?.print_format]);
+
+  // Inicializa o "já visto" na primeira carga (não imprime histórico)
+  useEffect(() => {
+    if (initializedRef.current || !orders) return;
+    if (orders.length >= 0) {
+      orders.forEach((o) => seenIdsRef.current.add(o.id));
+      initializedRef.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders.length === 0 ? null : orders[0]?.id]);
 
   // Sound alert + auto-cancel
   const playDing = () => {
