@@ -220,23 +220,7 @@ const Admin = () => {
     setEditingProduct(null);
     setProductModalOpen(true);
   };
-  const openEdit = (p: any) => {
-    setEditingProduct({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      description: p.description,
-      price: Number(p.price),
-      old_price: p.old_price !== null ? Number(p.old_price) : null,
-      image_url: p.image_url,
-      active: p.active,
-      bestseller: p.bestseller,
-      promo: p.promo,
-      track_stock: !!p.track_stock,
-      stock: p.stock,
-    });
-    setProductModalOpen(true);
-  };
+  // edição de produto agora vive dentro do MenuTab
 
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
@@ -632,16 +616,6 @@ const Admin = () => {
           <ReportsTab storeId={storeId} storeName={currentStore.name} />
         )}
       </div>
-
-      {storeId && (
-        <ProductFormModal
-          open={productModalOpen}
-          initial={editingProduct}
-          storeId={storeId}
-          onClose={() => setProductModalOpen(false)}
-          onSaved={() => qc.invalidateQueries({ queryKey: ["admin-products", storeId] })}
-        />
-      )}
 
       {storeId && (
         <CustomerHistoryDrawer
