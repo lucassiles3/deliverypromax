@@ -70,7 +70,7 @@ const COLUMNS: {
     hint: "aguardando aceite",
     icon: Bell,
     next: "preparing",
-    nextLabel: "Aceitar",
+    nextLabel: "✓ Aceitar",
     tone: "border-primary/40 bg-primary/5",
   },
   {
