@@ -377,27 +377,23 @@ const Admin = () => {
   );
 };
 
-const Kpi = ({
+const KpiBlock = ({
   icon: Icon,
   label,
   value,
-  accent,
+  divider,
 }: {
   icon: typeof Clock;
   label: string;
   value: string;
-  accent?: "primary";
+  divider?: boolean;
 }) => (
-  <div
-    className={`rounded-2xl p-4 shadow-soft ${
-      accent === "primary" ? "gradient-primary text-primary-foreground" : "bg-card"
-    }`}
-  >
-    <div className="flex items-center gap-2 text-xs font-medium opacity-90">
-      <Icon className="h-4 w-4" />
+  <div className={divider ? "md:border-l md:border-primary-foreground/20 md:pl-4" : ""}>
+    <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider opacity-80">
+      <Icon className="h-3.5 w-3.5" />
       {label}
     </div>
-    <div className="mt-1 font-display text-2xl font-bold">{value}</div>
+    <div className="mt-1 font-display text-2xl font-bold leading-tight">{value}</div>
   </div>
 );
 
