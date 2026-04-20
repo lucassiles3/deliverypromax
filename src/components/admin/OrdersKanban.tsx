@@ -293,30 +293,57 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders.length === 0 ? null : orders[0]?.id]);
 
-  // Sound alert + auto-cancel
+  // 🔔 Sino ALTO (3 badaladas com harmônicos) — toca a campainha de alerta
   const playDing = () => {
     if (!settings?.sound_alerts_enabled) return;
     try {
       const Ctx = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new Ctx();
-      const now = ctx.currentTime;
-      [880, 1100, 1320].forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0, now + i * 0.18);
-        gain.gain.linearRampToValueAtTime(0.3, now + i * 0.18 + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.18 + 0.4);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(now + i * 0.18);
-        osc.stop(now + i * 0.18 + 0.45);
-      });
-      setTimeout(() => ctx.close(), 1500);
+      // Tenta destravar autoplay
+      if (ctx.state === "suspended") ctx.resume().catch(() => {});
+      const master = ctx.createGain();
+      master.gain.value = 0.9; // volume alto
+      master.connect(ctx.destination);
+
+      const ringAt = (offset: number) => {
+        // sino = fundamental + harmônicos com decaimento longo
+        const freqs = [880, 1320, 1760, 2640];
+        const t0 = ctx.currentTime + offset;
+        freqs.forEach((f, idx) => {
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.type = idx === 0 ? "triangle" : "sine";
+          osc.frequency.value = f;
+          const peak = idx === 0 ? 0.55 : 0.22 / (idx + 1);
+          g.gain.setValueAtTime(0, t0);
+          g.gain.linearRampToValueAtTime(peak, t0 + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.2);
+          osc.connect(g).connect(master);
+          osc.start(t0);
+          osc.stop(t0 + 1.25);
+        });
+      };
+
+      // 3 badaladas espaçadas — clássico som de "campainha de balcão"
+      ringAt(0);
+      ringAt(0.45);
+      ringAt(0.9);
+
+      setTimeout(() => ctx.close(), 3000);
     } catch {
       /* ignore */
     }
   };
+
+  // 🔁 Toca a campainha em loop enquanto houver pedidos "received" não aceitos
+  useEffect(() => {
+    if (!settings?.sound_alerts_enabled) return;
+    const pending = orders.filter((o) => o.status === "received").length;
+    if (pending === 0) return;
+    const id = setInterval(() => playDing(), 8000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders, settings?.sound_alerts_enabled]);
 
   const autoCancel = async (id: string) => {
     if (autoCancelledRef.current.has(id)) return;
