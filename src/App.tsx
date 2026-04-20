@@ -19,6 +19,7 @@ const Admin = lazy(() => import("./pages/Admin.tsx"));
 const PDV = lazy(() => import("./pages/PDV.tsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 const MyOrders = lazy(() => import("./pages/MyOrders.tsx"));
+const OrderDetails = lazy(() => import("./pages/OrderDetails.tsx"));
 const MinhaConta = lazy(() => import("./pages/MinhaConta.tsx"));
 const Enderecos = lazy(() => import("./pages/Enderecos.tsx"));
 const Favoritos = lazy(() => import("./pages/Favoritos.tsx"));
@@ -59,6 +60,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/meus-pedidos" element={<MyOrders />} />
+              <Route path="/meus-pedidos/:id" element={<OrderDetails />} />
               <Route path="/conta" element={<MinhaConta />} />
               <Route path="/enderecos" element={<Enderecos />} />
               <Route path="/favoritos" element={<Favoritos />} />
