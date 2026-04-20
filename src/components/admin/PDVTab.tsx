@@ -324,23 +324,15 @@ export const PDVTab = ({
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
             {filtered.map((p) => (
               <button
                 key={p.id}
                 onClick={() => addProduct(p)}
-                className="rounded-xl border-2 border-border bg-card p-3 text-left transition-smooth hover:border-primary hover:shadow-md active:scale-[0.98]"
+                className="flex flex-col justify-between rounded-xl border-2 border-border bg-card p-3 text-left transition-smooth hover:border-primary hover:shadow-md active:scale-[0.98]"
               >
-                {p.image_url && (
-                  <img
-                    src={p.image_url}
-                    alt={p.name}
-                    loading="lazy"
-                    className="mb-2 aspect-square w-full rounded-lg object-cover"
-                  />
-                )}
-                <div className="line-clamp-2 text-sm font-bold">{p.name}</div>
-                <div className="mt-1 text-sm font-bold text-primary">{formatBRL(p.price)}</div>
+                <div className="line-clamp-2 text-sm font-bold leading-tight">{p.name}</div>
+                <div className="mt-2 text-sm font-bold text-primary">{formatBRL(p.price)}</div>
               </button>
             ))}
             {filtered.length === 0 && (
