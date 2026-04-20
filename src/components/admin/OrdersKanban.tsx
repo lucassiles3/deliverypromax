@@ -124,12 +124,21 @@ const COLUMNS: {
   },
 ];
 
+const WINDOW_OPTIONS = [
+  { id: "12h", label: "12h", hours: 12 },
+  { id: "24h", label: "24h", hours: 24 },
+  { id: "48h", label: "48h", hours: 48 },
+  { id: "7d", label: "7 dias", hours: 24 * 7 },
+] as const;
+
 export const OrdersKanban = ({ storeId }: { storeId: string }) => {
   const qc = useQueryClient();
   const [, force] = useState(0);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [view, setView] = useState<"kanban" | "history">("kanban");
+  const [windowSel, setWindowSel] = useState<(typeof WINDOW_OPTIONS)[number]["id"]>("12h");
   const lastAlertRef = useRef<Map<string, number>>(new Map());
   const autoCancelledRef = useRef<Set<string>>(new Set());
 
