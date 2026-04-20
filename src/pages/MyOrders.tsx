@@ -22,6 +22,7 @@ const statusIndex = (s: DbStatus) => {
 const MyOrders = () => {
   const { user, loading } = useAuth();
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: orders = [] } = useQuery({
     queryKey: ["my-orders", user?.id],
@@ -30,7 +31,7 @@ const MyOrders = () => {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, total, status, method, created_at, store_id, stores(name, logo), order_items(id, product_name, quantity)",
+          "id, total, status, method, created_at, store_id, stores(name, logo, phone, whatsapp_phone), order_items(id, product_name, quantity)",
         )
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
