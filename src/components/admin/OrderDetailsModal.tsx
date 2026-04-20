@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -52,7 +53,7 @@ export const OrderDetailsModal = ({
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, customer_name, customer_phone, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, status, method, payment_method, change_for, address, delivery_lat, delivery_lng, created_at, accepted_at, cancel_reason, cancel_by, notes, order_items(id, product_name, quantity, unit_price, notes, customizations)"
+          "id, store_id, customer_name, customer_phone, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, status, method, payment_method, change_for, address, delivery_lat, delivery_lng, created_at, accepted_at, cancel_reason, cancel_by, notes, order_items(id, product_name, quantity, unit_price, notes, customizations)"
         )
         .eq("id", orderId!)
         .maybeSingle();
@@ -105,6 +106,29 @@ export const OrderDetailsModal = ({
 
   const printOrder = () => window.print();
 
+  const qc = useQueryClient();
+  const FLOW: Array<{ id: string; label: string }> = [
+    { id: "received", label: "Recebido" },
+    { id: "preparing", label: "Em preparo" },
+    { id: "ready", label: "Pronto" },
+    { id: "out_for_delivery", label: "A caminho" },
+    { id: "delivered", label: "Entregue" },
+  ];
+  const idx = FLOW.findIndex((f) => f.id === order.status);
+  const next = idx >= 0 && idx < FLOW.length - 1 ? FLOW[idx + 1] : null;
+  const prev = idx > 0 ? FLOW[idx - 1] : null;
+  const isFinal = order.status === "delivered" || order.status === "cancelled";
+
+  const changeStatus = async (to: string) => {
+    const { error } = await supabase.from("orders").update({ status: to as any }).eq("id", order.id);
+    if (error) return toast.error(error.message);
+    toast.success(`Status alterado para ${STATUS_LABEL[to] ?? to}`);
+    qc.invalidateQueries({ queryKey: ["order-detail", order.id] });
+    qc.invalidateQueries({ queryKey: ["order-history", order.id] });
+    qc.invalidateQueries({ queryKey: ["kanban-orders", order.store_id ?? ""] });
+    qc.invalidateQueries({ queryKey: ["orders-history"] });
+  };
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
@@ -123,6 +147,36 @@ export const OrderDetailsModal = ({
             </button>
           </DialogTitle>
         </DialogHeader>
+
+        {!isFinal && (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-muted/30 p-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Trocar status:
+            </span>
+            {prev && (
+              <button
+                onClick={() => changeStatus(prev.id)}
+                className="rounded-lg border bg-card px-3 py-1.5 text-xs font-bold hover:bg-muted"
+              >
+                ← {prev.label}
+              </button>
+            )}
+            {next && (
+              <button
+                onClick={() => changeStatus(next.id)}
+                className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90"
+              >
+                {next.label} →
+              </button>
+            )}
+            <button
+              onClick={() => changeStatus("cancelled")}
+              className="ml-auto rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/20"
+            >
+              Cancelar pedido
+            </button>
+          </div>
+        )}
 
         <div className="grid gap-5 md:grid-cols-2">
           {/* Cliente */}

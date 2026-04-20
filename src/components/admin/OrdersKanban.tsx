@@ -27,10 +27,13 @@ import {
   X as XIcon,
   Repeat,
   Printer,
+  History,
+  LayoutGrid,
 } from "lucide-react";
 import { differenceInMinutes, differenceInSeconds } from "date-fns";
 import { OrderDetailsModal } from "./OrderDetailsModal";
 import { CancelOrderModal } from "./CancelOrderModal";
+import { OrdersHistory } from "./OrdersHistory";
 import { printReceipt, type PrintData } from "@/lib/printReceipt";
 
 type DbStatus =
@@ -121,12 +124,21 @@ const COLUMNS: {
   },
 ];
 
+const WINDOW_OPTIONS = [
+  { id: "12h", label: "12h", hours: 12 },
+  { id: "24h", label: "24h", hours: 24 },
+  { id: "48h", label: "48h", hours: 48 },
+  { id: "7d", label: "7 dias", hours: 24 * 7 },
+] as const;
+
 export const OrdersKanban = ({ storeId }: { storeId: string }) => {
   const qc = useQueryClient();
   const [, force] = useState(0);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [view, setView] = useState<"kanban" | "history">("kanban");
+  const [windowSel, setWindowSel] = useState<(typeof WINDOW_OPTIONS)[number]["id"]>("12h");
   const lastAlertRef = useRef<Map<string, number>>(new Map());
   const autoCancelledRef = useRef<Set<string>>(new Set());
 
@@ -154,8 +166,9 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
   });
 
   // Active orders
+  const windowHours = WINDOW_OPTIONS.find((w) => w.id === windowSel)?.hours ?? 12;
   const { data: orders = [] } = useQuery({
-    queryKey: ["kanban-orders", storeId],
+    queryKey: ["kanban-orders", storeId, windowHours],
     enabled: !!storeId,
     refetchInterval: 10000,
     queryFn: async () => {
@@ -166,7 +179,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
         )
         .eq("store_id", storeId)
         .in("status", ["pending_payment", "received", "preparing", "ready", "out_for_delivery", "delivered"])
-        .gte("created_at", new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString())
+        .gte("created_at", new Date(Date.now() - 1000 * 60 * 60 * windowHours).toISOString())
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as OrderRow[];
@@ -385,14 +398,50 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
 
   return (
     <>
+      {/* Toolbar: view + janela */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-1">
+          <button
+            onClick={() => setView("kanban")}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold ${view === "kanban" ? "bg-card shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" /> Ativos
+          </button>
+          <button
+            onClick={() => setView("history")}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold ${view === "history" ? "bg-card shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <History className="h-3.5 w-3.5" /> Histórico
+          </button>
+        </div>
+        {view === "kanban" && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-muted-foreground">Mostrar últimas:</span>
+            <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-1">
+              {WINDOW_OPTIONS.map((w) => (
+                <button
+                  key={w.id}
+                  onClick={() => setWindowSel(w.id)}
+                  className={`rounded-md px-2.5 py-1 text-xs font-bold ${windowSel === w.id ? "bg-card shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {w.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {view === "history" ? (
+        <OrdersHistory storeId={storeId} />
+      ) : (
+        <>
       {totalActive === 0 && (
         <div className="mb-4 rounded-2xl border-2 border-dashed border-border bg-card p-6 text-center">
           <Bell className="mx-auto h-8 w-8 text-muted-foreground" />
-          <h3 className="mt-2 font-display text-lg font-bold">Nenhum pedido ativo nas últimas 12h</h3>
+          <h3 className="mt-2 font-display text-lg font-bold">Nenhum pedido ativo na janela selecionada</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Quando um cliente fizer um pedido, ele aparecerá aqui em <strong>Novos</strong> com os botões{" "}
-            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">✓ Aceitar</span>{" "}
-            e <span className="rounded bg-destructive/10 px-1.5 py-0.5 text-xs font-bold text-destructive">✕ Recusar</span>.
+            Aumente a janela de tempo acima ou veja o <strong>Histórico</strong> para pedidos antigos.
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
             💡 Dica: confirme no topo da página se você está na loja certa (seletor ao lado do botão Som).
@@ -437,6 +486,8 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
           )}
         </DragOverlay>
       </DndContext>
+        </>
+      )}
 
       <OrderDetailsModal
         orderId={detailId}
