@@ -25,6 +25,7 @@ import type { Coupon } from "@/data/stores";
 import { useLoyalty, CASHBACK_RATE } from "@/hooks/useLoyalty";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { isStoreOpen } from "@/lib/storeHours";
 import { lookupCep, geocodeAddress, formatCep, reverseGeocode } from "@/lib/cep";
 import { toast } from "sonner";
@@ -36,6 +37,8 @@ const Checkout = () => {
   const { items, subtotal, storeSlug, clear } = useCart();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: profile } = useProfile();
+  const updateProfile = useUpdateProfile();
   const loyalty = useLoyalty();
   const { data: store, isLoading } = useStoreBySlug(storeSlug ?? "");
   const { data: coupons = [] } = useCoupons();
@@ -57,6 +60,7 @@ const Checkout = () => {
   const [addressMode, setAddressMode] = useState<"gps" | "manual">("gps");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [saveContact, setSaveContact] = useState(true);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [useCashback, setUseCashback] = useState(false);
@@ -91,6 +95,27 @@ const Checkout = () => {
   useEffect(() => {
     document.title = "Checkout • FoodFlash";
   }, []);
+
+  // Pré-preenche nome/telefone: perfil do usuário > último contato salvo
+  useEffect(() => {
+    if (name || phone) return;
+    const profileName = profile?.display_name?.trim() ?? "";
+    const profilePhone = profile?.phone?.trim() ?? "";
+    if (profileName || profilePhone) {
+      if (profileName) setName(profileName);
+      if (profilePhone) setPhone(profilePhone);
+      return;
+    }
+    try {
+      const raw = localStorage.getItem("ff_last_contact");
+      if (raw) {
+        const c = JSON.parse(raw);
+        if (c.name) setName(c.name);
+        if (c.phone) setPhone(c.phone);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.display_name, profile?.phone]);
 
   // Auto-lookup on CEP complete
   useEffect(() => {
@@ -351,6 +376,21 @@ const Checkout = () => {
       });
       if (loyaltyErr) throw loyaltyErr;
 
+      // Salva contato para próximos pedidos
+      if (saveContact) {
+        try {
+          localStorage.setItem("ff_last_contact", JSON.stringify({ name, phone }));
+        } catch {}
+        const profileNeedsUpdate =
+          (!profile?.display_name && name) || (!profile?.phone && phone);
+        if (profileNeedsUpdate) {
+          updateProfile.mutate({
+            display_name: profile?.display_name || name,
+            phone: profile?.phone || phone,
+          });
+        }
+      }
+
       const waUrl = buildWhatsappUrl(order.id);
       if (waUrl) {
         // Use anchor click to avoid popup blockers / iframe restrictions
@@ -559,7 +599,18 @@ const Checkout = () => {
 
               {/* Personal */}
               <section className="rounded-2xl bg-card p-5 shadow-soft">
-                <h2 className="mb-3 font-display text-lg font-bold">Seus dados</h2>
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <h2 className="font-display text-lg font-bold">Para quem é o pedido?</h2>
+                  {(name || phone) && (
+                    <button
+                      type="button"
+                      onClick={() => { setName(""); setPhone(""); }}
+                      className="text-xs font-semibold text-muted-foreground hover:text-primary hover:underline"
+                    >
+                      Trocar
+                    </button>
+                  )}
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <input
                     placeholder="Nome completo"
@@ -574,6 +625,15 @@ const Checkout = () => {
                     className="rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
                   />
                 </div>
+                <label className="mt-3 flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={saveContact}
+                    onChange={(e) => setSaveContact(e.target.checked)}
+                    className="h-4 w-4 cursor-pointer accent-primary"
+                  />
+                  Salvar nome e telefone para próximos pedidos
+                </label>
               </section>
 
               {/* Address + Map */}
