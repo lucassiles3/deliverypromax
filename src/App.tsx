@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/CartDrawer";
+import { BottomNav } from "@/components/BottomNav";
 import Index from "./pages/Index.tsx";
 import Store from "./pages/Store.tsx";
 import Checkout from "./pages/Checkout.tsx";
@@ -13,6 +14,11 @@ import PDV from "./pages/PDV.tsx";
 import Auth from "./pages/Auth.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import MyOrders from "./pages/MyOrders.tsx";
+import MinhaConta from "./pages/MinhaConta.tsx";
+import Enderecos from "./pages/Enderecos.tsx";
+import Favoritos from "./pages/Favoritos.tsx";
+import Notificacoes from "./pages/Notificacoes.tsx";
+import Categorias from "./pages/Categorias.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -33,9 +39,15 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/meus-pedidos" element={<MyOrders />} />
+            <Route path="/conta" element={<MinhaConta />} />
+            <Route path="/enderecos" element={<Enderecos />} />
+            <Route path="/favoritos" element={<Favoritos />} />
+            <Route path="/notificacoes" element={<Notificacoes />} />
+            <Route path="/categorias" element={<Categorias />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CartDrawer />
+          <BottomNav />
         </BrowserRouter>
       </CartProvider>
     </TooltipProvider>
