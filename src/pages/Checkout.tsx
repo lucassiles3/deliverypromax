@@ -30,7 +30,7 @@ import { lookupCep, geocodeAddress, formatCep, reverseGeocode } from "@/lib/cep"
 import { toast } from "sonner";
 
 type Method = "delivery" | "pickup";
-type PaymentMethod = "pix" | "cash" | "credit" | "debit";
+type PaymentMethod = "pix" | "cash" | "credit" | "debit" | "credit_link";
 
 const Checkout = () => {
   const { items, subtotal, storeSlug, clear } = useCart();
@@ -62,6 +62,31 @@ const Checkout = () => {
   const [useCashback, setUseCashback] = useState(false);
   const [step, setStep] = useState<"form" | "pix" | "done">("form");
   const [submitting, setSubmitting] = useState(false);
+  const [paidLinkUrl, setPaidLinkUrl] = useState<string | null>(null);
+
+  // Métodos de pagamento configurados pela loja (apenas habilitados)
+  const [enabledMethods, setEnabledMethods] = useState<Record<string, { enabled: boolean; notes?: string | null }>>({});
+  useEffect(() => {
+    if (!store?.id) return;
+    let cancelled = false;
+    supabase
+      .from("store_payment_methods")
+      .select("method, enabled, notes")
+      .eq("store_id", store.id)
+      .eq("enabled", true)
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const map: Record<string, { enabled: boolean; notes?: string | null }> = {};
+        data.forEach((m: any) => (map[m.method] = { enabled: m.enabled, notes: m.notes }));
+        setEnabledMethods(map);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [store?.id]);
+
+  const creditLinkTemplate = enabledMethods["credit_link"]?.notes ?? null;
+  const creditLinkEnabled = !!enabledMethods["credit_link"]?.enabled && !!creditLinkTemplate;
 
   useEffect(() => {
     document.title = "Checkout • FoodFlash";
@@ -172,6 +197,14 @@ const Checkout = () => {
     cash: "Dinheiro",
     credit: "Cartão de crédito (na entrega)",
     debit: "Cartão de débito (na entrega)",
+    credit_link: "Cartão de crédito (link de pagamento)",
+  };
+
+  // Substitui {valor} no template pelo total formatado em BR (12,50)
+  const buildPaymentLink = (amount: number): string | null => {
+    if (!creditLinkTemplate) return null;
+    const formatted = amount.toFixed(2).replace(".", ",");
+    return creditLinkTemplate.replace(/\{valor\}/gi, formatted);
   };
 
   const proceed = () => {
@@ -260,6 +293,15 @@ const Checkout = () => {
     if (!store || !user) return;
     setSubmitting(true);
     try {
+      // Para "credit_link" persistimos como "credit" (enum do banco) e marcamos via notes.
+      const paymentLink = payment === "credit_link" ? buildPaymentLink(total) : null;
+      const dbPaymentMethod: "pix" | "cash" | "credit" | "debit" =
+        payment === "credit_link" ? "credit" : payment;
+      const orderNotes =
+        payment === "credit_link" && paymentLink
+          ? `[LINK_PAGAMENTO] ${paymentLink}`
+          : null;
+
       const { data: order, error: orderErr } = await supabase
         .from("orders")
         .insert({
@@ -268,7 +310,7 @@ const Checkout = () => {
           customer_name: name,
           customer_phone: phone,
           method,
-          payment_method: payment,
+          payment_method: dbPaymentMethod,
           change_for: payment === "cash" && changeFor ? parseFloat(changeFor.replace(",", ".")) : null,
           address: method === "delivery" ? address : null,
           delivery_lat: method === "delivery" ? coords?.lat ?? null : null,
@@ -280,6 +322,7 @@ const Checkout = () => {
           cashback_used: cashbackUsed,
           cashback_earned: earned,
           total,
+          notes: orderNotes,
           status: payment === "pix" ? "received" : "pending_payment",
         })
         .select("id")
@@ -316,12 +359,27 @@ const Checkout = () => {
         document.body.removeChild(a);
       }
 
+      // Abre o link de pagamento (Cartão crédito - link)
+      if (paymentLink) {
+        setPaidLinkUrl(paymentLink);
+        const a = document.createElement("a");
+        a.href = paymentLink;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
       setStep("done");
       toast.success(`Pedido confirmado! Você ganhou R$ ${earned.toFixed(2).replace(".", ",")} de cashback 🎉`);
-      setTimeout(() => {
-        clear();
-        navigate("/");
-      }, 3500);
+      // Não redireciona automaticamente quando há link de pagamento, para o cliente poder reabrir
+      if (!paymentLink) {
+        setTimeout(() => {
+          clear();
+          navigate("/");
+        }, 3500);
+      }
     } catch (e: any) {
       toast.error(e.message ?? "Erro ao salvar pedido");
     } finally {
@@ -355,7 +413,9 @@ const Checkout = () => {
   const ctaLabel =
     payment === "pix"
       ? `Pagar com Pix • R$ ${total.toFixed(2).replace(".", ",")}`
-      : `Confirmar pedido • R$ ${total.toFixed(2).replace(".", ",")}`;
+      : payment === "credit_link"
+        ? `Confirmar e pagar online • R$ ${total.toFixed(2).replace(".", ",")}`
+        : `Confirmar pedido • R$ ${total.toFixed(2).replace(".", ",")}`;
 
   return (
     <div className="min-h-screen bg-muted/40 pb-24">
@@ -375,7 +435,35 @@ const Checkout = () => {
             <p className="mt-2 text-sm text-muted-foreground">
               Tempo estimado: <strong className="text-foreground">{store.deliveryTime}</strong>
             </p>
-            <p className="mt-4 text-sm">Você receberá atualizações no WhatsApp 📱</p>
+            {paidLinkUrl ? (
+              <div className="mt-5 rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 p-4 text-left">
+                <p className="text-sm font-bold text-foreground">
+                  💳 Falta pagar: R$ {total.toFixed(2).replace(".", ",")}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Abrimos o link de pagamento em outra aba. Caso não tenha aberto, clique abaixo:
+                </p>
+                <a
+                  href={paidLinkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl gradient-primary text-sm font-bold text-primary-foreground shadow-glow"
+                >
+                  <CreditCard className="h-4 w-4" /> Pagar agora
+                </a>
+                <button
+                  onClick={() => {
+                    clear();
+                    navigate("/");
+                  }}
+                  className="mt-3 w-full text-center text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Já paguei — voltar para a home
+                </button>
+              </div>
+            ) : (
+              <p className="mt-4 text-sm">Você receberá atualizações no WhatsApp 📱</p>
+            )}
           </div>
         ) : step === "pix" ? (
           <div className="mx-auto max-w-md rounded-2xl bg-card p-5 shadow-float animate-float-in">
@@ -576,11 +664,12 @@ const Checkout = () => {
                 </h2>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {([
-                    { v: "pix", label: "Pix", icon: QrCode, hint: "Aprovação instantânea" },
-                    { v: "cash", label: "Dinheiro", icon: Banknote, hint: "Na entrega" },
-                    { v: "credit", label: "Crédito", icon: CreditCard, hint: "Maquininha" },
-                    { v: "debit", label: "Débito", icon: CreditCard, hint: "Maquininha" },
-                  ] as const).map((opt) => {
+                    { v: "pix" as const, label: "Pix", icon: QrCode, hint: "Aprovação instantânea", show: true },
+                    { v: "cash" as const, label: "Dinheiro", icon: Banknote, hint: "Na entrega", show: true },
+                    { v: "credit" as const, label: "Crédito", icon: CreditCard, hint: "Maquininha", show: true },
+                    { v: "debit" as const, label: "Débito", icon: CreditCard, hint: "Maquininha", show: true },
+                    { v: "credit_link" as const, label: "Crédito (link)", icon: CreditCard, hint: "Pague online agora", show: creditLinkEnabled },
+                  ]).filter((o) => o.show).map((opt) => {
                     const Icon = opt.icon;
                     const active = payment === opt.v;
                     return (

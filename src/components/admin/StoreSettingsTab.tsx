@@ -52,6 +52,7 @@ const PAYMENT_METHODS = [
   { id: "pix_online", label: "Pix online (no app)", needsPix: true },
   { id: "pix_delivery", label: "Pix na entrega" },
   { id: "credit_online", label: "Crédito online", hasInstallments: true },
+  { id: "credit_link", label: "Cartão de crédito — link de pagamento", needsLink: true },
   { id: "credit_delivery", label: "Crédito (maquininha)" },
   { id: "debit_delivery", label: "Débito (maquininha)" },
   { id: "cash", label: "Dinheiro (com troco)" },
@@ -925,6 +926,9 @@ const PaymentSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
                     {pm.id === "pix_online" && !pixKey && enabled && (
                       <p className="text-xs text-amber-600">⚠ Cadastre uma chave Pix para ativar.</p>
                     )}
+                    {"needsLink" in pm && pm.needsLink && enabled && !cur?.notes && (
+                      <p className="text-xs text-amber-600">⚠ Cadastre o link de pagamento abaixo.</p>
+                    )}
                   </div>
                   <Switch checked={enabled} onCheckedChange={(v) => upsert(pm.id, { enabled: v })} />
                 </div>
@@ -939,6 +943,19 @@ const PaymentSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
                           value={cur?.installments ?? 1}
                           onChange={(e) => upsert(pm.id, { installments: Number(e.target.value) })}
                         />
+                      </Field>
+                    )}
+                    {"needsLink" in pm && pm.needsLink && (
+                      <Field label="Link de pagamento (use {valor} no lugar do valor)" full cls="sm:col-span-3">
+                        <Input
+                          type="url"
+                          placeholder="https://link.infinitepay.io/seu-usuario/{valor}"
+                          value={cur?.notes ?? ""}
+                          onChange={(e) => upsert(pm.id, { notes: e.target.value })}
+                        />
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                          Ex.: <code className="rounded bg-muted px-1">https://link.infinitepay.io/lucassiles/{"{valor}"}</code> — o sistema substitui <code className="rounded bg-muted px-1">{"{valor}"}</code> pelo total do pedido (formato BR, ex.: 12,50).
+                        </p>
                       </Field>
                     )}
                     <Field label="Disponível das">
