@@ -97,6 +97,44 @@ const Checkout = () => {
     };
   }, [address.cep]);
 
+  const useMyLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("GPS não disponível neste navegador");
+      return;
+    }
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setCoords(c);
+        const rev = await reverseGeocode(c.lat, c.lng);
+        if (rev) {
+          setAddress((a) => ({
+            cep: rev.cep || a.cep,
+            street: rev.street || a.street,
+            number: rev.number || a.number,
+            complement: a.complement,
+            neighborhood: rev.neighborhood || a.neighborhood,
+            city: rev.city || a.city,
+          }));
+          toast.success("Localização detectada — confira o número");
+        } else {
+          toast.success("Localização capturada — preencha os campos");
+        }
+        setGpsLoading(false);
+      },
+      (err) => {
+        setGpsLoading(false);
+        toast.error(
+          err.code === err.PERMISSION_DENIED
+            ? "Permissão de localização negada"
+            : "Não foi possível obter sua localização",
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30_000 },
+    );
+  };
+
   const fee =
     !store
       ? 0
