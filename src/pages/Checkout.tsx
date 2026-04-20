@@ -30,7 +30,7 @@ import { lookupCep, geocodeAddress, formatCep, reverseGeocode } from "@/lib/cep"
 import { toast } from "sonner";
 
 type Method = "delivery" | "pickup";
-type PaymentMethod = "pix" | "cash" | "credit" | "debit";
+type PaymentMethod = "pix" | "cash" | "credit" | "debit" | "credit_link";
 
 const Checkout = () => {
   const { items, subtotal, storeSlug, clear } = useCart();
