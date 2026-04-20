@@ -183,14 +183,53 @@ const MyOrders = () => {
 
                     {/* Itens */}
                     <ul className="mt-4 space-y-1 border-t pt-3 text-sm">
-                      {items.map((it) => (
+                      {items.slice(0, 3).map((it) => (
                         <li key={it.id} className="flex justify-between text-muted-foreground">
                           <span>
                             {it.quantity}× {it.product_name}
                           </span>
                         </li>
                       ))}
+                      {items.length > 3 && (
+                        <li className="text-xs italic text-muted-foreground">
+                          + {items.length - 3} {items.length - 3 === 1 ? "item" : "itens"}
+                        </li>
+                      )}
                     </ul>
+                  </div>
+
+                  {/* Ações */}
+                  <div className="grid grid-cols-2 gap-2 border-t bg-muted/30 p-3 sm:grid-cols-4">
+                    <button
+                      onClick={() => navigate(`/meus-pedidos/${o.id}`)}
+                      className="col-span-2 flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary text-xs font-bold text-primary-foreground hover:opacity-90 sm:col-span-1"
+                    >
+                      Ver detalhes <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                    {wppLink && (
+                      <a
+                        href={wppLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-success/40 bg-success/10 text-xs font-bold text-success hover:bg-success/20"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" /> Falar
+                      </a>
+                    )}
+                    <button
+                      onClick={() => navigate(`/meus-pedidos/${o.id}`)}
+                      className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-card text-xs font-bold hover:border-primary"
+                    >
+                      <HelpCircle className="h-3.5 w-3.5" /> Ajuda
+                    </button>
+                    {["pending_payment", "received"].includes(status) && (
+                      <button
+                        onClick={() => navigate(`/meus-pedidos/${o.id}`)}
+                        className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/5 text-xs font-bold text-destructive hover:bg-destructive/10"
+                      >
+                        <XCircle className="h-3.5 w-3.5" /> Cancelar
+                      </button>
+                    )}
                   </div>
                 </article>
               );
