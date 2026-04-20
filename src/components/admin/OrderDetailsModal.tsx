@@ -120,7 +120,7 @@ export const OrderDetailsModal = ({
   const isFinal = order.status === "delivered" || order.status === "cancelled";
 
   const changeStatus = async (to: string) => {
-    const { error } = await supabase.from("orders").update({ status: to }).eq("id", order.id);
+    const { error } = await supabase.from("orders").update({ status: to as any }).eq("id", order.id);
     if (error) return toast.error(error.message);
     toast.success(`Status alterado para ${STATUS_LABEL[to] ?? to}`);
     qc.invalidateQueries({ queryKey: ["order-detail", order.id] });
