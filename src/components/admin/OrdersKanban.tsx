@@ -166,8 +166,9 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
   });
 
   // Active orders
+  const windowHours = WINDOW_OPTIONS.find((w) => w.id === windowSel)?.hours ?? 12;
   const { data: orders = [] } = useQuery({
-    queryKey: ["kanban-orders", storeId],
+    queryKey: ["kanban-orders", storeId, windowHours],
     enabled: !!storeId,
     refetchInterval: 10000,
     queryFn: async () => {
@@ -178,7 +179,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
         )
         .eq("store_id", storeId)
         .in("status", ["pending_payment", "received", "preparing", "ready", "out_for_delivery", "delivered"])
-        .gte("created_at", new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString())
+        .gte("created_at", new Date(Date.now() - 1000 * 60 * 60 * windowHours).toISOString())
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as OrderRow[];
