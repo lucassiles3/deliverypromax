@@ -433,7 +433,35 @@ const Checkout = () => {
             <p className="mt-2 text-sm text-muted-foreground">
               Tempo estimado: <strong className="text-foreground">{store.deliveryTime}</strong>
             </p>
-            <p className="mt-4 text-sm">Você receberá atualizações no WhatsApp 📱</p>
+            {paidLinkUrl ? (
+              <div className="mt-5 rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 p-4 text-left">
+                <p className="text-sm font-bold text-foreground">
+                  💳 Falta pagar: R$ {total.toFixed(2).replace(".", ",")}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Abrimos o link de pagamento em outra aba. Caso não tenha aberto, clique abaixo:
+                </p>
+                <a
+                  href={paidLinkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl gradient-primary text-sm font-bold text-primary-foreground shadow-glow"
+                >
+                  <CreditCard className="h-4 w-4" /> Pagar agora
+                </a>
+                <button
+                  onClick={() => {
+                    clear();
+                    navigate("/");
+                  }}
+                  className="mt-3 w-full text-center text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Já paguei — voltar para a home
+                </button>
+              </div>
+            ) : (
+              <p className="mt-4 text-sm">Você receberá atualizações no WhatsApp 📱</p>
+            )}
           </div>
         ) : step === "pix" ? (
           <div className="mx-auto max-w-md rounded-2xl bg-card p-5 shadow-float animate-float-in">
