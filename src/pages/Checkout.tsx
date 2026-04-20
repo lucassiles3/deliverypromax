@@ -26,7 +26,7 @@ import { useLoyalty, CASHBACK_RATE } from "@/hooks/useLoyalty";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { isStoreOpen } from "@/lib/storeHours";
-import { lookupCep, geocodeAddress, formatCep } from "@/lib/cep";
+import { lookupCep, geocodeAddress, formatCep, reverseGeocode } from "@/lib/cep";
 import { toast } from "sonner";
 
 type Method = "delivery" | "pickup";
