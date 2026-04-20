@@ -1,0 +1,99 @@
+import { Bell, Check, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  useNotifications,
+  useUnreadCount,
+  useMarkRead,
+  useMarkAllRead,
+  useDeleteNotification,
+} from "@/hooks/useNotifications";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+export const NotificationBell = () => {
+  const { data = [] } = useNotifications();
+  const unread = useUnreadCount();
+  const markRead = useMarkRead();
+  const markAll = useMarkAllRead();
+  const del = useDeleteNotification();
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
+          aria-label="Notificações"
+        >
+          <Bell className="h-5 w-5" />
+          {unread > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+              {unread > 9 ? "9+" : unread}
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 p-0">
+        <div className="flex items-center justify-between border-b px-3 py-2">
+          <p className="text-sm font-bold">Notificações</p>
+          {unread > 0 && (
+            <button
+              onClick={() => markAll.mutate()}
+              className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            >
+              <Check className="h-3 w-3" /> Marcar todas
+            </button>
+          )}
+        </div>
+        <ScrollArea className="h-80">
+          {data.length === 0 ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">
+              Você não tem notificações ainda
+            </div>
+          ) : (
+            <ul className="divide-y">
+              {data.slice(0, 20).map((n) => (
+                <li key={n.id} className={`group p-3 ${!n.read ? "bg-primary/5" : ""}`}>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1">
+                      {n.link ? (
+                        <Link to={n.link} onClick={() => !n.read && markRead.mutate(n.id)}>
+                          <p className="text-sm font-semibold leading-tight">{n.title}</p>
+                          {n.message && <p className="mt-0.5 text-xs text-muted-foreground">{n.message}</p>}
+                        </Link>
+                      ) : (
+                        <>
+                          <p className="text-sm font-semibold leading-tight">{n.title}</p>
+                          {n.message && <p className="mt-0.5 text-xs text-muted-foreground">{n.message}</p>}
+                        </>
+                      )}
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: ptBR })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => del.mutate(n.id)}
+                      className="opacity-0 group-hover:opacity-100"
+                      aria-label="Remover"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </ScrollArea>
+        <div className="border-t p-2">
+          <Link
+            to="/notificacoes"
+            className="block rounded-md py-1.5 text-center text-xs font-bold text-primary hover:bg-muted"
+          >
+            Ver todas
+          </Link>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
