@@ -369,26 +369,26 @@ const Checkout = () => {
         </Link>
 
         {step === "done" ? (
-          <div className="mx-auto max-w-md rounded-3xl bg-card p-8 text-center shadow-float animate-float-in">
-            <CheckCircle2 className="mx-auto h-20 w-20 text-success" strokeWidth={1.5} />
-            <h2 className="mt-4 font-display text-2xl font-bold">Pedido confirmado!</h2>
+          <div className="mx-auto max-w-md rounded-2xl bg-card p-6 text-center shadow-float animate-float-in">
+            <CheckCircle2 className="mx-auto h-14 w-14 text-success" strokeWidth={1.5} />
+            <h2 className="mt-3 font-display text-xl font-bold sm:text-2xl">Pedido confirmado!</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Tempo estimado: <strong className="text-foreground">{store.deliveryTime}</strong>
             </p>
             <p className="mt-4 text-sm">Você receberá atualizações no WhatsApp 📱</p>
           </div>
         ) : step === "pix" ? (
-          <div className="mx-auto max-w-md rounded-3xl bg-card p-6 shadow-float animate-float-in">
+          <div className="mx-auto max-w-md rounded-2xl bg-card p-5 shadow-float animate-float-in">
             <div className="text-center">
-              <QrCode className="mx-auto h-10 w-10 text-primary" />
-              <h2 className="mt-2 font-display text-2xl font-bold">Pague com Pix</h2>
+              <QrCode className="mx-auto h-8 w-8 text-primary" />
+              <h2 className="mt-2 font-display text-xl font-bold sm:text-2xl">Pague com Pix</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Total: <strong className="text-foreground">R$ {total.toFixed(2).replace(".", ",")}</strong>
               </p>
             </div>
 
-            <div className="mx-auto mt-5 flex h-56 w-56 items-center justify-center rounded-2xl border-2 border-dashed bg-background">
-              <svg viewBox="0 0 100 100" className="h-48 w-48">
+            <div className="mx-auto mt-4 flex h-44 w-44 items-center justify-center rounded-2xl border-2 border-dashed bg-background sm:h-52 sm:w-52">
+              <svg viewBox="0 0 100 100" className="h-36 w-36 sm:h-44 sm:w-44">
                 {qrCells.map((c) => (
                   <rect key={c.k} x={c.x} y={c.y} width="5" height="5" fill="hsl(var(--foreground))" />
                 ))}
@@ -411,8 +411,7 @@ const Checkout = () => {
             <Button
               onClick={confirmPayment}
               disabled={submitting}
-              size="lg"
-              className="mt-4 h-14 w-full rounded-xl gradient-primary text-base font-bold shadow-glow"
+              className="mt-4 h-12 w-full rounded-xl gradient-primary text-sm font-bold shadow-glow"
             >
               {submitting ? "Salvando..." : "Já paguei • Confirmar pedido"}
             </Button>
@@ -430,25 +429,25 @@ const Checkout = () => {
               {/* Method */}
               <section className="rounded-2xl bg-card p-5 shadow-soft">
                 <h2 className="mb-3 font-display text-lg font-bold">Como você quer receber?</h2>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setMethod("delivery")}
-                    className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-smooth ${
+                    className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
                       method === "delivery" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
                     }`}
                   >
-                    <Bike className="h-6 w-6 text-primary" />
-                    <span className="font-bold">Entrega</span>
+                    <Bike className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-bold">Entrega</span>
                     <span className="text-xs text-muted-foreground">{store.deliveryTime}</span>
                   </button>
                   <button
                     onClick={() => setMethod("pickup")}
-                    className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-smooth ${
+                    className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
                       method === "pickup" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
                     }`}
                   >
-                    <StoreIcon className="h-6 w-6 text-primary" />
-                    <span className="font-bold">Retirar na loja</span>
+                    <StoreIcon className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-bold">Retirar na loja</span>
                     <span className="text-xs text-success">Sem taxa de entrega</span>
                   </button>
                 </div>
@@ -476,8 +475,8 @@ const Checkout = () => {
               {/* Address + Map */}
               {method === "delivery" && (
                 <section className="rounded-2xl bg-card p-5 shadow-soft">
-                  <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-bold">
-                    <MapPin className="h-5 w-5 text-primary" /> Endereço de entrega
+                  <h2 className="mb-3 flex items-center gap-2 font-display text-base font-bold sm:text-lg">
+                    <MapPin className="h-4 w-4 text-primary" /> Endereço de entrega
                   </h2>
 
                   {/* Primary action: GPS */}
@@ -485,20 +484,20 @@ const Checkout = () => {
                     type="button"
                     onClick={useMyLocation}
                     disabled={gpsLoading}
-                    className="group flex w-full items-center gap-3 rounded-2xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 p-4 text-left transition-smooth hover:border-primary hover:shadow-glow disabled:opacity-60"
+                    className="group flex w-full items-center gap-3 rounded-xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 p-3 text-left transition-smooth hover:border-primary hover:shadow-glow disabled:opacity-60"
                   >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-glow">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-glow">
                       {gpsLoading ? (
-                        <Loader2 className="h-6 w-6 animate-spin" />
+                        <Loader2 className="h-5 w-5 animate-spin" />
                       ) : (
-                        <Crosshair className="h-6 w-6" />
+                        <Crosshair className="h-5 w-5" />
                       )}
                     </div>
                     <div className="flex-1">
-                      <p className="font-display text-base font-bold text-foreground">
+                      <p className="font-display text-sm font-bold text-foreground">
                         {gpsLoading ? "Detectando localização..." : "Usar minha localização atual"}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[11px] text-muted-foreground">
                         Mais rápido — preenchemos o endereço automaticamente
                       </p>
                     </div>
@@ -710,8 +709,7 @@ const Checkout = () => {
                 <Button
                   onClick={proceed}
                   disabled={submitting}
-                  size="lg"
-                  className="mt-4 h-14 w-full rounded-xl gradient-primary text-base font-bold shadow-glow transition-bounce hover:scale-[1.02]"
+                  className="mt-4 h-12 w-full rounded-xl gradient-primary text-sm font-bold shadow-glow transition-bounce hover:scale-[1.01]"
                 >
                   {submitting ? "Enviando..." : ctaLabel}
                 </Button>

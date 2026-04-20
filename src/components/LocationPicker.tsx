@@ -75,7 +75,7 @@ export const LocationPicker = ({ value, onChange, defaultCenter }: LocationPicke
           {locating ? "Localizando..." : "Usar minha localização"}
         </button>
       </div>
-      <div className="overflow-hidden rounded-xl border-2 border-border" style={{ height: 240 }}>
+      <div className="overflow-hidden rounded-xl border-2 border-border" style={{ height: 200 }}>
         <MapContainer
           center={[center.lat, center.lng]}
           zoom={16}

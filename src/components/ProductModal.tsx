@@ -70,30 +70,30 @@ export const ProductModal = ({ product, storeSlug, onClose }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="max-h-[92vh] max-w-lg overflow-hidden p-0 sm:rounded-3xl">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-md overflow-hidden p-0 sm:max-w-md sm:rounded-2xl">
         {product && (
-          <div className="flex max-h-[92vh] flex-col">
-            <div className="relative h-48 shrink-0 overflow-hidden">
+          <div className="flex max-h-[90vh] flex-col">
+            <div className="relative h-36 shrink-0 overflow-hidden sm:h-40">
               <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
-              <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-card to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />
               {product.bestseller && (
-                <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-foreground/85 px-2.5 py-1 text-xs font-bold text-background backdrop-blur">
-                  <Flame className="h-3.5 w-3.5 text-accent" /> Mais pedido
+                <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-foreground/85 px-2 py-0.5 text-[10px] font-bold text-background backdrop-blur">
+                  <Flame className="h-3 w-3 text-accent" /> Mais pedido
                 </div>
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto px-5 pb-4">
-              <div className="-mt-4 flex items-start justify-between gap-3">
+            <div className="flex-1 overflow-y-auto px-4 pb-3">
+              <div className="-mt-3 flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="font-display text-2xl font-bold leading-tight">{product.name}</h2>
-                  <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                    <Star className="h-3.5 w-3.5 fill-accent text-accent" />
+                  <h2 className="font-display text-lg font-bold leading-tight sm:text-xl">{product.name}</h2>
+                  <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                    <Star className="h-3 w-3 fill-accent text-accent" />
                     {product.rating} • {product.reviews} avaliações
                   </div>
                 </div>
               </div>
-              <p className="mt-3 text-sm text-muted-foreground">{product.description}</p>
+              <p className="mt-2 text-xs text-muted-foreground sm:text-sm">{product.description}</p>
 
               <div className="mt-4 space-y-5">
                 {groups.map((g) => (
@@ -153,30 +153,29 @@ export const ProductModal = ({ product, storeSlug, onClose }: Props) => {
               </div>
             </div>
 
-            <div className="border-t bg-card p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 rounded-full border bg-background p-1">
+            <div className="border-t bg-card p-3">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 rounded-full border bg-background p-0.5">
                   <button
                     onClick={() => setQty(Math.max(1, qty - 1))}
-                    className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted"
+                    className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-muted"
                     aria-label="Diminuir"
                   >
-                    <Minus className="h-4 w-4" />
+                    <Minus className="h-3.5 w-3.5" />
                   </button>
-                  <span className="w-6 text-center text-sm font-bold">{qty}</span>
+                  <span className="w-5 text-center text-sm font-bold">{qty}</span>
                   <button
                     onClick={() => setQty(qty + 1)}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                    className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
                     aria-label="Aumentar"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-3.5 w-3.5" />
                   </button>
                 </div>
                 <Button
                   disabled={!requiredOk}
                   onClick={submit}
-                  size="lg"
-                  className="h-12 flex-1 rounded-xl gradient-primary text-base font-bold shadow-glow transition-bounce hover:scale-[1.02] disabled:opacity-50"
+                  className="h-11 flex-1 rounded-xl gradient-primary text-sm font-bold shadow-glow transition-bounce hover:scale-[1.01] disabled:opacity-50"
                 >
                   {requiredOk
                     ? `Adicionar • R$ ${(unitPrice * qty).toFixed(2).replace(".", ",")}`

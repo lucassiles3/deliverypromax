@@ -29,18 +29,18 @@ export const CartDrawer = () => {
   return (
     <Sheet open={isOpen} onOpenChange={setOpen}>
       <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
-        <SheetHeader className="border-b p-5">
-          <SheetTitle className="font-display text-xl">
+        <SheetHeader className="border-b p-4">
+          <SheetTitle className="font-display text-base sm:text-lg">
             {store ? `Seu pedido • ${store.name}` : "Seu carrinho"}
           </SheetTitle>
         </SheetHeader>
 
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-              <ShoppingBag className="h-9 w-9 text-muted-foreground" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+              <ShoppingBag className="h-7 w-7 text-muted-foreground" />
             </div>
-            <h3 className="font-display text-lg font-semibold">Carrinho vazio</h3>
+            <h3 className="font-display text-base font-semibold">Carrinho vazio</h3>
             <p className="text-sm text-muted-foreground">
               Escolha uma loja e adicione itens deliciosos.
             </p>
@@ -74,13 +74,13 @@ export const CartDrawer = () => {
             <div className="flex-1 overflow-y-auto p-4">
               <ul className="space-y-3">
                 {items.map((item) => (
-                  <li key={item.lineId} className="flex gap-3 rounded-xl bg-card p-2 shadow-soft">
+                  <li key={item.lineId} className="flex gap-2.5 rounded-xl bg-card p-2 shadow-soft">
                     <img
                       src={item.product.image}
                       alt={item.product.name}
-                      width={80}
-                      height={80}
-                      className="h-20 w-20 rounded-lg object-cover"
+                      width={64}
+                      height={64}
+                      className="h-16 w-16 rounded-lg object-cover"
                     />
                     <div className="flex flex-1 flex-col">
                       <h4 className="font-semibold leading-tight">{item.product.name}</h4>
@@ -150,8 +150,7 @@ export const CartDrawer = () => {
               </div>
               <Button
                 asChild
-                size="lg"
-                className="h-14 w-full gap-2 rounded-xl gradient-primary text-base font-bold shadow-glow transition-bounce hover:scale-[1.02]"
+                className="h-12 w-full gap-2 rounded-xl gradient-primary text-sm font-bold shadow-glow transition-bounce hover:scale-[1.01]"
               >
                 <Link to="/checkout" onClick={() => setOpen(false)}>
                   Ir para o checkout
