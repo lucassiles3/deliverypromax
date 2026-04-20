@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
-import { Star, Clock, Bike } from "lucide-react";
+import { Clock, Bike } from "lucide-react";
 import type { Store } from "@/data/stores";
-import { FavoriteStoreButton } from "@/components/FavoriteButton";
 
 export const StoreCard = ({ store, index = 0 }: { store: Store; index?: number }) => {
+  const tagline = (store as any).tagline as string | undefined;
+
   return (
     <Link
       to={`/loja/${store.slug}`}
@@ -26,7 +27,11 @@ export const StoreCard = ({ store, index = 0 }: { store: Store; index?: number }
               🔥 {store.promo}
             </div>
           )}
-          <FavoriteStoreButton storeId={store.id} className="absolute right-3 top-3" />
+          {tagline && (
+            <div className="absolute right-3 top-3 max-w-[60%] truncate rounded-full bg-background/90 px-3 py-1 text-[11px] font-bold text-foreground shadow-card backdrop-blur">
+              ✨ {tagline}
+            </div>
+          )}
           <div className="absolute bottom-3 left-3 flex items-center gap-2">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-background text-2xl shadow-card">
               {store.logo}
@@ -38,12 +43,6 @@ export const StoreCard = ({ store, index = 0 }: { store: Store; index?: number }
           </div>
         </div>
         <div className="flex items-center gap-3 px-4 py-3 text-sm">
-          <div className="flex items-center gap-1 font-semibold">
-            <Star className="h-4 w-4 fill-accent text-accent" />
-            {store.rating}
-          </div>
-          <span className="text-muted-foreground">({store.reviews})</span>
-          <span className="text-border">•</span>
           <div className="flex items-center gap-1 text-muted-foreground">
             <Clock className="h-3.5 w-3.5" /> {store.deliveryTime}
           </div>

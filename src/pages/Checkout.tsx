@@ -455,6 +455,18 @@ const Checkout = () => {
                 >
                   <CreditCard className="h-4 w-4" /> Pagar agora
                 </a>
+                {store?.whatsappPhone && (
+                  <a
+                    href={`https://wa.me/55${store.whatsappPhone.replace(/\D/g, "")}?text=${encodeURIComponent(
+                      `Olá! Segue o comprovante do meu pagamento de R$ ${total.toFixed(2).replace(".", ",")} referente ao meu pedido na ${store.name}. 📎`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-success text-sm font-bold text-success-foreground shadow-card hover:opacity-90"
+                  >
+                    📱 Enviar comprovante no WhatsApp
+                  </a>
+                )}
                 <button
                   onClick={() => {
                     clear();
