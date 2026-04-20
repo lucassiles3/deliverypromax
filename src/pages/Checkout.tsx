@@ -37,6 +37,8 @@ const Checkout = () => {
   const { items, subtotal, storeSlug, clear } = useCart();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: profile } = useProfile();
+  const updateProfile = useUpdateProfile();
   const loyalty = useLoyalty();
   const { data: store, isLoading } = useStoreBySlug(storeSlug ?? "");
   const { data: coupons = [] } = useCoupons();
