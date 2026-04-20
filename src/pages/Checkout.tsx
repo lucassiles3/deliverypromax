@@ -60,6 +60,7 @@ const Checkout = () => {
   const [addressMode, setAddressMode] = useState<"gps" | "manual">("gps");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [saveContact, setSaveContact] = useState(true);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [useCashback, setUseCashback] = useState(false);
