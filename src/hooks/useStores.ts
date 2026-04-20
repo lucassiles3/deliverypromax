@@ -23,6 +23,8 @@ type DbStore = {
   categories: string[] | null;
   whatsapp_phone?: string | null;
   opening_hours?: OpeningHours | null;
+  lat?: number | null;
+  lng?: number | null;
 };
 
 const mapStore = (s: DbStore, products: Product[] = []): Store => ({
@@ -46,6 +48,8 @@ const mapStore = (s: DbStore, products: Product[] = []): Store => ({
   products,
   whatsappPhone: s.whatsapp_phone ?? undefined,
   openingHours: s.opening_hours ?? undefined,
+  lat: s.lat != null ? Number(s.lat) : undefined,
+  lng: s.lng != null ? Number(s.lng) : undefined,
 });
 
 export const useStores = () =>
