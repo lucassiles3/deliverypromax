@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { Link, Navigate } from "react-router-dom";
-import { ArrowLeft, Clock, Package, Truck, CheckCircle2, XCircle } from "lucide-react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { ArrowLeft, Clock, Package, Truck, CheckCircle2, XCircle, ChevronRight, MessageCircle, HelpCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
