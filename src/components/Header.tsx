@@ -1,9 +1,10 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ShoppingBag, MapPin, Sparkles, LayoutDashboard, LogIn, LogOut, Store as StoreIcon, User as UserIcon } from "lucide-react";
+import { ShoppingBag, MapPin, Sparkles, LogIn, LogOut, Store as StoreIcon, User as UserIcon } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { useLoyalty, tierOf } from "@/hooks/useLoyalty";
 import { useAuth } from "@/hooks/useAuth";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export const Header = () => {
   const { count, setOpen } = useCart();
@@ -71,13 +72,23 @@ export const Header = () => {
             </button>
           )}
           {user ? (
-            <button
-              onClick={signOut}
-              className="hidden items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground sm:flex"
-              title="Sair"
-            >
-              <LogOut className="h-3.5 w-3.5" /> Sair
-            </button>
+            <>
+              <NotificationBell />
+              <Link
+                to="/conta"
+                className="hidden items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground sm:flex"
+                title="Minha conta"
+              >
+                <UserIcon className="h-3.5 w-3.5" /> Conta
+              </Link>
+              <button
+                onClick={signOut}
+                className="hidden items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground sm:flex"
+                title="Sair"
+              >
+                <LogOut className="h-3.5 w-3.5" /> Sair
+              </button>
+            </>
           ) : (
             <Link
               to="/auth"

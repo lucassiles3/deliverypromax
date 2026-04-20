@@ -1,13 +1,15 @@
 import { Star, Plus, Flame } from "lucide-react";
 import type { Product } from "@/data/stores";
+import { FavoriteProductButton } from "@/components/FavoriteButton";
 
 type Props = {
   product: Product;
   storeSlug: string;
+  storeId?: string;
   onOpen: (product: Product) => void;
 };
 
-export const ProductCard = ({ product, onOpen }: Props) => {
+export const ProductCard = ({ product, storeId, onOpen }: Props) => {
   return (
     <article
       onClick={() => onOpen(product)}
@@ -26,6 +28,13 @@ export const ProductCard = ({ product, onOpen }: Props) => {
           <div className="absolute left-1 top-1 flex items-center gap-0.5 rounded-md bg-foreground/85 px-1.5 py-0.5 text-[10px] font-bold text-background backdrop-blur">
             <Flame className="h-3 w-3 text-accent" /> Top
           </div>
+        )}
+        {storeId && (
+          <FavoriteProductButton
+            productId={product.id}
+            storeId={storeId}
+            className="absolute right-1 top-1"
+          />
         )}
       </div>
 
