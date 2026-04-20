@@ -27,10 +27,13 @@ import {
   X as XIcon,
   Repeat,
   Printer,
+  History,
+  LayoutGrid,
 } from "lucide-react";
 import { differenceInMinutes, differenceInSeconds } from "date-fns";
 import { OrderDetailsModal } from "./OrderDetailsModal";
 import { CancelOrderModal } from "./CancelOrderModal";
+import { OrdersHistory } from "./OrdersHistory";
 import { printReceipt, type PrintData } from "@/lib/printReceipt";
 
 type DbStatus =
