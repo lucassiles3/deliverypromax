@@ -584,7 +584,18 @@ const Checkout = () => {
 
               {/* Personal */}
               <section className="rounded-2xl bg-card p-5 shadow-soft">
-                <h2 className="mb-3 font-display text-lg font-bold">Seus dados</h2>
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <h2 className="font-display text-lg font-bold">Para quem é o pedido?</h2>
+                  {(name || phone) && (
+                    <button
+                      type="button"
+                      onClick={() => { setName(""); setPhone(""); }}
+                      className="text-xs font-semibold text-muted-foreground hover:text-primary hover:underline"
+                    >
+                      Trocar
+                    </button>
+                  )}
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <input
                     placeholder="Nome completo"
@@ -599,6 +610,15 @@ const Checkout = () => {
                     className="rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
                   />
                 </div>
+                <label className="mt-3 flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={saveContact}
+                    onChange={(e) => setSaveContact(e.target.checked)}
+                    className="h-4 w-4 cursor-pointer accent-primary"
+                  />
+                  Salvar nome e telefone para próximos pedidos
+                </label>
               </section>
 
               {/* Address + Map */}
