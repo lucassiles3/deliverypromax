@@ -1195,6 +1195,44 @@ export type Database = {
           },
         ]
       }
+      sectors: {
+        Row: {
+          active: boolean
+          color: string
+          created_at: string
+          id: string
+          name: string
+          position: number
+          store_id: string
+        }
+        Insert: {
+          active?: boolean
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          position?: number
+          store_id: string
+        }
+        Update: {
+          active?: boolean
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sectors_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_activity_log: {
         Row: {
           action: string
@@ -1543,6 +1581,8 @@ export type Database = {
           promo: string | null
           rating: number | null
           reviews: number | null
+          service_fee_default_on: boolean
+          service_fee_percent: number
           short_description: string | null
           slug: string
           sound_alerts_enabled: boolean
@@ -1599,6 +1639,8 @@ export type Database = {
           promo?: string | null
           rating?: number | null
           reviews?: number | null
+          service_fee_default_on?: boolean
+          service_fee_percent?: number
           short_description?: string | null
           slug: string
           sound_alerts_enabled?: boolean
@@ -1655,6 +1697,8 @@ export type Database = {
           promo?: string | null
           rating?: number | null
           reviews?: number | null
+          service_fee_default_on?: boolean
+          service_fee_percent?: number
           short_description?: string | null
           slug?: string
           sound_alerts_enabled?: boolean
@@ -1667,6 +1711,417 @@ export type Database = {
           whatsapp_phone?: string | null
         }
         Relationships: []
+      }
+      table_calls: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          reason: string
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          store_id: string
+          table_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          reason?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          store_id: string
+          table_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          reason?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          store_id?: string
+          table_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_calls_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_calls_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      table_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          method: string
+          notes: string | null
+          payer_name: string | null
+          session_id: string
+          store_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          method: string
+          notes?: string | null
+          payer_name?: string | null
+          session_id: string
+          store_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          method?: string
+          notes?: string | null
+          payer_name?: string | null
+          session_id?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_payments_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "table_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_payments_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      table_reservations: {
+        Row: {
+          created_at: string
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          notes: string | null
+          people: number
+          reserved_for: string
+          status: Database["public"]["Enums"]["reservation_status"]
+          store_id: string
+          table_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name: string
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          people?: number
+          reserved_for: string
+          status?: Database["public"]["Enums"]["reservation_status"]
+          store_id: string
+          table_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          people?: number
+          reserved_for?: string
+          status?: Database["public"]["Enums"]["reservation_status"]
+          store_id?: string
+          table_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_reservations_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_reservations_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      table_session_items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          destination: string
+          id: string
+          kitchen_status: Database["public"]["Enums"]["kitchen_status"]
+          notes: string | null
+          product_id: string | null
+          product_name: string
+          quantity: number
+          session_id: string
+          store_id: string
+          total: number
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          destination?: string
+          id?: string
+          kitchen_status?: Database["public"]["Enums"]["kitchen_status"]
+          notes?: string | null
+          product_id?: string | null
+          product_name: string
+          quantity?: number
+          session_id: string
+          store_id: string
+          total?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          destination?: string
+          id?: string
+          kitchen_status?: Database["public"]["Enums"]["kitchen_status"]
+          notes?: string | null
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          session_id?: string
+          store_id?: string
+          total?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_session_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_session_items_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "table_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_session_items_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      table_sessions: {
+        Row: {
+          cash_register_id: string | null
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          discount: number
+          id: string
+          notes: string | null
+          opened_at: string
+          order_id: string | null
+          paid_amount: number
+          people: number
+          service_fee: number
+          service_fee_percent: number
+          status: string
+          store_id: string
+          subtotal: number
+          table_id: string
+          total: number
+          updated_at: string
+          waiter_name: string | null
+          waiter_user_id: string | null
+        }
+        Insert: {
+          cash_register_id?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount?: number
+          id?: string
+          notes?: string | null
+          opened_at?: string
+          order_id?: string | null
+          paid_amount?: number
+          people?: number
+          service_fee?: number
+          service_fee_percent?: number
+          status?: string
+          store_id: string
+          subtotal?: number
+          table_id: string
+          total?: number
+          updated_at?: string
+          waiter_name?: string | null
+          waiter_user_id?: string | null
+        }
+        Update: {
+          cash_register_id?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount?: number
+          id?: string
+          notes?: string | null
+          opened_at?: string
+          order_id?: string | null
+          paid_amount?: number
+          people?: number
+          service_fee?: number
+          service_fee_percent?: number
+          status?: string
+          store_id?: string
+          subtotal?: number
+          table_id?: string
+          total?: number
+          updated_at?: string
+          waiter_name?: string | null
+          waiter_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_sessions_cash_register_id_fkey"
+            columns: ["cash_register_id"]
+            isOneToOne: false
+            referencedRelation: "cash_registers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_sessions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_sessions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_sessions_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tables: {
+        Row: {
+          active: boolean
+          capacity: number
+          created_at: string
+          id: string
+          name: string | null
+          notes: string | null
+          number: number
+          position: number
+          position_x: number
+          position_y: number
+          qr_token: string
+          sector_id: string | null
+          status: Database["public"]["Enums"]["table_status"]
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          capacity?: number
+          created_at?: string
+          id?: string
+          name?: string | null
+          notes?: string | null
+          number: number
+          position?: number
+          position_x?: number
+          position_y?: number
+          qr_token?: string
+          sector_id?: string | null
+          status?: Database["public"]["Enums"]["table_status"]
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          capacity?: number
+          created_at?: string
+          id?: string
+          name?: string | null
+          notes?: string | null
+          number?: number
+          position?: number
+          position_x?: number
+          position_y?: number
+          qr_token?: string
+          sector_id?: string | null
+          status?: Database["public"]["Enums"]["table_status"]
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tables_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tables_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_addresses: {
         Row: {
@@ -1907,6 +2362,10 @@ export type Database = {
         Args: { _store_id: string; _user_id: string }
         Returns: boolean
       }
+      recalc_table_session: {
+        Args: { _session_id: string }
+        Returns: undefined
+      }
       resolve_api_key: {
         Args: { _key_hash: string }
         Returns: {
@@ -1925,6 +2384,12 @@ export type Database = {
       cancel_source: "store" | "system" | "customer" | "courier"
       coupon_type: "percent" | "fixed" | "free_shipping"
       delivery_method: "delivery" | "pickup"
+      kitchen_status:
+        | "pending"
+        | "preparing"
+        | "ready"
+        | "delivered"
+        | "cancelled"
       order_status:
         | "pending_payment"
         | "received"
@@ -1935,7 +2400,14 @@ export type Database = {
         | "cancelled"
       payment_method: "pix" | "cash" | "credit" | "debit"
       payout_status: "scheduled" | "processing" | "paid"
+      reservation_status:
+        | "pending"
+        | "confirmed"
+        | "seated"
+        | "cancelled"
+        | "no_show"
       staff_role: "manager" | "attendant" | "kitchen" | "courier"
+      table_status: "available" | "occupied" | "reserved" | "blocked"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2068,6 +2540,13 @@ export const Constants = {
       cancel_source: ["store", "system", "customer", "courier"],
       coupon_type: ["percent", "fixed", "free_shipping"],
       delivery_method: ["delivery", "pickup"],
+      kitchen_status: [
+        "pending",
+        "preparing",
+        "ready",
+        "delivered",
+        "cancelled",
+      ],
       order_status: [
         "pending_payment",
         "received",
@@ -2079,7 +2558,15 @@ export const Constants = {
       ],
       payment_method: ["pix", "cash", "credit", "debit"],
       payout_status: ["scheduled", "processing", "paid"],
+      reservation_status: [
+        "pending",
+        "confirmed",
+        "seated",
+        "cancelled",
+        "no_show",
+      ],
       staff_role: ["manager", "attendant", "kitchen", "courier"],
+      table_status: ["available", "occupied", "reserved", "blocked"],
     },
   },
 } as const

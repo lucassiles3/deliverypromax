@@ -45,12 +45,13 @@ import { MarketingTab } from "@/components/admin/MarketingTab";
 import { TeamTab } from "@/components/admin/TeamTab";
 import { IntegrationsTab } from "@/components/admin/IntegrationsTab";
 import { PDVTab } from "@/components/admin/PDVTab";
+import { TablesTab } from "@/components/admin/TablesTab";
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 import { useStoreToggles } from "@/hooks/useStoreToggles";
 import { Printer } from "lucide-react";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "pdv" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team" | "integrations";
+type Tab = "dashboard" | "orders" | "pdv" | "tables" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team" | "integrations";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
@@ -122,7 +123,7 @@ const Admin = () => {
   useEffect(() => {
     if (!currentRole) return;
     if (!canAccessSection(currentRole, tab)) {
-      const order: Tab[] = ["dashboard","orders","products","customers","marketing","financial","reports","store","settings","team","integrations"];
+      const order: Tab[] = ["dashboard","orders","tables","products","customers","marketing","financial","reports","store","settings","team","integrations"];
       const next = order.find((t) => canAccessSection(currentRole, t));
       if (next && next !== tab) setTab(next);
     }
@@ -363,6 +364,7 @@ const Admin = () => {
             { id: "dashboard" as const, label: "Dashboard" },
             { id: "orders" as const, label: "Pedidos ao vivo" },
             { id: "pdv" as const, label: "PDV" },
+            { id: "tables" as const, label: "Salão / Mesas" },
             { id: "products" as const, label: "Cardápio" },
             { id: "customers" as const, label: "Clientes" },
             { id: "marketing" as const, label: "Marketing" },
@@ -406,6 +408,7 @@ const Admin = () => {
             </p>
           </div>
         )}
+        {tab === "tables" && storeId && canAccessSection(currentRole, "tables") && <TablesTab storeId={storeId} />}
         {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
         {tab === "customers" && storeId && canAccessSection(currentRole, "customers") && <CustomersTab storeId={storeId} />}
         {tab === "marketing" && storeId && canAccessSection(currentRole, "marketing") && <MarketingTab storeId={storeId} />}
