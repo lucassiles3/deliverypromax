@@ -25,6 +25,7 @@ import type { Coupon } from "@/data/stores";
 import { useLoyalty, CASHBACK_RATE } from "@/hooks/useLoyalty";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { isStoreOpen } from "@/lib/storeHours";
 import { lookupCep, geocodeAddress, formatCep, reverseGeocode } from "@/lib/cep";
 import { toast } from "sonner";
