@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Search, Store as StoreIcon, Package, Tag, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAsset } from "@/lib/assetMap";
-import { formatBRL } from "@/lib/format";
+import { brl } from "@/lib/format";
 
 type StoreHit = { id: string; slug: string; name: string; cuisine: string | null; logo: string | null };
 type ProductHit = {
@@ -201,7 +201,7 @@ export const SmartSearch = ({
                     )}
                   </div>
                   <span className="shrink-0 text-sm font-bold text-primary">
-                    {formatBRL(p.price)}
+                    {brl(p.price)}
                   </span>
                 </Link>
               ))}
