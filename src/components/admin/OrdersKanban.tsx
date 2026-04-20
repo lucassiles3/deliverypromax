@@ -53,6 +53,8 @@ type OrderRow = {
   created_at: string;
   accepted_at: string | null;
   user_id: string | null;
+  source?: string | null;
+  table_number?: number | null;
   order_items: Array<{ product_name: string; quantity: number }>;
 };
 
@@ -160,7 +162,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, customer_name, customer_phone, total, status, method, payment_method, created_at, accepted_at, user_id, order_items(product_name, quantity)"
+          "id, customer_name, customer_phone, total, status, method, payment_method, created_at, accepted_at, user_id, source, table_number, order_items(product_name, quantity)"
         )
         .eq("store_id", storeId)
         .in("status", ["pending_payment", "received", "preparing", "ready", "out_for_delivery", "delivered"])
