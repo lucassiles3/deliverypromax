@@ -11,6 +11,11 @@ export type AddressInput = {
   complement?: string | null;
   neighborhood?: string | null;
   city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  reference?: string | null;
+  lat?: number | null;
+  lng?: number | null;
   is_default?: boolean;
 };
 
