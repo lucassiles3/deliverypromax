@@ -53,6 +53,8 @@ const Checkout = () => {
   });
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [addressMode, setAddressMode] = useState<"gps" | "manual">("gps");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [couponCode, setCouponCode] = useState("");
