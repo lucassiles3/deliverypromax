@@ -53,7 +53,7 @@ export const OrderDetailsModal = ({
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, customer_name, customer_phone, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, status, method, payment_method, change_for, address, delivery_lat, delivery_lng, created_at, accepted_at, cancel_reason, cancel_by, notes, order_items(id, product_name, quantity, unit_price, notes, customizations)"
+          "id, store_id, customer_name, customer_phone, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, status, method, payment_method, change_for, address, delivery_lat, delivery_lng, created_at, accepted_at, cancel_reason, cancel_by, notes, order_items(id, product_name, quantity, unit_price, notes, customizations)"
         )
         .eq("id", orderId!)
         .maybeSingle();
