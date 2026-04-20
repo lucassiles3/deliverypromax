@@ -52,6 +52,7 @@ const PAYMENT_METHODS = [
   { id: "pix_online", label: "Pix online (no app)", needsPix: true },
   { id: "pix_delivery", label: "Pix na entrega" },
   { id: "credit_online", label: "Crédito online", hasInstallments: true },
+  { id: "credit_link", label: "Cartão de crédito — link de pagamento", needsLink: true },
   { id: "credit_delivery", label: "Crédito (maquininha)" },
   { id: "debit_delivery", label: "Débito (maquininha)" },
   { id: "cash", label: "Dinheiro (com troco)" },
