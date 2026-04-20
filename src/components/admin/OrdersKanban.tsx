@@ -486,6 +486,8 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
           )}
         </DragOverlay>
       </DndContext>
+        </>
+      )}
 
       <OrderDetailsModal
         orderId={detailId}
