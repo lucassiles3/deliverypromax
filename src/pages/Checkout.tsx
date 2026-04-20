@@ -476,49 +476,95 @@ const Checkout = () => {
               {/* Address + Map */}
               {method === "delivery" && (
                 <section className="rounded-2xl bg-card p-5 shadow-soft">
-                  <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold">
+                  <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-bold">
                     <MapPin className="h-5 w-5 text-primary" /> Endereço de entrega
                   </h2>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="relative">
-                      <input
-                        placeholder="CEP"
-                        value={address.cep}
-                        onChange={(e) => setAddress({ ...address, cep: formatCep(e.target.value) })}
-                        maxLength={9}
-                        className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
-                      />
-                      {cepLoading && (
-                        <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />
+
+                  {/* Primary action: GPS */}
+                  <button
+                    type="button"
+                    onClick={useMyLocation}
+                    disabled={gpsLoading}
+                    className="group flex w-full items-center gap-3 rounded-2xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 p-4 text-left transition-smooth hover:border-primary hover:shadow-glow disabled:opacity-60"
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-glow">
+                      {gpsLoading ? (
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      ) : (
+                        <Crosshair className="h-6 w-6" />
                       )}
                     </div>
-                    <input
-                      placeholder="Rua"
-                      value={address.street}
-                      onChange={(e) => setAddress({ ...address, street: e.target.value })}
-                      className="rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary sm:col-span-2"
-                    />
-                    <input
-                      placeholder="Número"
-                      value={address.number}
-                      onChange={(e) => setAddress({ ...address, number: e.target.value })}
-                      className="rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
-                    />
-                    <input
-                      placeholder="Complemento (opcional)"
-                      value={address.complement}
-                      onChange={(e) => setAddress({ ...address, complement: e.target.value })}
-                      className="rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
-                    />
-                    <input
-                      placeholder="Bairro"
-                      value={address.neighborhood}
-                      onChange={(e) => setAddress({ ...address, neighborhood: e.target.value })}
-                      className="rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
-                    />
+                    <div className="flex-1">
+                      <p className="font-display text-base font-bold text-foreground">
+                        {gpsLoading ? "Detectando localização..." : "Usar minha localização atual"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Mais rápido — preenchemos o endereço automaticamente
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Toggle: enviar para outro endereço */}
+                  <div className="mt-3 flex items-center justify-between rounded-xl bg-muted/50 px-4 py-2.5">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Quer enviar para outro endereço?
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setAddressMode((m) => (m === "manual" ? "gps" : "manual"))}
+                      className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      {addressMode === "manual" ? "Ocultar" : "Digitar endereço"}
+                    </button>
                   </div>
 
+                  {/* Manual fields — appear when GPS used (to confirm number) or user opted in */}
+                  {(addressMode === "manual" || coords || address.cep) && (
+                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                      <div className="relative">
+                        <input
+                          placeholder="CEP"
+                          value={address.cep}
+                          onChange={(e) => setAddress({ ...address, cep: formatCep(e.target.value) })}
+                          maxLength={9}
+                          className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
+                        />
+                        {cepLoading && (
+                          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />
+                        )}
+                      </div>
+                      <input
+                        placeholder="Rua"
+                        value={address.street}
+                        onChange={(e) => setAddress({ ...address, street: e.target.value })}
+                        className="rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary sm:col-span-2"
+                      />
+                      <input
+                        placeholder="Número"
+                        value={address.number}
+                        onChange={(e) => setAddress({ ...address, number: e.target.value })}
+                        className="rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
+                      />
+                      <input
+                        placeholder="Complemento (opcional)"
+                        value={address.complement}
+                        onChange={(e) => setAddress({ ...address, complement: e.target.value })}
+                        className="rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
+                      />
+                      <input
+                        placeholder="Bairro"
+                        value={address.neighborhood}
+                        onChange={(e) => setAddress({ ...address, neighborhood: e.target.value })}
+                        className="rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
+                      />
+                    </div>
+                  )}
+
                   <div className="mt-4">
+                    <p className="mb-2 text-xs font-semibold text-muted-foreground">
+                      📍 Ajuste o pino no mapa para localização exata
+                    </p>
                     <LocationPicker value={coords} onChange={setCoords} />
                   </div>
                 </section>
