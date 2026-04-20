@@ -335,12 +335,23 @@ export const TableSessionDrawer = ({ storeId, table, onClose }: Props) => {
                   ) : (
                     items.map((it) => {
                       const s = kStyle[it.kitchen_status];
+                      const isCustomer = (it as any).customer_requested;
                       return (
-                        <div key={it.id} className="flex items-start gap-2 border-b px-3 py-2 last:border-b-0">
+                        <div
+                          key={it.id}
+                          className={`flex items-start gap-2 border-b px-3 py-2 last:border-b-0 ${
+                            isCustomer && it.kitchen_status === "pending" ? "bg-primary/5 ring-1 ring-inset ring-primary/30" : ""
+                          }`}
+                        >
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-bold">{it.product_name}</span>
                               <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${s.bg}`}>{s.label}</span>
+                              {isCustomer && (
+                                <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                                  📱 Cliente
+                                </span>
+                              )}
                             </div>
                             {it.notes && <div className="text-[11px] text-muted-foreground">📝 {it.notes}</div>}
                             <div className="mt-1 flex items-center gap-1.5">
