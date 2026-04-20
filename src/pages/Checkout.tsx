@@ -359,12 +359,27 @@ const Checkout = () => {
         document.body.removeChild(a);
       }
 
+      // Abre o link de pagamento (Cartão crédito - link)
+      if (paymentLink) {
+        setPaidLinkUrl(paymentLink);
+        const a = document.createElement("a");
+        a.href = paymentLink;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
       setStep("done");
       toast.success(`Pedido confirmado! Você ganhou R$ ${earned.toFixed(2).replace(".", ",")} de cashback 🎉`);
-      setTimeout(() => {
-        clear();
-        navigate("/");
-      }, 3500);
+      // Não redireciona automaticamente quando há link de pagamento, para o cliente poder reabrir
+      if (!paymentLink) {
+        setTimeout(() => {
+          clear();
+          navigate("/");
+        }, 3500);
+      }
     } catch (e: any) {
       toast.error(e.message ?? "Erro ao salvar pedido");
     } finally {
