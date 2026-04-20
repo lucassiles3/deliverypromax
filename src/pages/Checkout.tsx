@@ -62,6 +62,31 @@ const Checkout = () => {
   const [useCashback, setUseCashback] = useState(false);
   const [step, setStep] = useState<"form" | "pix" | "done">("form");
   const [submitting, setSubmitting] = useState(false);
+  const [paidLinkUrl, setPaidLinkUrl] = useState<string | null>(null);
+
+  // Métodos de pagamento configurados pela loja (apenas habilitados)
+  const [enabledMethods, setEnabledMethods] = useState<Record<string, { enabled: boolean; notes?: string | null }>>({});
+  useEffect(() => {
+    if (!store?.id) return;
+    let cancelled = false;
+    supabase
+      .from("store_payment_methods")
+      .select("method, enabled, notes")
+      .eq("store_id", store.id)
+      .eq("enabled", true)
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const map: Record<string, { enabled: boolean; notes?: string | null }> = {};
+        data.forEach((m: any) => (map[m.method] = { enabled: m.enabled, notes: m.notes }));
+        setEnabledMethods(map);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [store?.id]);
+
+  const creditLinkTemplate = enabledMethods["credit_link"]?.notes ?? null;
+  const creditLinkEnabled = !!enabledMethods["credit_link"]?.enabled && !!creditLinkTemplate;
 
   useEffect(() => {
     document.title = "Checkout • FoodFlash";
