@@ -1673,12 +1673,17 @@ export type Database = {
           cep: string
           city: string | null
           complement: string | null
+          country: string | null
           created_at: string
           id: string
           is_default: boolean
           label: string | null
+          lat: number | null
+          lng: number | null
           neighborhood: string | null
           number: string
+          reference: string | null
+          state: string | null
           street: string
           user_id: string
         }
@@ -1686,12 +1691,17 @@ export type Database = {
           cep: string
           city?: string | null
           complement?: string | null
+          country?: string | null
           created_at?: string
           id?: string
           is_default?: boolean
           label?: string | null
+          lat?: number | null
+          lng?: number | null
           neighborhood?: string | null
           number: string
+          reference?: string | null
+          state?: string | null
           street: string
           user_id: string
         }
@@ -1699,12 +1709,17 @@ export type Database = {
           cep?: string
           city?: string | null
           complement?: string | null
+          country?: string | null
           created_at?: string
           id?: string
           is_default?: boolean
           label?: string | null
+          lat?: number | null
+          lng?: number | null
           neighborhood?: string | null
           number?: string
+          reference?: string | null
+          state?: string | null
           street?: string
           user_id?: string
         }
