@@ -96,6 +96,27 @@ const Checkout = () => {
     document.title = "Checkout • FoodFlash";
   }, []);
 
+  // Pré-preenche nome/telefone: perfil do usuário > último contato salvo
+  useEffect(() => {
+    if (name || phone) return;
+    const profileName = profile?.display_name?.trim() ?? "";
+    const profilePhone = profile?.phone?.trim() ?? "";
+    if (profileName || profilePhone) {
+      if (profileName) setName(profileName);
+      if (profilePhone) setPhone(profilePhone);
+      return;
+    }
+    try {
+      const raw = localStorage.getItem("ff_last_contact");
+      if (raw) {
+        const c = JSON.parse(raw);
+        if (c.name) setName(c.name);
+        if (c.phone) setPhone(c.phone);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.display_name, profile?.phone]);
+
   // Auto-lookup on CEP complete
   useEffect(() => {
     const digits = address.cep.replace(/\D/g, "");
