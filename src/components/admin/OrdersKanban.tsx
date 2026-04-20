@@ -398,14 +398,50 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
 
   return (
     <>
+      {/* Toolbar: view + janela */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-1">
+          <button
+            onClick={() => setView("kanban")}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold ${view === "kanban" ? "bg-card shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" /> Ativos
+          </button>
+          <button
+            onClick={() => setView("history")}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold ${view === "history" ? "bg-card shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <History className="h-3.5 w-3.5" /> Histórico
+          </button>
+        </div>
+        {view === "kanban" && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-muted-foreground">Mostrar últimas:</span>
+            <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-1">
+              {WINDOW_OPTIONS.map((w) => (
+                <button
+                  key={w.id}
+                  onClick={() => setWindowSel(w.id)}
+                  className={`rounded-md px-2.5 py-1 text-xs font-bold ${windowSel === w.id ? "bg-card shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {w.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {view === "history" ? (
+        <OrdersHistory storeId={storeId} />
+      ) : (
+        <>
       {totalActive === 0 && (
         <div className="mb-4 rounded-2xl border-2 border-dashed border-border bg-card p-6 text-center">
           <Bell className="mx-auto h-8 w-8 text-muted-foreground" />
-          <h3 className="mt-2 font-display text-lg font-bold">Nenhum pedido ativo nas últimas 12h</h3>
+          <h3 className="mt-2 font-display text-lg font-bold">Nenhum pedido ativo na janela selecionada</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Quando um cliente fizer um pedido, ele aparecerá aqui em <strong>Novos</strong> com os botões{" "}
-            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">✓ Aceitar</span>{" "}
-            e <span className="rounded bg-destructive/10 px-1.5 py-0.5 text-xs font-bold text-destructive">✕ Recusar</span>.
+            Aumente a janela de tempo acima ou veja o <strong>Histórico</strong> para pedidos antigos.
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
             💡 Dica: confirme no topo da página se você está na loja certa (seletor ao lado do botão Som).
