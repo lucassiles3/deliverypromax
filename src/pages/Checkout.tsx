@@ -376,6 +376,21 @@ const Checkout = () => {
       });
       if (loyaltyErr) throw loyaltyErr;
 
+      // Salva contato para próximos pedidos
+      if (saveContact) {
+        try {
+          localStorage.setItem("ff_last_contact", JSON.stringify({ name, phone }));
+        } catch {}
+        const profileNeedsUpdate =
+          (!profile?.display_name && name) || (!profile?.phone && phone);
+        if (profileNeedsUpdate) {
+          updateProfile.mutate({
+            display_name: profile?.display_name || name,
+            phone: profile?.phone || phone,
+          });
+        }
+      }
+
       const waUrl = buildWhatsappUrl(order.id);
       if (waUrl) {
         // Use anchor click to avoid popup blockers / iframe restrictions
