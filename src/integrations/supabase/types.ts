@@ -744,9 +744,12 @@ export type Database = {
           method: Database["public"]["Enums"]["delivery_method"]
           notes: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
+          source: string
           status: Database["public"]["Enums"]["order_status"]
           store_id: string
           subtotal: number
+          table_number: number | null
+          table_session_id: string | null
           total: number
           updated_at: string
           user_id: string | null
@@ -771,9 +774,12 @@ export type Database = {
           method?: Database["public"]["Enums"]["delivery_method"]
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          source?: string
           status?: Database["public"]["Enums"]["order_status"]
           store_id: string
           subtotal: number
+          table_number?: number | null
+          table_session_id?: string | null
           total: number
           updated_at?: string
           user_id?: string | null
@@ -798,9 +804,12 @@ export type Database = {
           method?: Database["public"]["Enums"]["delivery_method"]
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          source?: string
           status?: Database["public"]["Enums"]["order_status"]
           store_id?: string
           subtotal?: number
+          table_number?: number | null
+          table_session_id?: string | null
           total?: number
           updated_at?: string
           user_id?: string | null
@@ -811,6 +820,13 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_table_session_id_fkey"
+            columns: ["table_session_id"]
+            isOneToOne: false
+            referencedRelation: "table_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -1876,6 +1892,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           created_by_name: string | null
+          customer_requested: boolean
           destination: string
           id: string
           kitchen_status: Database["public"]["Enums"]["kitchen_status"]
@@ -1893,6 +1910,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           created_by_name?: string | null
+          customer_requested?: boolean
           destination?: string
           id?: string
           kitchen_status?: Database["public"]["Enums"]["kitchen_status"]
@@ -1910,6 +1928,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           created_by_name?: string | null
+          customer_requested?: boolean
           destination?: string
           id?: string
           kitchen_status?: Database["public"]["Enums"]["kitchen_status"]
