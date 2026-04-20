@@ -105,7 +105,11 @@ const MyOrders = () => {
                 product_name: string;
                 quantity: number;
               }>;
-              const store = o.stores as { name: string; logo: string | null } | null;
+              const store = o.stores as { name: string; logo: string | null; phone: string | null; whatsapp_phone: string | null } | null;
+              const wppDigits = (store?.whatsapp_phone || store?.phone || "").replace(/\D/g, "");
+              const wppLink = wppDigits
+                ? `https://wa.me/55${wppDigits}?text=${encodeURIComponent(`Olá! Tenho uma dúvida sobre meu pedido #${o.id.slice(0, 6).toUpperCase()}`)}`
+                : null;
               const date = new Date(o.created_at).toLocaleString("pt-BR", {
                 day: "2-digit",
                 month: "2-digit",
