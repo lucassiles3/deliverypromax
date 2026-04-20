@@ -13,9 +13,9 @@ export type StoreAccess = {
 };
 
 const SECTION_MATRIX: Record<StaffRole, string[]> = {
-  manager: ["dashboard", "orders", "products", "customers", "marketing", "reports", "settings", "pdv"],
-  attendant: ["dashboard", "orders", "customers", "pdv"],
-  kitchen: ["orders"],
+  manager: ["dashboard", "orders", "products", "customers", "marketing", "reports", "settings", "pdv", "tables"],
+  attendant: ["dashboard", "orders", "customers", "pdv", "tables"],
+  kitchen: ["orders", "tables"],
   courier: ["orders"],
 };
 
@@ -35,14 +35,12 @@ export const useStoreAccess = () => {
     queryKey: ["store-access", user?.id],
     enabled: !!user,
     queryFn: async (): Promise<StoreAccess[]> => {
-      // Lojas onde é dono (RLS já permite)
       const { data: owned, error: ownErr } = await supabase
         .from("stores")
         .select("id, name, logo, slug, owner_id")
         .eq("owner_id", user!.id);
       if (ownErr) throw ownErr;
 
-      // Lojas onde é membro
       const { data: memberships, error: memErr } = await supabase
         .from("store_members")
         .select("role, store_id, stores:store_id(id, name, logo, slug)")
