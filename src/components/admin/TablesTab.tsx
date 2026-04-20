@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { LayoutGrid, ListOrdered, CalendarClock, ChefHat, Trophy, Map as MapIcon } from "lucide-react";
+import { LayoutGrid, ListOrdered, CalendarClock, ChefHat, Trophy, Map as MapIcon, BarChart3 } from "lucide-react";
 import { useOpenSessions, useTables } from "@/hooks/useTables";
 import { brl } from "@/lib/format";
 import { TablesGrid } from "./tables/TablesGrid";
@@ -9,8 +9,9 @@ import { KitchenDisplay } from "./tables/KitchenDisplay";
 import { WaiterRanking } from "./tables/WaiterRanking";
 import { TableMap } from "./tables/TableMap";
 import { TableCalls } from "./tables/TableCalls";
+import { SalonReport } from "./tables/SalonReport";
 
-type View = "grid" | "map" | "reservations" | "kitchen" | "ranking" | "sectors";
+type View = "grid" | "map" | "reservations" | "kitchen" | "ranking" | "sectors" | "report";
 
 export const TablesTab = ({ storeId }: { storeId: string }) => {
   const [view, setView] = useState<View>("grid");
@@ -33,6 +34,7 @@ export const TablesTab = ({ storeId }: { storeId: string }) => {
     { id: "kitchen", label: "Produção (KDS)", icon: ChefHat },
     { id: "reservations", label: "Reservas", icon: CalendarClock },
     { id: "ranking", label: "Ranking garçons", icon: Trophy },
+    { id: "report", label: "Relatório", icon: BarChart3 },
     { id: "sectors", label: "Setores", icon: ListOrdered },
   ];
 
@@ -69,6 +71,7 @@ export const TablesTab = ({ storeId }: { storeId: string }) => {
       {view === "kitchen" && <KitchenDisplay storeId={storeId} />}
       {view === "reservations" && <ReservationsView storeId={storeId} />}
       {view === "ranking" && <WaiterRanking storeId={storeId} />}
+      {view === "report" && <SalonReport storeId={storeId} />}
       {view === "sectors" && <SectorsManager storeId={storeId} />}
     </div>
   );

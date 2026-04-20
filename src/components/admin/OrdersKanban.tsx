@@ -53,6 +53,8 @@ type OrderRow = {
   created_at: string;
   accepted_at: string | null;
   user_id: string | null;
+  source?: string | null;
+  table_number?: number | null;
   order_items: Array<{ product_name: string; quantity: number }>;
 };
 
@@ -160,7 +162,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, customer_name, customer_phone, total, status, method, payment_method, created_at, accepted_at, user_id, order_items(product_name, quantity)"
+          "id, customer_name, customer_phone, total, status, method, payment_method, created_at, accepted_at, user_id, source, table_number, order_items(product_name, quantity)"
         )
         .eq("store_id", storeId)
         .in("status", ["pending_payment", "received", "preparing", "ready", "out_for_delivery", "delivered"])
@@ -568,7 +570,13 @@ const OrderCard = ({
     >
       <div className="flex items-center gap-2">
         <strong className="font-display text-sm">#{order.id.slice(0, 6).toUpperCase()}</strong>
-        <span className="text-[11px]">{order.method === "delivery" ? "🛵" : "🏪"}</span>
+        {order.source === "mesa" ? (
+          <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+            🍽️ Mesa {order.table_number ?? "?"}
+          </span>
+        ) : (
+          <span className="text-[11px]">{order.method === "delivery" ? "🛵" : "🏪"}</span>
+        )}
         <PayIcon className="h-3 w-3 text-muted-foreground" />
         <span className="ml-auto font-display text-sm font-bold">
           R$ {Number(order.total).toFixed(2).replace(".", ",")}

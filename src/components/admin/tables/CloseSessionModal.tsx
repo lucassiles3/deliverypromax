@@ -87,6 +87,49 @@ export const CloseSessionModal = ({
     setSaving(false);
     if (closeErr) return toast.error(closeErr.message);
 
+    // 4. criar pedido tipo "mesa" no Kanban (status delivered) para histórico/integrações
+    try {
+      const { data: items } = await supabase
+        .from("table_session_items")
+        .select("product_id, product_name, quantity, unit_price, notes")
+        .eq("session_id", session.id);
+      const primaryMethod = (payRows[0]?.method ?? "cash") as string;
+      const pmMap: Record<string, string> = { cash: "cash", pix: "pix", credit: "credit_card", debit: "debit_card", voucher: "voucher" };
+      const { data: ord } = await supabase
+        .from("orders")
+        .insert({
+          store_id: storeId,
+          customer_name: session.customer_name || `Mesa ${tableNumber}`,
+          customer_phone: session.customer_phone || "—",
+          subtotal: Number(session.subtotal),
+          delivery_fee: 0,
+          total: Number(session.total),
+          method: "pickup",
+          payment_method: pmMap[primaryMethod] as any,
+          status: "delivered",
+          source: "mesa",
+          table_session_id: session.id,
+          table_number: tableNumber,
+          notes: session.notes || `Comanda mesa ${tableNumber} · ${session.people} pessoa(s)`,
+        })
+        .select("id")
+        .maybeSingle();
+      if (ord && items?.length) {
+        await supabase.from("order_items").insert(
+          items.map((it: any) => ({
+            order_id: ord.id,
+            product_id: it.product_id,
+            product_name: it.product_name,
+            quantity: it.quantity,
+            unit_price: Number(it.unit_price),
+            notes: it.notes,
+          })),
+        );
+      }
+    } catch (e) {
+      console.warn("Falha ao criar pedido kanban da mesa:", e);
+    }
+
     toast.success("🎉 Mesa finalizada");
     if (navigator.vibrate) navigator.vibrate([30, 30, 60]);
     qc.invalidateQueries({ queryKey: ["tables", storeId] });
