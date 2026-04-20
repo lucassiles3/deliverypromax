@@ -34,6 +34,11 @@ const PageFallback = () => (
   </div>
 );
 
+const PushBridge = () => {
+  usePushNotifications();
+  return null;
+};
+
 const App = () => (
   <PersistQueryClientProvider
     client={queryClient}
