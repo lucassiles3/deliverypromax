@@ -19,6 +19,7 @@ import Enderecos from "./pages/Enderecos.tsx";
 import Favoritos from "./pages/Favoritos.tsx";
 import Notificacoes from "./pages/Notificacoes.tsx";
 import Categorias from "./pages/Categorias.tsx";
+import Mesa from "./pages/Mesa.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/favoritos" element={<Favoritos />} />
             <Route path="/notificacoes" element={<Notificacoes />} />
             <Route path="/categorias" element={<Categorias />} />
+            <Route path="/mesa/:token" element={<Mesa />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CartDrawer />

@@ -47,7 +47,7 @@ export const ReservationsView = ({ storeId }: { storeId: string }) => {
     qc.invalidateQueries({ queryKey: ["reservations", storeId] });
   };
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: "pending" | "confirmed" | "seated" | "cancelled" | "no_show") => {
     const { error } = await supabase.from("table_reservations").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["reservations", storeId] });
