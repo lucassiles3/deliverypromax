@@ -52,6 +52,8 @@ export type Store = {
   products: Product[];
   whatsappPhone?: string;
   openingHours?: OpeningHours;
+  lat?: number;
+  lng?: number;
 };
 
 export type Coupon = {
