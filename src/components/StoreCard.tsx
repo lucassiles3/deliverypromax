@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Star, Clock, Bike } from "lucide-react";
 import type { Store } from "@/data/stores";
+import { FavoriteStoreButton } from "@/components/FavoriteButton";
 
 export const StoreCard = ({ store, index = 0 }: { store: Store; index?: number }) => {
   return (
@@ -25,6 +26,7 @@ export const StoreCard = ({ store, index = 0 }: { store: Store; index?: number }
               🔥 {store.promo}
             </div>
           )}
+          <FavoriteStoreButton storeId={store.id} className="absolute right-3 top-3" />
           <div className="absolute bottom-3 left-3 flex items-center gap-2">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-background text-2xl shadow-card">
               {store.logo}

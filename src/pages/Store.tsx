@@ -177,7 +177,7 @@ const Store = () => {
               <h2 className="mb-4 font-display text-xl font-bold md:text-2xl">{c}</h2>
               <div className="grid gap-3 md:grid-cols-2">
                 {list.map((p) => (
-                  <ProductCard key={p.id} product={p} storeSlug={store.slug} onOpen={setOpenProduct} />
+                  <ProductCard key={p.id} product={p} storeSlug={store.slug} storeId={store.id} onOpen={setOpenProduct} />
                 ))}
               </div>
             </section>

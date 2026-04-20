@@ -479,6 +479,74 @@ export type Database = {
           },
         ]
       }
+      favorite_products: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          store_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          store_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          store_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorite_products_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      favorite_stores: {
+        Row: {
+          created_at: string
+          id: string
+          store_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          store_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          store_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_stores_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loyalty_points: {
         Row: {
           created_at: string
@@ -520,6 +588,56 @@ export type Database = {
           },
           {
             foreignKeyName: "loyalty_points_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          link: string | null
+          message: string | null
+          metadata: Json | null
+          read: boolean
+          read_at: string | null
+          store_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          link?: string | null
+          message?: string | null
+          metadata?: Json | null
+          read?: boolean
+          read_at?: string | null
+          store_id?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          link?: string | null
+          message?: string | null
+          metadata?: Json | null
+          read?: boolean
+          read_at?: string | null
+          store_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
@@ -942,6 +1060,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          cpf: string | null
           created_at: string
           display_name: string | null
           id: string
@@ -950,6 +1069,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          cpf?: string | null
           created_at?: string
           display_name?: string | null
           id: string
@@ -958,6 +1078,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          cpf?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
