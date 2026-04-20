@@ -1,5 +1,10 @@
 import { Heart } from "lucide-react";
-import { useFavoriteProductIds, useToggleFavoriteProduct } from "@/hooks/useFavorites";
+import {
+  useFavoriteProductIds,
+  useToggleFavoriteProduct,
+  useFavoriteStoreIds,
+  useToggleFavoriteStore,
+} from "@/hooks/useFavorites";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
@@ -51,7 +56,6 @@ export const FavoriteStoreButton = ({
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { useFavoriteStoreIds, useToggleFavoriteStore } = require("@/hooks/useFavorites");
   const { data: ids } = useFavoriteStoreIds();
   const toggle = useToggleFavoriteStore();
   const isFav = !!ids?.has(storeId);
