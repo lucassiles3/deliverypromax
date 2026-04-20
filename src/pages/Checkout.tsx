@@ -197,6 +197,14 @@ const Checkout = () => {
     cash: "Dinheiro",
     credit: "Cartão de crédito (na entrega)",
     debit: "Cartão de débito (na entrega)",
+    credit_link: "Cartão de crédito (link de pagamento)",
+  };
+
+  // Substitui {valor} no template pelo total formatado em BR (12,50)
+  const buildPaymentLink = (amount: number): string | null => {
+    if (!creditLinkTemplate) return null;
+    const formatted = amount.toFixed(2).replace(".", ",");
+    return creditLinkTemplate.replace(/\{valor\}/gi, formatted);
   };
 
   const proceed = () => {
@@ -285,6 +293,15 @@ const Checkout = () => {
     if (!store || !user) return;
     setSubmitting(true);
     try {
+      // Para "credit_link" persistimos como "credit" (enum do banco) e marcamos via notes.
+      const paymentLink = payment === "credit_link" ? buildPaymentLink(total) : null;
+      const dbPaymentMethod: "pix" | "cash" | "credit" | "debit" =
+        payment === "credit_link" ? "credit" : payment;
+      const orderNotes =
+        payment === "credit_link" && paymentLink
+          ? `[LINK_PAGAMENTO] ${paymentLink}`
+          : null;
+
       const { data: order, error: orderErr } = await supabase
         .from("orders")
         .insert({
@@ -293,7 +310,7 @@ const Checkout = () => {
           customer_name: name,
           customer_phone: phone,
           method,
-          payment_method: payment,
+          payment_method: dbPaymentMethod,
           change_for: payment === "cash" && changeFor ? parseFloat(changeFor.replace(",", ".")) : null,
           address: method === "delivery" ? address : null,
           delivery_lat: method === "delivery" ? coords?.lat ?? null : null,
@@ -305,6 +322,7 @@ const Checkout = () => {
           cashback_used: cashbackUsed,
           cashback_earned: earned,
           total,
+          notes: orderNotes,
           status: payment === "pix" ? "received" : "pending_payment",
         })
         .select("id")
