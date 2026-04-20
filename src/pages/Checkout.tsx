@@ -413,7 +413,9 @@ const Checkout = () => {
   const ctaLabel =
     payment === "pix"
       ? `Pagar com Pix • R$ ${total.toFixed(2).replace(".", ",")}`
-      : `Confirmar pedido • R$ ${total.toFixed(2).replace(".", ",")}`;
+      : payment === "credit_link"
+        ? `Confirmar e pagar online • R$ ${total.toFixed(2).replace(".", ",")}`
+        : `Confirmar pedido • R$ ${total.toFixed(2).replace(".", ",")}`;
 
   return (
     <div className="min-h-screen bg-muted/40 pb-24">
