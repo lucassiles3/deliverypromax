@@ -200,11 +200,15 @@ const Checkout = () => {
     credit_link: "Cartão de crédito (link de pagamento)",
   };
 
-  // Substitui {valor} no template pelo total formatado em BR (12,50)
+  // Adiciona o valor formatado no final do link (ex: /12,50)
   const buildPaymentLink = (amount: number): string | null => {
     if (!creditLinkTemplate) return null;
     const formatted = amount.toFixed(2).replace(".", ",");
-    return creditLinkTemplate.replace(/\{valor\}/gi, formatted);
+    // Remove {valor} se existir, remove trailing slash, e adiciona /valor
+    const base = creditLinkTemplate
+      .replace(/\{valor\}/gi, "")
+      .replace(/\/$/, "");
+    return `${base}/${formatted}`;
   };
 
   const proceed = () => {
