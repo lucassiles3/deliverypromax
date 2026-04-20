@@ -49,23 +49,25 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/loja/:slug" element={<Store />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/pdv" element={<PDV />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/meus-pedidos" element={<MyOrders />} />
-            <Route path="/conta" element={<MinhaConta />} />
-            <Route path="/enderecos" element={<Enderecos />} />
-            <Route path="/favoritos" element={<Favoritos />} />
-            <Route path="/notificacoes" element={<Notificacoes />} />
-            <Route path="/categorias" element={<Categorias />} />
-            <Route path="/mesa/:token" element={<Mesa />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<PageFallback />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/loja/:slug" element={<Store />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/pdv" element={<PDV />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/meus-pedidos" element={<MyOrders />} />
+              <Route path="/conta" element={<MinhaConta />} />
+              <Route path="/enderecos" element={<Enderecos />} />
+              <Route path="/favoritos" element={<Favoritos />} />
+              <Route path="/notificacoes" element={<Notificacoes />} />
+              <Route path="/categorias" element={<Categorias />} />
+              <Route path="/mesa/:token" element={<Mesa />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
           <CartDrawer />
           <BottomNav />
         </BrowserRouter>
