@@ -420,6 +420,12 @@ const OrderDetails = () => {
         {/* Histórico de status */}
         <StatusTimeline orderId={order.id} />
 
+        <AdBanner
+          slotId={import.meta.env.VITE_ADSENSE_SLOT_ORDER_DETAILS}
+          variant="rectangle"
+          label="Banner detalhes do pedido"
+        />
+
         {/* Avaliações (apenas após entrega) */}
         {status === "delivered" && (
           <OrderReviews
