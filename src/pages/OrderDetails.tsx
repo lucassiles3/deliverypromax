@@ -577,11 +577,17 @@ const LiveCourierTracking = ({
   courier,
   destLat,
   destLng,
+  storeLat,
+  storeLng,
+  storeName,
 }: {
   courierId: string;
   courier: { name?: string; phone?: string | null; vehicle_plate?: string | null; photo_url?: string | null } | null;
   destLat: number | null;
   destLng: number | null;
+  storeLat?: number | null;
+  storeLng?: number | null;
+  storeName?: string;
 }) => {
   const loc = useCourierLocation(courierId);
   return (
@@ -620,8 +626,11 @@ const LiveCourierTracking = ({
         courierLng={loc?.lng ?? null}
         destLat={destLat}
         destLng={destLng}
+        storeLat={storeLat ?? null}
+        storeLng={storeLng ?? null}
         courierLabel={courier?.name ?? "Entregador"}
         destLabel="Seu endereço"
+        storeLabel={storeName}
         height={280}
       />
       {!loc && (
