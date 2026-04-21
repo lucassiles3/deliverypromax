@@ -111,7 +111,6 @@ export const OrderDetailsModal = ({
 
   const printOrder = () => window.print();
 
-  const qc = useQueryClient();
   const FLOW: Array<{ id: string; label: string }> = [
     { id: "received", label: "Recebido" },
     { id: "preparing", label: "Em preparo" },
