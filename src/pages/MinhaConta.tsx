@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Navigate, Link } from "react-router-dom";
-import { User, Lock, Phone, Mail, Save, MapPin, Heart, Bell, Receipt, LogOut, IdCard } from "lucide-react";
+import { User, Lock, Phone, Mail, Save, MapPin, Heart, Bell, Receipt, LogOut, IdCard, Trophy } from "lucide-react";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -46,8 +46,9 @@ const MinhaConta = () => {
         </div>
 
         {/* Atalhos */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
           <ShortcutLink to="/meus-pedidos" icon={Receipt} label="Pedidos" />
+          <ShortcutLink to="/recompensas" icon={Trophy} label="Recompensas" />
           <ShortcutLink to="/enderecos" icon={MapPin} label="Endereços" />
           <ShortcutLink to="/favoritos" icon={Heart} label="Favoritos" />
           <ShortcutLink to="/notificacoes" icon={Bell} label="Notificações" />
