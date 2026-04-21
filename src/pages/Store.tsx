@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductModal } from "@/components/ProductModal";
 import { PromoCountdown } from "@/components/PromoCountdown";
+import { AdBanner } from "@/components/AdBanner";
 import { useStoreBySlug } from "@/hooks/useStores";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useUserLocation } from "@/hooks/useUserLocation";
@@ -206,6 +207,11 @@ const Store = () => {
 
       {/* Products by category */}
       <div className="container mt-6 space-y-10">
+        <AdBanner
+          slotId={import.meta.env.VITE_ADSENSE_SLOT_STORE}
+          variant="leaderboard"
+          label="Banner loja — antes do cardápio"
+        />
         {store.categories.map((c) => {
           const list = grouped[c] ?? [];
           if (list.length === 0) return null;

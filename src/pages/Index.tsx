@@ -8,6 +8,7 @@ import { CategoryGrid, CATEGORIES, matchCategory } from "@/components/CategoryGr
 import { StoreRail } from "@/components/StoreRail";
 import { StoreCard } from "@/components/StoreCard";
 import { ProductRail } from "@/components/ProductRail";
+import { AdBanner } from "@/components/AdBanner";
 import { useStores } from "@/hooks/useStores";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -359,6 +360,13 @@ const Index = () => {
             stores={promoStores}
             emptyHint="Nenhuma promoção ativa agora — volte mais tarde."
           />
+
+          <AdBanner
+            slotId={import.meta.env.VITE_ADSENSE_SLOT_HOME_TOP}
+            variant="leaderboard"
+            label="Banner home — entre rails"
+          />
+
           <ProductRail
             title="✨ Pratos em destaque"
             subtitle="Os queridinhos dos clientes"
@@ -376,6 +384,13 @@ const Index = () => {
               stores={nearbyStores}
             />
           )}
+
+          <AdBanner
+            slotId={import.meta.env.VITE_ADSENSE_SLOT_HOME_MID}
+            variant="leaderboard"
+            label="Banner home — antes de novidades"
+          />
+
           <StoreRail title="🆕 Novidades" subtitle="Recém chegadas" stores={newStores} />
 
           {!user && (

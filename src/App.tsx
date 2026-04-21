@@ -40,6 +40,23 @@ const PushBridge = () => {
   return null;
 };
 
+/**
+ * Carrega o script do Google AdSense uma única vez se VITE_ADSENSE_CLIENT estiver definido.
+ * Sem a env var, nada é injetado (banners caem em modo placeholder).
+ */
+const AdSenseLoader = () => {
+  const client = import.meta.env.VITE_ADSENSE_CLIENT as string | undefined;
+  if (typeof window === "undefined" || !client) return null;
+  if (document.querySelector('script[data-adsense="1"]')) return null;
+  const s = document.createElement("script");
+  s.async = true;
+  s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`;
+  s.crossOrigin = "anonymous";
+  s.dataset.adsense = "1";
+  document.head.appendChild(s);
+  return null;
+};
+
 const App = () => (
   <PersistQueryClientProvider
     client={queryClient}
@@ -58,6 +75,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <PushBridge />
+          <AdSenseLoader />
           <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/" element={<Index />} />

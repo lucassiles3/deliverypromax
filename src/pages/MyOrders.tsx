@@ -4,6 +4,7 @@ import { ArrowLeft, Clock, Package, Truck, CheckCircle2, XCircle, ChevronRight, 
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AdBanner } from "@/components/AdBanner";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
 
@@ -80,6 +81,11 @@ const MyOrders = () => {
       </header>
 
       <div className="container max-w-3xl py-6">
+        <AdBanner
+          slotId={import.meta.env.VITE_ADSENSE_SLOT_ORDERS}
+          variant="leaderboard"
+          label="Banner meus pedidos — topo"
+        />
         {orders.length === 0 ? (
           <div className="rounded-2xl bg-card p-12 text-center shadow-soft">
             <Package className="mx-auto h-12 w-12 text-muted-foreground" />

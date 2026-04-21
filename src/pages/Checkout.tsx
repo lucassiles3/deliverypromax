@@ -28,6 +28,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { isStoreOpen } from "@/lib/storeHours";
 import { lookupCep, geocodeAddress, formatCep, reverseGeocode } from "@/lib/cep";
+import { distanceKm, formatDistance } from "@/lib/distance";
 import { toast } from "sonner";
 
 type Method = "delivery" | "pickup";
@@ -208,6 +209,18 @@ const Checkout = () => {
   const total = Math.max(0, subtotal + fee - couponDiscount - cashbackUsed);
   const earned = Math.round(Math.max(0, total) * CASHBACK_RATE * 100) / 100;
 
+  // Verificação de raio de entrega
+  const deliveryDistance =
+    coords && store?.lat && store?.lng
+      ? distanceKm(coords, { lat: store.lat, lng: store.lng })
+      : null;
+  const deliveryRadius = store?.deliveryRadiusKm ?? null;
+  const outOfDeliveryRange =
+    method === "delivery" &&
+    deliveryDistance !== null &&
+    deliveryRadius !== null &&
+    deliveryDistance > deliveryRadius;
+
   const applyCoupon = () => {
     const c = coupons.find((x) => x.code === couponCode.trim().toUpperCase());
     if (!c) return toast.error("Cupom inválido");
@@ -253,6 +266,10 @@ const Checkout = () => {
       if (!address.cep || !address.street || !address.number)
         return toast.error("Preencha o endereço");
       if (!coords) return toast.error("Marque sua localização no mapa");
+      if (outOfDeliveryRange)
+        return toast.error(
+          `Endereço fora da área de entrega (${formatDistance(deliveryDistance!)} — máx. ${deliveryRadius} km)`,
+        );
     }
     if (payment === "cash" && changeFor) {
       const v = parseFloat(changeFor.replace(",", "."));
@@ -871,12 +888,22 @@ const Checkout = () => {
                     Você vai ganhar R$ {earned.toFixed(2).replace(".", ",")} de cashback ✨
                   </p>
                 )}
+                {outOfDeliveryRange && (
+                  <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs">
+                    <p className="font-bold text-destructive">Fora da área de entrega</p>
+                    <p className="mt-0.5 text-muted-foreground">
+                      Você está a <strong>{formatDistance(deliveryDistance!)}</strong> da loja —
+                      ela entrega em até <strong>{deliveryRadius} km</strong>. Escolha{" "}
+                      <strong>retirada na loja</strong> ou outro endereço.
+                    </p>
+                  </div>
+                )}
                 <Button
                   onClick={proceed}
-                  disabled={submitting}
+                  disabled={submitting || outOfDeliveryRange}
                   className="mt-4 h-12 w-full rounded-xl gradient-primary text-sm font-bold shadow-glow transition-bounce hover:scale-[1.01]"
                 >
-                  {submitting ? "Enviando..." : ctaLabel}
+                  {submitting ? "Enviando..." : outOfDeliveryRange ? "Endereço fora do raio" : ctaLabel}
                 </Button>
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                   Pagamento seguro • SSL criptografado

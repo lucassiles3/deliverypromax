@@ -36,6 +36,7 @@ import { CourierMap } from "@/components/CourierMap";
 import { PickupMap } from "@/components/PickupMap";
 import { RouteReplay } from "@/components/RouteReplay";
 import { useCourierLocation } from "@/hooks/useCourierLocation";
+import { AdBanner } from "@/components/AdBanner";
 
 type DbStatus =
   | "pending_payment"
@@ -418,6 +419,12 @@ const OrderDetails = () => {
 
         {/* Histórico de status */}
         <StatusTimeline orderId={order.id} />
+
+        <AdBanner
+          slotId={import.meta.env.VITE_ADSENSE_SLOT_ORDER_DETAILS}
+          variant="rectangle"
+          label="Banner detalhes do pedido"
+        />
 
         {/* Avaliações (apenas após entrega) */}
         {status === "delivered" && (
