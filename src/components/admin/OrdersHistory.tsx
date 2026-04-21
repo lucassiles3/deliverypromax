@@ -7,14 +7,6 @@ import { Search, Eye, Filter, Calendar, ChevronRight, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrderDetailsModal } from "./OrderDetailsModal";
 
-const NEXT_STATUS: Partial<Record<DbStatus, { next: DbStatus; label: string }>> = {
-  pending_payment: { next: "received", label: "Confirmar pgto" },
-  received: { next: "preparing", label: "Iniciar preparo" },
-  preparing: { next: "ready", label: "Marcar pronto" },
-  ready: { next: "out_for_delivery", label: "Saiu p/ entrega" },
-  out_for_delivery: { next: "delivered", label: "Entregue" },
-};
-
 type DbStatus =
   | "pending_payment"
   | "received"
@@ -23,6 +15,14 @@ type DbStatus =
   | "out_for_delivery"
   | "delivered"
   | "cancelled";
+
+const NEXT_STATUS: Partial<Record<DbStatus, { next: DbStatus; label: string }>> = {
+  pending_payment: { next: "received", label: "Confirmar pgto" },
+  received: { next: "preparing", label: "Iniciar preparo" },
+  preparing: { next: "ready", label: "Marcar pronto" },
+  ready: { next: "out_for_delivery", label: "Saiu p/ entrega" },
+  out_for_delivery: { next: "delivered", label: "Entregue" },
+};
 
 const STATUS_LABEL: Record<DbStatus, string> = {
   pending_payment: "Aguardando pgto",
