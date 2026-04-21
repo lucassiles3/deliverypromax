@@ -36,6 +36,7 @@ import { CourierMap } from "@/components/CourierMap";
 import { PickupMap } from "@/components/PickupMap";
 import { RouteReplay } from "@/components/RouteReplay";
 import { useCourierLocation } from "@/hooks/useCourierLocation";
+import { AdBanner } from "@/components/AdBanner";
 
 type DbStatus =
   | "pending_payment"
