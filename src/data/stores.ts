@@ -54,6 +54,7 @@ export type Store = {
   openingHours?: OpeningHours;
   lat?: number;
   lng?: number;
+  deliveryRadiusKm?: number;
 };
 
 export type Coupon = {
