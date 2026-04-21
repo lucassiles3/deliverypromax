@@ -1062,17 +1062,6 @@ const RankCard = ({
     )}
   </div>
 );
-
-// PIX icon usando QrCode da lucide
-const QrIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="3" y="3" width="7" height="7" rx="1" />
-    <rect x="14" y="3" width="7" height="7" rx="1" />
-    <rect x="3" y="14" width="7" height="7" rx="1" />
-    <path d="M14 14h3v3h-3zM18 18h3v3h-3z" />
-  </svg>
-);
-
 function timeAgo(dateStr: string) {
   const min = differenceInMinutes(new Date(), new Date(dateStr));
   if (min < 1) return "agora";
