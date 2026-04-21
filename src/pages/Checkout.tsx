@@ -209,6 +209,18 @@ const Checkout = () => {
   const total = Math.max(0, subtotal + fee - couponDiscount - cashbackUsed);
   const earned = Math.round(Math.max(0, total) * CASHBACK_RATE * 100) / 100;
 
+  // Verificação de raio de entrega
+  const deliveryDistance =
+    coords && store?.lat && store?.lng
+      ? distanceKm(coords, { lat: store.lat, lng: store.lng })
+      : null;
+  const deliveryRadius = store?.deliveryRadiusKm ?? null;
+  const outOfDeliveryRange =
+    method === "delivery" &&
+    deliveryDistance !== null &&
+    deliveryRadius !== null &&
+    deliveryDistance > deliveryRadius;
+
   const applyCoupon = () => {
     const c = coupons.find((x) => x.code === couponCode.trim().toUpperCase());
     if (!c) return toast.error("Cupom inválido");
