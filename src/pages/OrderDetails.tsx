@@ -33,6 +33,8 @@ import { brl } from "@/lib/format";
 import { StatusTimeline } from "@/components/order/StatusTimeline";
 import { OrderReviews } from "@/components/order/OrderReviews";
 import { CourierMap } from "@/components/CourierMap";
+import { PickupMap } from "@/components/PickupMap";
+import { RouteReplay } from "@/components/RouteReplay";
 import { useCourierLocation } from "@/hooks/useCourierLocation";
 
 type DbStatus =
@@ -81,7 +83,7 @@ const OrderDetails = () => {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, cashback_earned, change_for, status, method, payment_method, address, delivery_lat, delivery_lng, notes, customer_name, customer_phone, created_at, accepted_at, updated_at, store_id, table_number, courier_id, couriers:courier_id(id, name, phone, vehicle_type, vehicle_plate, photo_url), stores(name, logo, phone, whatsapp_phone, slug), order_items(id, product_id, product_name, quantity, unit_price, notes, customizations)",
+          "id, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, cashback_earned, change_for, status, method, payment_method, address, delivery_lat, delivery_lng, notes, customer_name, customer_phone, created_at, accepted_at, updated_at, store_id, table_number, courier_id, couriers:courier_id(id, name, phone, vehicle_type, vehicle_plate, photo_url), stores(name, logo, phone, whatsapp_phone, slug, lat, lng, address_street, address_number, address_neighborhood, city, pickup_prep_time_min), order_items(id, product_id, product_name, quantity, unit_price, notes, customizations)",
         )
         .eq("id", id!)
         .eq("user_id", user!.id)
@@ -272,13 +274,53 @@ const OrderDetails = () => {
           )}
         </section>
 
-        {/* Rastreamento em tempo real */}
+        {/* Rastreamento em tempo real (delivery em rota) */}
         {order.method === "delivery" && status === "out_for_delivery" && order.courier_id && (
           <LiveCourierTracking
             courierId={order.courier_id}
             courier={(order as any).couriers}
             destLat={order.delivery_lat}
             destLng={order.delivery_lng}
+            storeLat={(order.stores as any)?.lat ?? null}
+            storeLng={(order.stores as any)?.lng ?? null}
+            storeName={order.stores?.name}
+          />
+        )}
+
+        {/* Mapa de retirada (pickup) */}
+        {order.method === "pickup" && !isCancelled && status !== "delivered" && (
+          <PickupMap
+            storeName={order.stores?.name ?? "Loja"}
+            storeLat={(order.stores as any)?.lat ?? null}
+            storeLng={(order.stores as any)?.lng ?? null}
+            storeAddress={[
+              (order.stores as any)?.address_street &&
+                `${(order.stores as any).address_street}${(order.stores as any).address_number ? `, ${(order.stores as any).address_number}` : ""}`,
+              (order.stores as any)?.address_neighborhood,
+              (order.stores as any)?.city,
+            ]
+              .filter(Boolean)
+              .join(" • ") || null}
+            pickupReadyAt={
+              order.accepted_at && (order.stores as any)?.pickup_prep_time_min
+                ? new Date(
+                    new Date(order.accepted_at).getTime() +
+                      Number((order.stores as any).pickup_prep_time_min) * 60000,
+                  ).toISOString()
+                : null
+            }
+          />
+        )}
+
+        {/* Histórico de trajeto após entrega (delivery) */}
+        {order.method === "delivery" && status === "delivered" && order.courier_id && (
+          <RouteReplay
+            orderId={order.id}
+            destLat={order.delivery_lat}
+            destLng={order.delivery_lng}
+            storeLat={(order.stores as any)?.lat ?? null}
+            storeLng={(order.stores as any)?.lng ?? null}
+            storeName={order.stores?.name}
           />
         )}
 
