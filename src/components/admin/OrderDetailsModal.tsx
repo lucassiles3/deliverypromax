@@ -290,6 +290,7 @@ export const OrderDetailsModal = ({
                 )}
               </div>
             )}
+            {order.cancel_reason && (
               <div className="mt-3 rounded-lg bg-destructive/10 p-3">
                 <h5 className="mb-1 text-[11px] font-bold uppercase text-destructive">
                   Motivo do cancelamento
