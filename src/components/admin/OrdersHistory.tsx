@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Search, Eye, Filter, Calendar } from "lucide-react";
+import { Search, Eye, Filter, Calendar, ChevronRight, X } from "lucide-react";
+import { toast } from "sonner";
 import { OrderDetailsModal } from "./OrderDetailsModal";
 
 type DbStatus =
@@ -14,6 +15,14 @@ type DbStatus =
   | "out_for_delivery"
   | "delivered"
   | "cancelled";
+
+const NEXT_STATUS: Partial<Record<DbStatus, { next: DbStatus; label: string }>> = {
+  pending_payment: { next: "received", label: "Confirmar pgto" },
+  received: { next: "preparing", label: "Iniciar preparo" },
+  preparing: { next: "ready", label: "Marcar pronto" },
+  ready: { next: "out_for_delivery", label: "Saiu p/ entrega" },
+  out_for_delivery: { next: "delivered", label: "Entregue" },
+};
 
 const STATUS_LABEL: Record<DbStatus, string> = {
   pending_payment: "Aguardando pgto",
@@ -44,10 +53,26 @@ const RANGES = [
 ] as const;
 
 export const OrdersHistory = ({ storeId }: { storeId: string }) => {
+  const qc = useQueryClient();
   const [range, setRange] = useState<(typeof RANGES)[number]["id"]>("7d");
   const [statusFilter, setStatusFilter] = useState<DbStatus | "all">("all");
   const [search, setSearch] = useState("");
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const updateStatus = async (id: string, next: DbStatus, successMsg: string) => {
+    setBusyId(id);
+    const { error } = await supabase.from("orders").update({ status: next }).eq("id", id);
+    setBusyId(null);
+    if (error) return toast.error(error.message);
+    toast.success(successMsg);
+    qc.invalidateQueries({ queryKey: ["orders-history", storeId] });
+  };
+
+  const cancelOrder = async (id: string) => {
+    if (!confirm("Cancelar este pedido?")) return;
+    await updateStatus(id, "cancelled", "Pedido cancelado");
+  };
 
   const fromDate = useMemo(() => {
     const r = RANGES.find((x) => x.id === range) ?? RANGES[1];
@@ -207,12 +232,38 @@ export const OrdersHistory = ({ storeId }: { storeId: string }) => {
                       R$ {Number(o.total).toFixed(2).replace(".", ",")}
                     </td>
                     <td className="px-3 py-2">
-                      <button
-                        onClick={() => setDetailId(o.id)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-xs font-bold hover:bg-muted/70"
-                      >
-                        <Eye className="h-3 w-3" /> Ver
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        {(() => {
+                          const adv = NEXT_STATUS[o.status as DbStatus];
+                          if (!adv) return null;
+                          return (
+                            <button
+                              onClick={() => updateStatus(o.id, adv.next, `Pedido: ${STATUS_LABEL[adv.next]}`)}
+                              disabled={busyId === o.id}
+                              className="inline-flex items-center gap-1 rounded-lg bg-primary px-2 py-1 text-xs font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                              title={adv.label}
+                            >
+                              {adv.label} <ChevronRight className="h-3 w-3" />
+                            </button>
+                          );
+                        })()}
+                        {o.status !== "delivered" && o.status !== "cancelled" && (
+                          <button
+                            onClick={() => cancelOrder(o.id)}
+                            disabled={busyId === o.id}
+                            className="inline-flex items-center justify-center rounded-lg bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20 disabled:opacity-50"
+                            title="Cancelar pedido"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setDetailId(o.id)}
+                          className="inline-flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-xs font-bold hover:bg-muted/70"
+                        >
+                          <Eye className="h-3 w-3" /> Ver
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
