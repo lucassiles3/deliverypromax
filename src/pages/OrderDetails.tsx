@@ -30,6 +30,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
+import { StatusTimeline } from "@/components/order/StatusTimeline";
+import { OrderReviews } from "@/components/order/OrderReviews";
 
 type DbStatus =
   | "pending_payment"
@@ -77,7 +79,7 @@ const OrderDetails = () => {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, cashback_earned, change_for, status, method, payment_method, address, notes, customer_name, customer_phone, created_at, accepted_at, updated_at, store_id, table_number, stores(name, logo, phone, whatsapp_phone, slug), order_items(id, product_name, quantity, unit_price, notes, customizations)",
+          "id, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, cashback_earned, change_for, status, method, payment_method, address, notes, customer_name, customer_phone, created_at, accepted_at, updated_at, store_id, table_number, stores(name, logo, phone, whatsapp_phone, slug), order_items(id, product_id, product_name, quantity, unit_price, notes, customizations)",
         )
         .eq("id", id!)
         .eq("user_id", user!.id)
@@ -360,6 +362,24 @@ const OrderDetails = () => {
             </a>
           )}
         </section>
+
+        {/* Histórico de status */}
+        <StatusTimeline orderId={order.id} />
+
+        {/* Avaliações (apenas após entrega) */}
+        {status === "delivered" && (
+          <OrderReviews
+            orderId={order.id}
+            storeId={order.store_id}
+            userId={user.id}
+            storeName={order.stores?.name ?? "loja"}
+            items={items.map((it) => ({
+              id: it.id,
+              product_id: (it as any).product_id ?? null,
+              product_name: it.product_name,
+            }))}
+          />
+        )}
 
         {/* Endereço */}
         {order.method === "delivery" && addr && (
