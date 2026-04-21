@@ -1,9 +1,13 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { resolveAsset } from "@/lib/assetMap";
 import { Header } from "@/components/Header";
 import { SmartSearch } from "@/components/SmartSearch";
 import { CategoryGrid, CATEGORIES, matchCategory } from "@/components/CategoryGrid";
 import { StoreRail } from "@/components/StoreRail";
 import { StoreCard } from "@/components/StoreCard";
+import { ProductRail } from "@/components/ProductRail";
 import { useStores } from "@/hooks/useStores";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -24,7 +28,44 @@ import {
   Filter,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { Store } from "@/data/stores";
+import type { Store, Product } from "@/data/stores";
+
+const useFeaturedProducts = (stores: Store[]) =>
+  useQuery({
+    queryKey: ["featured-products", stores.map((s) => s.id).join(",")],
+    enabled: stores.length > 0,
+    queryFn: async () => {
+      const storeMap = new Map(stores.map((s) => [s.id, s]));
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, description, price, old_price, image_url, category, rating, reviews, bestseller, promo, store_id")
+        .eq("active", true)
+        .or("promo.eq.true,bestseller.eq.true")
+        .order("rating", { ascending: false })
+        .limit(12);
+      if (error) throw error;
+      return (data ?? [])
+        .map((p: any) => {
+          const store = storeMap.get(p.store_id);
+          if (!store) return null;
+          return {
+            id: p.id,
+            name: p.name,
+            description: p.description ?? "",
+            price: Number(p.price),
+            oldPrice: p.old_price ? Number(p.old_price) : undefined,
+            image: resolveAsset(p.image_url),
+            category: p.category ?? "Outros",
+            rating: Number(p.rating ?? 5),
+            reviews: p.reviews ?? 0,
+            bestseller: !!p.bestseller,
+            promo: !!p.promo,
+            _store: store,
+          } as Product & { _store: Store };
+        })
+        .filter(Boolean) as (Product & { _store: Store })[];
+    },
+  });
 
 type FilterKey = "open" | "promo" | "rated" | "fast";
 
