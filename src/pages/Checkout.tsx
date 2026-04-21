@@ -28,6 +28,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { isStoreOpen } from "@/lib/storeHours";
 import { lookupCep, geocodeAddress, formatCep, reverseGeocode } from "@/lib/cep";
+import { distanceKm, formatDistance } from "@/lib/distance";
 import { toast } from "sonner";
 
 type Method = "delivery" | "pickup";
