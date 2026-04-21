@@ -317,6 +317,11 @@ const Index = () => {
             stores={promoStores}
             emptyHint="Nenhuma promoção ativa agora — volte mais tarde."
           />
+          <ProductRail
+            title="✨ Pratos em destaque"
+            subtitle="Os queridinhos dos clientes"
+            products={featuredProducts}
+          />
           <StoreRail
             title="⭐ Lojas em destaque"
             subtitle="As favoritas dos clientes"
