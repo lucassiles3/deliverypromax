@@ -312,16 +312,150 @@ const Admin = () => {
 
   const currentStore = stores.find((s) => s.id === storeId);
 
+  const sections: { id: Tab; label: string; icon: typeof Clock }[] = [
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "orders", label: "Pedidos ao vivo", icon: ShoppingCart },
+    { id: "pdv", label: "PDV", icon: Receipt },
+    { id: "tables", label: "Salão / Mesas", icon: Utensils },
+    { id: "products", label: "Cardápio", icon: Package },
+    { id: "customers", label: "Clientes", icon: UsersIcon },
+    { id: "couriers", label: "Entregadores", icon: Bike },
+    { id: "marketing", label: "Marketing", icon: Megaphone },
+    { id: "financial", label: "Financeiro", icon: Wallet },
+    { id: "reports", label: "Relatórios", icon: BarChart3 },
+    { id: "store", label: "Loja", icon: StoreIcon },
+    { id: "settings", label: "Operação", icon: SettingsIcon },
+    { id: "team", label: "Equipe", icon: UserCog },
+    { id: "integrations", label: "Integrações", icon: Plug },
+  ];
+  const visibleSections = sections.filter((s) => canAccessSection(currentRole, s.id));
+  const currentSection = visibleSections.find((s) => s.id === tab);
+
   return (
     <div className="min-h-screen bg-muted/40 pb-20">
       <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-xl">
-        <div className="container flex h-16 items-center gap-3">
-          <Link to="/" className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground">
+        <div className="container flex h-14 items-center gap-2 md:h-16 md:gap-3">
+          {/* Mobile: menu hamburger */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <button
+                className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-border bg-card md:hidden"
+                aria-label="Abrir menu"
+              >
+                <MenuIcon className="h-5 w-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="flex w-[85vw] max-w-sm flex-col p-0">
+              <SheetHeader className="border-b p-4 text-left">
+                <SheetTitle className="font-display text-lg">Painel do dono</SheetTitle>
+              </SheetHeader>
+
+              <div className="border-b p-4">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Loja</label>
+                <select
+                  value={storeId ?? ""}
+                  onChange={(e) => setStoreId(e.target.value)}
+                  className="mt-1 w-full rounded-xl border-2 border-border bg-card px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+                >
+                  {stores.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.logo} {s.name}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      const next = !soundEnabled;
+                      updateToggles({ sound_alerts_enabled: next });
+                      if (next) playDing();
+                    }}
+                    className={`flex items-center justify-center gap-1.5 rounded-xl border-2 px-3 py-2 text-xs font-bold transition-smooth ${
+                      soundEnabled
+                        ? "border-primary/30 bg-primary/5 text-primary"
+                        : "border-border bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {soundEnabled ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
+                    Som
+                  </button>
+                  <button
+                    onClick={() => updateToggles({ auto_print_enabled: !autoPrintEnabled })}
+                    className={`flex items-center justify-center gap-1.5 rounded-xl border-2 px-3 py-2 text-xs font-bold transition-smooth ${
+                      autoPrintEnabled
+                        ? "border-primary/30 bg-primary/5 text-primary"
+                        : "border-border bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                    Imprimir
+                  </button>
+                </div>
+              </div>
+
+              <nav className="flex-1 overflow-y-auto p-2">
+                {visibleSections.map((s) => {
+                  const Icon = s.icon;
+                  const active = tab === s.id;
+                  const showBadge = s.id === "orders" && pendingCount > 0;
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => {
+                        setTab(s.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-bold transition-smooth ${
+                        active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <Icon className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                      <span className="flex-1">{s.label}</span>
+                      {showBadge && (
+                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground">
+                          {pendingCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+                <Link
+                  to="/"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-bold text-muted-foreground hover:bg-muted"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                  Voltar ao app
+                </Link>
+              </nav>
+            </SheetContent>
+          </Sheet>
+
+          {/* Desktop: link voltar + título */}
+          <Link to="/" className="hidden items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground md:flex">
             <ArrowLeft className="h-4 w-4" /> App
           </Link>
-          <span className="text-border">|</span>
-          <h1 className="font-display text-xl font-bold">Painel do dono</h1>
-          <div className="ml-auto flex items-center gap-2">
+          <span className="hidden text-border md:inline">|</span>
+          <h1 className="hidden font-display text-xl font-bold md:block">Painel do dono</h1>
+
+          {/* Mobile: nome da seção atual */}
+          <div className="flex min-w-0 flex-1 items-center gap-2 md:hidden">
+            {currentSection && (
+              <>
+                <currentSection.icon className="h-4 w-4 shrink-0 text-primary" />
+                <h1 className="truncate font-display text-base font-bold">{currentSection.label}</h1>
+                {tab === "orders" && pendingCount > 0 && (
+                  <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground animate-pulse">
+                    {pendingCount}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Desktop: ações no header */}
+          <div className="ml-auto hidden items-center gap-2 md:flex">
             <button
               onClick={() => {
                 const next = !soundEnabled;
@@ -365,9 +499,9 @@ const Admin = () => {
         </div>
       </header>
 
-      <div className="container py-6">
-        <div className="mb-6 rounded-2xl gradient-primary p-5 text-primary-foreground shadow-soft">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="container py-3 md:py-6">
+        <div className="mb-4 rounded-2xl gradient-primary p-3 text-primary-foreground shadow-soft md:mb-6 md:p-5">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
             <KpiBlock icon={DollarSign} label="Faturamento" value={`R$ ${kpis.revenue.toFixed(2).replace(".", ",")}`} />
             <KpiBlock icon={ShoppingBag} label="Pedidos" value={String(kpis.count)} divider />
             <KpiBlock icon={Package} label="Em andamento" value={String(kpis.active)} divider />
@@ -375,41 +509,25 @@ const Admin = () => {
           </div>
         </div>
 
-        <div className="mb-5 flex gap-2 border-b overflow-x-auto">
-          {[
-            { id: "dashboard" as const, label: "Dashboard" },
-            { id: "orders" as const, label: "Pedidos ao vivo" },
-            { id: "pdv" as const, label: "PDV" },
-            { id: "tables" as const, label: "Salão / Mesas" },
-            { id: "products" as const, label: "Cardápio" },
-            { id: "customers" as const, label: "Clientes" },
-            { id: "couriers" as const, label: "Entregadores" },
-            { id: "marketing" as const, label: "Marketing" },
-            { id: "financial" as const, label: "Financeiro" },
-            { id: "reports" as const, label: "Relatórios" },
-            { id: "store" as const, label: "Loja" },
-            { id: "settings" as const, label: "Operação" },
-            { id: "team" as const, label: "Equipe" },
-            { id: "integrations" as const, label: "Integrações" },
-          ]
-            .filter((t) => canAccessSection(currentRole, t.id))
-            .map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`relative flex items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-bold transition-smooth ${
-                  tab === t.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {t.label}
-                {t.id === "orders" && pendingCount > 0 && (
-                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground animate-pulse">
-                    {pendingCount}
-                  </span>
-                )}
-                {tab === t.id && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
-              </button>
-            ))}
+        {/* Desktop: tabs horizontais. Mobile: usa menu lateral (Sheet) */}
+        <div className="mb-5 hidden gap-2 border-b overflow-x-auto md:flex">
+          {visibleSections.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`relative flex items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-bold transition-smooth ${
+                tab === t.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.label}
+              {t.id === "orders" && pendingCount > 0 && (
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground animate-pulse">
+                  {pendingCount}
+                </span>
+              )}
+              {tab === t.id && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
+            </button>
+          ))}
         </div>
 
         {tab === "dashboard" && storeId && canAccessSection(currentRole, "dashboard") && <DashboardTab storeId={storeId} />}
