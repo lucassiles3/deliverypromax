@@ -685,6 +685,113 @@ export type Database = {
           },
         ]
       }
+      expense_categories: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          position: number
+          store_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          kind?: string
+          name: string
+          position?: number
+          store_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          position?: number
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          expense_date: string
+          id: string
+          notes: string | null
+          paid: boolean
+          paid_at: string | null
+          receipt_url: string | null
+          recurrence: string | null
+          recurring: boolean
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          paid?: boolean
+          paid_at?: string | null
+          receipt_url?: string | null
+          recurrence?: string | null
+          recurring?: boolean
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          paid?: boolean
+          paid_at?: string | null
+          receipt_url?: string | null
+          recurrence?: string | null
+          recurring?: boolean
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorite_products: {
         Row: {
           created_at: string
@@ -746,6 +853,96 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "favorite_stores_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiscal_invoices: {
+        Row: {
+          access_key: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          created_at: string
+          customer_cpf: string | null
+          customer_name: string | null
+          emitted_at: string | null
+          error_message: string | null
+          id: string
+          numero: number | null
+          order_id: string
+          pdf_url: string | null
+          protocol: string | null
+          provider: string | null
+          raw_response: Json | null
+          serie: number | null
+          status: string
+          store_id: string
+          total: number
+          type: string
+          updated_at: string
+          xml_url: string | null
+        }
+        Insert: {
+          access_key?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          customer_cpf?: string | null
+          customer_name?: string | null
+          emitted_at?: string | null
+          error_message?: string | null
+          id?: string
+          numero?: number | null
+          order_id: string
+          pdf_url?: string | null
+          protocol?: string | null
+          provider?: string | null
+          raw_response?: Json | null
+          serie?: number | null
+          status?: string
+          store_id: string
+          total: number
+          type?: string
+          updated_at?: string
+          xml_url?: string | null
+        }
+        Update: {
+          access_key?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          customer_cpf?: string | null
+          customer_name?: string | null
+          emitted_at?: string | null
+          error_message?: string | null
+          id?: string
+          numero?: number | null
+          order_id?: string
+          pdf_url?: string | null
+          protocol?: string | null
+          provider?: string | null
+          raw_response?: Json | null
+          serie?: number | null
+          status?: string
+          store_id?: string
+          total?: number
+          type?: string
+          updated_at?: string
+          xml_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_invoices_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
@@ -1047,6 +1244,146 @@ export type Database = {
           },
         ]
       }
+      payment_gateways: {
+        Row: {
+          access_token_secret_name: string | null
+          active: boolean
+          created_at: string
+          id: string
+          is_default: boolean
+          marketplace_fee_percent: number
+          notes: string | null
+          provider: string
+          sandbox: boolean
+          split_enabled: boolean
+          split_recipient_id: string | null
+          store_id: string
+          updated_at: string
+          webhook_secret: string | null
+        }
+        Insert: {
+          access_token_secret_name?: string | null
+          active?: boolean
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          marketplace_fee_percent?: number
+          notes?: string | null
+          provider: string
+          sandbox?: boolean
+          split_enabled?: boolean
+          split_recipient_id?: string | null
+          store_id: string
+          updated_at?: string
+          webhook_secret?: string | null
+        }
+        Update: {
+          access_token_secret_name?: string | null
+          active?: boolean
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          marketplace_fee_percent?: number
+          notes?: string | null
+          provider?: string
+          sandbox?: boolean
+          split_enabled?: boolean
+          split_recipient_id?: string | null
+          store_id?: string
+          updated_at?: string
+          webhook_secret?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_gateways_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          expires_at: string | null
+          external_id: string | null
+          fee_amount: number | null
+          gateway: string
+          id: string
+          method: string
+          net_amount: number | null
+          order_id: string
+          paid_at: string | null
+          qr_code_base64: string | null
+          qr_code_payload: string | null
+          raw_response: Json | null
+          raw_webhook: Json | null
+          status: string
+          store_id: string
+          ticket_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          expires_at?: string | null
+          external_id?: string | null
+          fee_amount?: number | null
+          gateway: string
+          id?: string
+          method?: string
+          net_amount?: number | null
+          order_id: string
+          paid_at?: string | null
+          qr_code_base64?: string | null
+          qr_code_payload?: string | null
+          raw_response?: Json | null
+          raw_webhook?: Json | null
+          status?: string
+          store_id: string
+          ticket_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          expires_at?: string | null
+          external_id?: string | null
+          fee_amount?: number | null
+          gateway?: string
+          id?: string
+          method?: string
+          net_amount?: number | null
+          order_id?: string
+          paid_at?: string | null
+          qr_code_base64?: string | null
+          qr_code_payload?: string | null
+          raw_response?: Json | null
+          raw_webhook?: Json | null
+          status?: string
+          store_id?: string
+          ticket_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payout_orders: {
         Row: {
           order_id: string
@@ -1255,6 +1592,7 @@ export type Database = {
           bestseller: boolean
           category: string | null
           category_id: string | null
+          cost_price: number | null
           created_at: string
           description: string | null
           flash_discount_percent: number | null
@@ -1286,6 +1624,7 @@ export type Database = {
           bestseller?: boolean
           category?: string | null
           category_id?: string | null
+          cost_price?: number | null
           created_at?: string
           description?: string | null
           flash_discount_percent?: number | null
@@ -1317,6 +1656,7 @@ export type Database = {
           bestseller?: boolean
           category?: string | null
           category_id?: string | null
+          cost_price?: number | null
           created_at?: string
           description?: string | null
           flash_discount_percent?: number | null
@@ -1572,6 +1912,74 @@ export type Database = {
             foreignKeyName: "staff_activity_log_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_fiscal_config: {
+        Row: {
+          ambiente: string
+          certificate_secret_name: string | null
+          cfop_padrao: string | null
+          cnpj: string | null
+          csc_id: string | null
+          csc_token_secret_name: string | null
+          csosn_padrao: string | null
+          enabled: boolean
+          ie: string | null
+          ie_isenta: boolean
+          ncm_padrao: string | null
+          provider: string | null
+          regime_tributario: string | null
+          serie: number
+          store_id: string
+          ultimo_numero: number
+          updated_at: string
+        }
+        Insert: {
+          ambiente?: string
+          certificate_secret_name?: string | null
+          cfop_padrao?: string | null
+          cnpj?: string | null
+          csc_id?: string | null
+          csc_token_secret_name?: string | null
+          csosn_padrao?: string | null
+          enabled?: boolean
+          ie?: string | null
+          ie_isenta?: boolean
+          ncm_padrao?: string | null
+          provider?: string | null
+          regime_tributario?: string | null
+          serie?: number
+          store_id: string
+          ultimo_numero?: number
+          updated_at?: string
+        }
+        Update: {
+          ambiente?: string
+          certificate_secret_name?: string | null
+          cfop_padrao?: string | null
+          cnpj?: string | null
+          csc_id?: string | null
+          csc_token_secret_name?: string | null
+          csosn_padrao?: string | null
+          enabled?: boolean
+          ie?: string | null
+          ie_isenta?: boolean
+          ncm_padrao?: string | null
+          provider?: string | null
+          regime_tributario?: string | null
+          serie?: number
+          store_id?: string
+          ultimo_numero?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_fiscal_config_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
             referencedRelation: "stores"
             referencedColumns: ["id"]
           },
@@ -2697,6 +3105,10 @@ export type Database = {
       customer_points_balance: {
         Args: { _store_id: string; _user_id: string }
         Returns: number
+      }
+      dre_report: {
+        Args: { _from: string; _store_id: string; _to: string }
+        Returns: Json
       }
       generate_weekly_payouts: { Args: { _store_id: string }; Returns: number }
       get_open_cash_register: { Args: { _store_id: string }; Returns: string }
