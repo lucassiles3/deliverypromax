@@ -272,7 +272,16 @@ const OrderDetails = () => {
           )}
         </section>
 
-        {/* Itens */}
+        {/* Rastreamento em tempo real */}
+        {order.method === "delivery" && status === "out_for_delivery" && order.courier_id && (
+          <LiveCourierTracking
+            courierId={order.courier_id}
+            courier={(order as any).couriers}
+            destLat={order.delivery_lat}
+            destLng={order.delivery_lng}
+          />
+        )}
+
         <section className="rounded-2xl bg-card p-5 shadow-soft">
           <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wide text-muted-foreground">
             <Receipt className="h-4 w-4" /> Itens
