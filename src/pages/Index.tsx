@@ -328,6 +328,29 @@ const Index = () => {
           </div>
         </section>
       )}
+
+      {/* Fallback — nenhuma loja no raio */}
+      {coords && inRangeStores.length === 0 && nearestFallback && !showOutOfRange && (
+        <section className="container pb-3">
+          <div className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4">
+            <p className="text-sm font-bold text-foreground">
+              Nenhuma loja atende seu endereço no momento 😔
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              A loja mais próxima de você está a{" "}
+              <strong className="text-foreground">{formatDistance(nearestFallback._distance!)}</strong>.
+              Você ainda pode pedir para retirada.
+            </p>
+            <div className="mt-3 max-w-sm">
+              <StoreCard
+                store={nearestFallback}
+                distanceKm={nearestFallback._distance}
+                inRange={false}
+              />
+            </div>
+          </div>
+        </section>
+      )}
       {/* Conteúdo */}
       {isLoading ? (
         <div className="flex justify-center py-16">
@@ -348,14 +371,13 @@ const Index = () => {
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((s, i) => (
-                <div key={s.id}>
-                  <StoreCard store={s} index={i} />
-                  {s._distance !== null && (
-                    <p className="mt-1 px-1 text-xs font-medium text-muted-foreground">
-                      📍 {formatDistance(s._distance)} de você
-                    </p>
-                  )}
-                </div>
+                <StoreCard
+                  key={s.id}
+                  store={s}
+                  index={i}
+                  distanceKm={s._distance}
+                  inRange={coords ? s._inRange : undefined}
+                />
               ))}
             </div>
           )}
