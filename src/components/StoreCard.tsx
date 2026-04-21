@@ -1,9 +1,20 @@
 import { Link } from "react-router-dom";
-import { Clock, Bike } from "lucide-react";
+import { Clock, Bike, MapPin, CheckCircle2, AlertCircle } from "lucide-react";
 import type { Store } from "@/data/stores";
+import { formatDistance } from "@/lib/distance";
 
-export const StoreCard = ({ store, index = 0 }: { store: Store; index?: number }) => {
+type Props = {
+  store: Store;
+  index?: number;
+  /** Distância (km) entre usuário e loja, quando disponível. */
+  distanceKm?: number | null;
+  /** Se a loja atende o usuário (dentro do raio). undefined = sem dados de localização. */
+  inRange?: boolean;
+};
+
+export const StoreCard = ({ store, index = 0, distanceKm = null, inRange }: Props) => {
   const tagline = (store as any).tagline as string | undefined;
+  const showRangeBadge = typeof inRange === "boolean" && distanceKm !== null;
 
   return (
     <Link
@@ -46,11 +57,29 @@ export const StoreCard = ({ store, index = 0 }: { store: Store; index?: number }
           <div className="flex items-center gap-1 text-muted-foreground">
             <Clock className="h-3.5 w-3.5" /> {store.deliveryTime}
           </div>
+          {distanceKm !== null && (
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5" /> {formatDistance(distanceKm)}
+            </div>
+          )}
           <span className="ml-auto flex items-center gap-1 font-medium text-success">
             <Bike className="h-3.5 w-3.5" />
             {store.deliveryFee === 0 ? "Grátis" : `R$${store.deliveryFee.toFixed(2)}`}
           </span>
         </div>
+        {showRangeBadge && (
+          <div className="px-4 pb-3">
+            {inRange ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-success">
+                <CheckCircle2 className="h-3 w-3" /> Entrega no raio
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-destructive">
+                <AlertCircle className="h-3 w-3" /> Fora do raio
+              </span>
+            )}
+          </div>
+        )}
       </article>
     </Link>
   );
