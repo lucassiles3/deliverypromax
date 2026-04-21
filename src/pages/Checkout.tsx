@@ -888,12 +888,22 @@ const Checkout = () => {
                     Você vai ganhar R$ {earned.toFixed(2).replace(".", ",")} de cashback ✨
                   </p>
                 )}
+                {outOfDeliveryRange && (
+                  <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs">
+                    <p className="font-bold text-destructive">Fora da área de entrega</p>
+                    <p className="mt-0.5 text-muted-foreground">
+                      Você está a <strong>{formatDistance(deliveryDistance!)}</strong> da loja —
+                      ela entrega em até <strong>{deliveryRadius} km</strong>. Escolha{" "}
+                      <strong>retirada na loja</strong> ou outro endereço.
+                    </p>
+                  </div>
+                )}
                 <Button
                   onClick={proceed}
-                  disabled={submitting}
+                  disabled={submitting || outOfDeliveryRange}
                   className="mt-4 h-12 w-full rounded-xl gradient-primary text-sm font-bold shadow-glow transition-bounce hover:scale-[1.01]"
                 >
-                  {submitting ? "Enviando..." : ctaLabel}
+                  {submitting ? "Enviando..." : outOfDeliveryRange ? "Endereço fora do raio" : ctaLabel}
                 </Button>
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                   Pagamento seguro • SSL criptografado
