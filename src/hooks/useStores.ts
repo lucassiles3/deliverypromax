@@ -25,6 +25,7 @@ type DbStore = {
   opening_hours?: OpeningHours | null;
   lat?: number | null;
   lng?: number | null;
+  delivery_radius_km?: number | null;
 };
 
 const mapStore = (s: DbStore, products: Product[] = []): Store => ({
