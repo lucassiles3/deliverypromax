@@ -208,6 +208,67 @@ Deno.serve(async (req) => {
       return json({ data }, 201);
     }
 
+    // GET /categorias
+    if (method === "GET" && route[0] === "categorias" && route.length === 1) {
+      const { data, error } = await admin
+        .from("categories")
+        .select("id, name, position, active")
+        .eq("store_id", storeId)
+        .order("position");
+      if (error) return json({ error: error.message }, 500);
+      return json({ data });
+    }
+
+    // GET /estoque
+    if (method === "GET" && route[0] === "estoque" && route.length === 1) {
+      const { data, error } = await admin
+        .from("products")
+        .select("id, name, stock, track_stock, active")
+        .eq("store_id", storeId)
+        .eq("track_stock", true)
+        .order("name");
+      if (error) return json({ error: error.message }, 500);
+      return json({ data });
+    }
+
+    // PUT /estoque/:id  { stock }
+    if (method === "PUT" && route[0] === "estoque" && route.length === 2) {
+      const body = await req.json().catch(() => ({}));
+      if (typeof body.stock !== "number") return json({ error: "stock (number) required" }, 400);
+      const { data, error } = await admin
+        .from("products")
+        .update({ stock: body.stock, track_stock: true })
+        .eq("id", route[1])
+        .eq("store_id", storeId)
+        .select()
+        .maybeSingle();
+      if (error) return json({ error: error.message }, 400);
+      if (!data) return json({ error: "not found" }, 404);
+      return json({ data });
+    }
+
+    // GET /dashboard?days=7
+    if (method === "GET" && route[0] === "dashboard" && route.length === 1) {
+      const days = Math.min(Math.max(Number(url.searchParams.get("days") || 1), 1), 90);
+      const since = new Date(Date.now() - days * 86400_000).toISOString();
+      const { data, error } = await admin
+        .from("orders")
+        .select("id, total, status, created_at")
+        .eq("store_id", storeId)
+        .gte("created_at", since);
+      if (error) return json({ error: error.message }, 500);
+      const valid = (data ?? []).filter((o: any) => o.status !== "cancelled");
+      const revenue = valid.reduce((s, o: any) => s + Number(o.total), 0);
+      const orders = valid.length;
+      return json({
+        period_days: days,
+        revenue: Math.round(revenue * 100) / 100,
+        orders,
+        avg_ticket: orders ? Math.round((revenue / orders) * 100) / 100 : 0,
+        cancelled: (data ?? []).length - orders,
+      });
+    }
+
     return json({ error: "route not found", method, route }, 404);
   } catch (e) {
     console.error("api-rest error", e);

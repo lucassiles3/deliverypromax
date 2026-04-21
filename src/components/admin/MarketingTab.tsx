@@ -4,11 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   Tag, Plus, Pencil, Trash2, Zap, Package2, Users, Send,
-  Copy, Eye, EyeOff, TrendingUp, Clock, Search,
+  Copy, Eye, EyeOff, TrendingUp, Clock, Search, Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RewardsSection } from "./marketing/RewardsSection";
 
-type Tab = "coupons" | "combos" | "flash" | "reactivation";
+type Tab = "coupons" | "combos" | "flash" | "reactivation" | "rewards";
 
 export const MarketingTab = ({ storeId }: { storeId: string }) => {
   const [tab, setTab] = useState<Tab>("coupons");
@@ -18,6 +19,7 @@ export const MarketingTab = ({ storeId }: { storeId: string }) => {
       <div className="flex flex-wrap gap-2">
         {[
           { id: "coupons" as const, label: "Cupons", icon: Tag },
+          { id: "rewards" as const, label: "Fidelidade", icon: Trophy },
           { id: "combos" as const, label: "Combos", icon: Package2 },
           { id: "flash" as const, label: "Promo Relâmpago", icon: Zap },
           { id: "reactivation" as const, label: "Reativação", icon: Users },
@@ -41,6 +43,7 @@ export const MarketingTab = ({ storeId }: { storeId: string }) => {
       </div>
 
       {tab === "coupons" && <CouponsSection storeId={storeId} />}
+      {tab === "rewards" && <RewardsSection storeId={storeId} />}
       {tab === "combos" && <CombosSection storeId={storeId} />}
       {tab === "flash" && <FlashSection storeId={storeId} />}
       {tab === "reactivation" && <ReactivationSection storeId={storeId} />}
