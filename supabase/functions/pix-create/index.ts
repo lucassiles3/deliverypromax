@@ -138,22 +138,50 @@ Deno.serve(async (req) => {
     if (!user) return json({ error: "invalid token" }, 401);
 
     const body = await req.json().catch(() => ({}));
-    const orderId = body.order_id as string;
-    if (!orderId) return json({ error: "missing order_id" }, 400);
+    const orderId = body.order_id as string | undefined;
+    const sessionId = body.table_session_id as string | undefined;
+    const explicitAmount = body.amount as number | undefined;
+    if (!orderId && !sessionId) return json({ error: "missing order_id or table_session_id" }, 400);
 
-    const { data: order } = await admin
-      .from("orders")
-      .select("id, store_id, user_id, total, customer_name, customer_phone")
-      .eq("id", orderId)
-      .maybeSingle();
-    if (!order) return json({ error: "order not found" }, 404);
-    if (order.user_id !== user.id) return json({ error: "forbidden" }, 403);
+    let storeId: string;
+    let amount: number;
+    let payerName: string;
+    let reference: string;
+
+    if (orderId) {
+      const { data: order } = await admin
+        .from("orders")
+        .select("id, store_id, user_id, total, customer_name, customer_phone")
+        .eq("id", orderId)
+        .maybeSingle();
+      if (!order) return json({ error: "order not found" }, 404);
+      if (order.user_id !== user.id) return json({ error: "forbidden" }, 403);
+      storeId = order.store_id;
+      amount = Number(order.total);
+      payerName = order.customer_name;
+      reference = order.id;
+    } else {
+      const { data: sess } = await admin
+        .from("table_sessions")
+        .select("id, store_id, total, paid_amount")
+        .eq("id", sessionId)
+        .maybeSingle();
+      if (!sess) return json({ error: "session not found" }, 404);
+      const remaining = Math.max(0, Number(sess.total) - Number(sess.paid_amount || 0));
+      amount = explicitAmount && explicitAmount > 0 ? Math.min(explicitAmount, remaining) : remaining;
+      if (amount <= 0) return json({ error: "session already paid" }, 400);
+      storeId = sess.store_id;
+      payerName = "Cliente da mesa";
+      reference = `mesa-${sess.id}-${Date.now()}`;
+    }
+
+    const order = orderId ? { id: reference, store_id: storeId, total: amount, customer_name: payerName } : null;
 
     // gateway ativo da loja (default ou primeiro ativo)
     const { data: gateway } = await admin
       .from("payment_gateways")
       .select("*")
-      .eq("store_id", order.store_id)
+      .eq("store_id", storeId)
       .eq("active", true)
       .order("is_default", { ascending: false })
       .limit(1)
@@ -165,15 +193,17 @@ Deno.serve(async (req) => {
     const accessToken = Deno.env.get(tokenSecretName);
     if (!accessToken) return json({ error: `secret ${tokenSecretName} not set` }, 500);
 
-    const notificationUrl = `${SUPABASE_URL}/functions/v1/pix-webhook?gateway=${gateway.provider}&store=${order.store_id}`;
-    const reference = order.id;
+    const notificationUrl = `${SUPABASE_URL}/functions/v1/pix-webhook?gateway=${gateway.provider}&store=${storeId}`;
+    const description = orderId
+      ? `Pedido #${reference.slice(0, 8)}`
+      : `Comanda mesa ${reference.slice(5, 13)}`;
 
     let result;
     if (gateway.provider === "mercadopago") {
       result = await createMercadoPagoPix({
         token: accessToken,
-        amount: Number(order.total),
-        description: `Pedido #${order.id.slice(0, 8)}`,
+        amount,
+        description,
         externalReference: reference,
         payerEmail: user.email ?? undefined,
         splitRecipientId: gateway.split_enabled ? gateway.split_recipient_id : undefined,
@@ -184,10 +214,10 @@ Deno.serve(async (req) => {
       result = await createAsaasPix({
         token: accessToken,
         sandbox: !!gateway.sandbox,
-        amount: Number(order.total),
-        description: `Pedido #${order.id.slice(0, 8)}`,
+        amount,
+        description,
         externalReference: reference,
-        customer: { name: order.customer_name, email: user.email ?? undefined },
+        customer: { name: payerName, email: user.email ?? undefined },
         splitRecipientId: gateway.split_enabled ? gateway.split_recipient_id : undefined,
         marketplaceFeePct: gateway.split_enabled ? Number(gateway.marketplace_fee_percent) : undefined,
       });
@@ -198,12 +228,13 @@ Deno.serve(async (req) => {
     const { data: txn, error: txnErr } = await admin
       .from("payment_transactions")
       .insert({
-        order_id: order.id,
-        store_id: order.store_id,
+        order_id: orderId ?? null,
+        table_session_id: sessionId ?? null,
+        store_id: storeId,
         gateway: gateway.provider,
         external_id: result.external_id,
         method: "pix",
-        amount: order.total,
+        amount,
         status: "pending",
         qr_code_base64: result.qr_code_base64,
         qr_code_payload: result.qr_code_payload,
