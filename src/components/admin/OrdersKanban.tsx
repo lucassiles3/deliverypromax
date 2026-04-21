@@ -35,6 +35,7 @@ import { OrderDetailsModal } from "./OrderDetailsModal";
 import { CancelOrderModal } from "./CancelOrderModal";
 import { OrdersHistory } from "./OrdersHistory";
 import { printReceipt, type PrintData } from "@/lib/printReceipt";
+import { StaleCouriersAlert } from "./StaleCouriersAlert";
 
 type DbStatus =
   | "pending_payment"
