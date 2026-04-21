@@ -46,12 +46,13 @@ import { TeamTab } from "@/components/admin/TeamTab";
 import { IntegrationsTab } from "@/components/admin/IntegrationsTab";
 import { PDVTab } from "@/components/admin/PDVTab";
 import { TablesTab } from "@/components/admin/TablesTab";
+import { CouriersTab } from "@/components/admin/CouriersTab";
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 import { useStoreToggles } from "@/hooks/useStoreToggles";
 import { Printer } from "lucide-react";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "pdv" | "tables" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team" | "integrations";
+type Tab = "dashboard" | "orders" | "pdv" | "tables" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team" | "integrations" | "couriers";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
@@ -123,7 +124,7 @@ const Admin = () => {
   useEffect(() => {
     if (!currentRole) return;
     if (!canAccessSection(currentRole, tab)) {
-      const order: Tab[] = ["dashboard","orders","tables","products","customers","marketing","financial","reports","store","settings","team","integrations"];
+      const order: Tab[] = ["dashboard","orders","tables","products","customers","couriers","marketing","financial","reports","store","settings","team","integrations"];
       const next = order.find((t) => canAccessSection(currentRole, t));
       if (next && next !== tab) setTab(next);
     }
@@ -367,6 +368,7 @@ const Admin = () => {
             { id: "tables" as const, label: "Salão / Mesas" },
             { id: "products" as const, label: "Cardápio" },
             { id: "customers" as const, label: "Clientes" },
+            { id: "couriers" as const, label: "Entregadores" },
             { id: "marketing" as const, label: "Marketing" },
             { id: "financial" as const, label: "Financeiro" },
             { id: "reports" as const, label: "Relatórios" },
@@ -411,6 +413,7 @@ const Admin = () => {
         {tab === "tables" && storeId && canAccessSection(currentRole, "tables") && <TablesTab storeId={storeId} />}
         {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
         {tab === "customers" && storeId && canAccessSection(currentRole, "customers") && <CustomersTab storeId={storeId} />}
+        {tab === "couriers" && storeId && canAccessSection(currentRole, "couriers") && <CouriersTab storeId={storeId} />}
         {tab === "marketing" && storeId && canAccessSection(currentRole, "marketing") && <MarketingTab storeId={storeId} />}
         {tab === "financial" && storeId && currentStore && canAccessSection(currentRole, "financial") && (
           <FinancialTab storeId={storeId} storeName={currentStore.name} />

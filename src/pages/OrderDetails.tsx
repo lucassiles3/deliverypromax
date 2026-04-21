@@ -32,6 +32,8 @@ import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { StatusTimeline } from "@/components/order/StatusTimeline";
 import { OrderReviews } from "@/components/order/OrderReviews";
+import { CourierMap } from "@/components/CourierMap";
+import { useCourierLocation } from "@/hooks/useCourierLocation";
 
 type DbStatus =
   | "pending_payment"
@@ -79,7 +81,7 @@ const OrderDetails = () => {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, cashback_earned, change_for, status, method, payment_method, address, notes, customer_name, customer_phone, created_at, accepted_at, updated_at, store_id, table_number, stores(name, logo, phone, whatsapp_phone, slug), order_items(id, product_id, product_name, quantity, unit_price, notes, customizations)",
+          "id, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, cashback_earned, change_for, status, method, payment_method, address, delivery_lat, delivery_lng, notes, customer_name, customer_phone, created_at, accepted_at, updated_at, store_id, table_number, courier_id, couriers:courier_id(id, name, phone, vehicle_type, vehicle_plate, photo_url), stores(name, logo, phone, whatsapp_phone, slug), order_items(id, product_id, product_name, quantity, unit_price, notes, customizations)",
         )
         .eq("id", id!)
         .eq("user_id", user!.id)
@@ -270,7 +272,16 @@ const OrderDetails = () => {
           )}
         </section>
 
-        {/* Itens */}
+        {/* Rastreamento em tempo real */}
+        {order.method === "delivery" && status === "out_for_delivery" && order.courier_id && (
+          <LiveCourierTracking
+            courierId={order.courier_id}
+            courier={(order as any).couriers}
+            destLat={order.delivery_lat}
+            destLng={order.delivery_lng}
+          />
+        )}
+
         <section className="rounded-2xl bg-card p-5 shadow-soft">
           <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wide text-muted-foreground">
             <Receipt className="h-4 w-4" /> Itens
@@ -516,6 +527,67 @@ const OrderDetails = () => {
         </DialogContent>
       </Dialog>
     </div>
+  );
+};
+
+const LiveCourierTracking = ({
+  courierId,
+  courier,
+  destLat,
+  destLng,
+}: {
+  courierId: string;
+  courier: { name?: string; phone?: string | null; vehicle_plate?: string | null; photo_url?: string | null } | null;
+  destLat: number | null;
+  destLng: number | null;
+}) => {
+  const loc = useCourierLocation(courierId);
+  return (
+    <section className="rounded-2xl bg-card p-5 shadow-soft">
+      <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <Truck className="h-4 w-4" /> Rastreamento ao vivo
+      </h3>
+      <div className="mb-3 flex items-center gap-3 rounded-xl bg-muted/40 p-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-2xl">
+          {courier?.photo_url ? (
+            <img src={courier.photo_url} alt="" className="h-full w-full rounded-full object-cover" />
+          ) : (
+            "🛵"
+          )}
+        </div>
+        <div className="flex-1">
+          <p className="font-bold">{courier?.name ?? "Entregador"}</p>
+          <p className="text-xs text-muted-foreground">
+            {courier?.vehicle_plate ?? "A caminho"}
+            {loc?.updated_at && (
+              <> • atualizado {new Date(loc.updated_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</>
+            )}
+          </p>
+        </div>
+        {courier?.phone && (
+          <a
+            href={`tel:${String(courier.phone).replace(/\D/g, "")}`}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-success text-success-foreground"
+          >
+            <Phone className="h-4 w-4" />
+          </a>
+        )}
+      </div>
+      <CourierMap
+        courierLat={loc?.lat ?? null}
+        courierLng={loc?.lng ?? null}
+        destLat={destLat}
+        destLng={destLng}
+        courierLabel={courier?.name ?? "Entregador"}
+        destLabel="Seu endereço"
+        height={280}
+      />
+      {!loc && (
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          Aguardando o entregador ativar o GPS…
+        </p>
+      )}
+    </section>
   );
 };
 

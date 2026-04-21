@@ -16,9 +16,11 @@ import {
   History,
   MessageCircle,
   Printer,
+  Bike,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useCouriers } from "@/hooks/useCouriers";
 
 const PAY_LABEL: Record<string, string> = {
   pix: "Pix",
@@ -53,7 +55,7 @@ export const OrderDetailsModal = ({
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, store_id, customer_name, customer_phone, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, status, method, payment_method, change_for, address, delivery_lat, delivery_lng, created_at, accepted_at, cancel_reason, cancel_by, notes, order_items(id, product_name, quantity, unit_price, notes, customizations)"
+          "id, store_id, courier_id, customer_name, customer_phone, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, status, method, payment_method, change_for, address, delivery_lat, delivery_lng, created_at, accepted_at, cancel_reason, cancel_by, notes, order_items(id, product_name, quantity, unit_price, notes, customizations)"
         )
         .eq("id", orderId!)
         .maybeSingle();
@@ -75,6 +77,9 @@ export const OrderDetailsModal = ({
       return data ?? [];
     },
   });
+
+  const qc = useQueryClient();
+  const { data: couriers = [] } = useCouriers(order?.store_id ?? null);
 
   if (!order) return null;
 
@@ -106,7 +111,6 @@ export const OrderDetailsModal = ({
 
   const printOrder = () => window.print();
 
-  const qc = useQueryClient();
   const FLOW: Array<{ id: string; label: string }> = [
     { id: "received", label: "Recebido" },
     { id: "preparing", label: "Em preparo" },
@@ -248,6 +252,44 @@ export const OrderDetailsModal = ({
               )}
             </div>
 
+            {order.method === "delivery" && !isFinal && (
+              <div className="mt-3 rounded-lg bg-muted/40 p-3">
+                <h5 className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase text-muted-foreground">
+                  <Bike className="h-3.5 w-3.5" /> Entregador
+                </h5>
+                <select
+                  value={order.courier_id ?? ""}
+                  onChange={async (e) => {
+                    const val = e.target.value || null;
+                    const { error } = await supabase
+                      .from("orders")
+                      .update({ courier_id: val })
+                      .eq("id", order.id);
+                    if (error) return toast.error(error.message);
+                    toast.success(val ? "Entregador atribuído" : "Entregador removido");
+                    qc.invalidateQueries({ queryKey: ["order-detail", order.id] });
+                    qc.invalidateQueries({ queryKey: ["kanban-orders", order.store_id] });
+                  }}
+                  className="w-full rounded-lg border-2 border-border bg-card px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
+                >
+                  <option value="">— Não atribuído —</option>
+                  {couriers
+                    .filter((c) => c.active)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.is_online ? "🟢 " : "⚫ "}
+                        {c.name}
+                        {c.vehicle_plate ? ` (${c.vehicle_plate})` : ""}
+                      </option>
+                    ))}
+                </select>
+                {couriers.length === 0 && (
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    Nenhum entregador cadastrado. Vá em <strong>Entregadores</strong>.
+                  </p>
+                )}
+              </div>
+            )}
             {order.cancel_reason && (
               <div className="mt-3 rounded-lg bg-destructive/10 p-3">
                 <h5 className="mb-1 text-[11px] font-bold uppercase text-destructive">
