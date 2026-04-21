@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Navigate, Link } from "react-router-dom";
-import { User, Lock, Phone, Mail, Save, MapPin, Heart, Bell, Receipt, LogOut, IdCard, Trophy } from "lucide-react";
+import { User, Lock, Phone, Mail, Save, MapPin, Heart, Bell, Receipt, LogOut, IdCard, Trophy, Cake } from "lucide-react";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,7 +17,7 @@ const MinhaConta = () => {
   const update = useUpdateProfile();
   const updatePw = useUpdatePassword();
 
-  const [form, setForm] = useState({ display_name: "", phone: "", cpf: "", avatar_url: "" });
+  const [form, setForm] = useState({ display_name: "", phone: "", cpf: "", avatar_url: "", birthday: "" });
   const [pw, setPw] = useState("");
 
   useEffect(() => {
@@ -27,6 +27,7 @@ const MinhaConta = () => {
         phone: profile.phone ?? "",
         cpf: (profile as any).cpf ?? "",
         avatar_url: profile.avatar_url ?? "",
+        birthday: (profile as any).birthday ?? "",
       });
     }
   }, [profile]);
@@ -81,12 +82,21 @@ const MinhaConta = () => {
               <Input value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder="000.000.000-00" maxLength={14} />
             </div>
             <div>
+              <Label className="flex items-center gap-1"><Cake className="h-3 w-3" /> Aniversário</Label>
+              <Input
+                type="date"
+                value={form.birthday}
+                onChange={(e) => setForm({ ...form, birthday: e.target.value })}
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">Ganhe um cupom no seu mês 🎉</p>
+            </div>
+            <div className="md:col-span-2">
               <Label>URL do avatar</Label>
               <Input value={form.avatar_url} onChange={(e) => setForm({ ...form, avatar_url: e.target.value })} placeholder="https://..." maxLength={500} />
             </div>
           </div>
 
-          <Button className="mt-4" onClick={() => update.mutate(form)} disabled={update.isPending}>
+          <Button className="mt-4" onClick={() => update.mutate({ ...form, birthday: form.birthday || null } as any)} disabled={update.isPending}>
             <Save className="mr-1 h-4 w-4" /> Salvar perfil
           </Button>
         </Card>

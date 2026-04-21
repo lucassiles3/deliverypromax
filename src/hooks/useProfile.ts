@@ -24,7 +24,7 @@ export const useUpdateProfile = () => {
   const { user } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { display_name?: string; phone?: string | null; avatar_url?: string | null; cpf?: string | null }) => {
+    mutationFn: async (input: { display_name?: string; phone?: string | null; avatar_url?: string | null; cpf?: string | null; birthday?: string | null }) => {
       if (!user) throw new Error("Faça login");
       const { error } = await supabase
         .from("profiles")

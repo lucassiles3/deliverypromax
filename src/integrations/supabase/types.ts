@@ -175,6 +175,111 @@ export type Database = {
           },
         ]
       }
+      birthday_campaigns: {
+        Row: {
+          active: boolean
+          coupon_validity_days: number
+          created_at: string
+          discount_type: string
+          discount_value: number
+          id: string
+          message: string | null
+          name: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          coupon_validity_days?: number
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          message?: string | null
+          name?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          coupon_validity_days?: number
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          message?: string | null
+          name?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "birthday_campaigns_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      birthday_runs: {
+        Row: {
+          campaign_id: string
+          coupon_code: string
+          coupon_id: string | null
+          created_at: string
+          id: string
+          redeemed: boolean
+          store_id: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          campaign_id: string
+          coupon_code: string
+          coupon_id?: string | null
+          created_at?: string
+          id?: string
+          redeemed?: boolean
+          store_id: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          campaign_id?: string
+          coupon_code?: string
+          coupon_id?: string | null
+          created_at?: string
+          id?: string
+          redeemed?: boolean
+          store_id?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "birthday_runs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "birthday_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "birthday_runs_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "birthday_runs_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blocked_customers: {
         Row: {
           blocked_at: string
@@ -1451,7 +1556,7 @@ export type Database = {
           id: string
           method: string
           net_amount: number | null
-          order_id: string
+          order_id: string | null
           paid_at: string | null
           qr_code_base64: string | null
           qr_code_payload: string | null
@@ -1459,6 +1564,7 @@ export type Database = {
           raw_webhook: Json | null
           status: string
           store_id: string
+          table_session_id: string | null
           ticket_url: string | null
           updated_at: string
         }
@@ -1472,7 +1578,7 @@ export type Database = {
           id?: string
           method?: string
           net_amount?: number | null
-          order_id: string
+          order_id?: string | null
           paid_at?: string | null
           qr_code_base64?: string | null
           qr_code_payload?: string | null
@@ -1480,6 +1586,7 @@ export type Database = {
           raw_webhook?: Json | null
           status?: string
           store_id: string
+          table_session_id?: string | null
           ticket_url?: string | null
           updated_at?: string
         }
@@ -1493,7 +1600,7 @@ export type Database = {
           id?: string
           method?: string
           net_amount?: number | null
-          order_id?: string
+          order_id?: string | null
           paid_at?: string | null
           qr_code_base64?: string | null
           qr_code_payload?: string | null
@@ -1501,6 +1608,7 @@ export type Database = {
           raw_webhook?: Json | null
           status?: string
           store_id?: string
+          table_session_id?: string | null
           ticket_url?: string | null
           updated_at?: string
         }
@@ -1517,6 +1625,13 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_table_session_id_fkey"
+            columns: ["table_session_id"]
+            isOneToOne: false
+            referencedRelation: "table_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -1837,6 +1952,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          birthday: string | null
           cpf: string | null
           created_at: string
           display_name: string | null
@@ -1846,6 +1962,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          birthday?: string | null
           cpf?: string | null
           created_at?: string
           display_name?: string | null
@@ -1855,6 +1972,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          birthday?: string | null
           cpf?: string | null
           created_at?: string
           display_name?: string | null
@@ -3285,6 +3403,7 @@ export type Database = {
           store_id: string
         }[]
       }
+      run_birthday_campaign: { Args: { _campaign_id: string }; Returns: number }
       run_reactivation_campaign: {
         Args: { _campaign_id: string }
         Returns: number

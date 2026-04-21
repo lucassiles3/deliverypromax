@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Receipt, HelpCircle, Check, Plus, Minus, ShoppingBag, Search, X } from "lucide-react";
+import { Bell, Receipt, HelpCircle, Check, Plus, Minus, ShoppingBag, Search, X, QrCode, Copy, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,6 +32,9 @@ const Mesa = () => {
   const [confirmProduct, setConfirmProduct] = useState<Product | null>(null);
   const [confirmQty, setConfirmQty] = useState(1);
   const [confirmNotes, setConfirmNotes] = useState("");
+  const [pixOpen, setPixOpen] = useState(false);
+  const [pixLoading, setPixLoading] = useState(false);
+  const [pixTxn, setPixTxn] = useState<any>(null);
 
   useEffect(() => {
     document.title = "Mesa · Pedido";
@@ -145,6 +148,53 @@ const Mesa = () => {
     setConfirmNotes("");
     qc.invalidateQueries({ queryKey: ["mesa-items", session.id] });
     setTab("comanda");
+  };
+
+  // Polling do status do PIX após gerar
+  useEffect(() => {
+    if (!pixTxn?.id) return;
+    const ch = supabase
+      .channel(`pix-${pixTxn.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "payment_transactions", filter: `id=eq.${pixTxn.id}` },
+        (payload: any) => {
+          if (payload.new?.status === "approved") {
+            toast.success("✅ Pagamento confirmado!");
+            setPixOpen(false);
+            setPixTxn(null);
+            qc.invalidateQueries({ queryKey: ["mesa-session", table?.id] });
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [pixTxn?.id, qc, table?.id]);
+
+  const payWithPix = async () => {
+    if (!token || !session) return;
+    setPixLoading(true);
+    setPixOpen(true);
+    setPixTxn(null);
+    try {
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pix-create-table`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ qr_token: token }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Falha ao gerar PIX");
+      setPixTxn(json.data);
+    } catch (e: any) {
+      toast.error(e.message);
+      setPixOpen(false);
+    } finally {
+      setPixLoading(false);
+    }
   };
 
   if (loading) return <div className="min-h-screen" />;
@@ -351,19 +401,30 @@ const Mesa = () => {
                   </div>
                 </div>
 
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-14 w-full text-base"
-                  onClick={() => call("bill")}
-                  disabled={sent === "bill"}
-                >
-                  {sent === "bill" ? (
-                    <><Check className="mr-2 h-5 w-5" />Aviso enviado ao garçom</>
-                  ) : (
-                    <><Receipt className="mr-2 h-5 w-5" />Pedir a conta</>
-                  )}
-                </Button>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Button
+                    size="lg"
+                    className="h-14 w-full text-base"
+                    onClick={payWithPix}
+                    disabled={pixLoading}
+                  >
+                    <QrCode className="mr-2 h-5 w-5" />
+                    {pixLoading ? "Gerando…" : "Pagar com PIX"}
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-14 w-full text-base"
+                    onClick={() => call("bill")}
+                    disabled={sent === "bill"}
+                  >
+                    {sent === "bill" ? (
+                      <><Check className="mr-2 h-5 w-5" />Aviso enviado</>
+                    ) : (
+                      <><Receipt className="mr-2 h-5 w-5" />Chamar garçom</>
+                    )}
+                  </Button>
+                </div>
               </>
             )}
           </div>
@@ -428,6 +489,58 @@ const Mesa = () => {
                 </Button>
               </DialogFooter>
             </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal PIX */}
+      <Dialog open={pixOpen} onOpenChange={(o) => { if (!o) { setPixOpen(false); setPixTxn(null); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><QrCode className="h-5 w-5 text-primary" /> Pagar com PIX</DialogTitle>
+          </DialogHeader>
+          {pixLoading || !pixTxn ? (
+            <div className="flex flex-col items-center justify-center py-10">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <p className="mt-3 text-sm text-muted-foreground">Gerando QR Code…</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-center text-sm text-muted-foreground">
+                Escaneie com o app do seu banco
+              </p>
+              <div className="flex items-baseline justify-center gap-1">
+                <span className="text-xs text-muted-foreground">Valor:</span>
+                <span className="font-display text-2xl font-bold text-primary">{brl(Number(pixTxn.amount))}</span>
+              </div>
+              {pixTxn.qr_code_base64 && (
+                <img
+                  src={`data:image/png;base64,${pixTxn.qr_code_base64}`}
+                  alt="QR Code PIX"
+                  className="mx-auto h-56 w-56 rounded-xl border"
+                />
+              )}
+              {pixTxn.qr_code_payload && (
+                <div className="rounded-xl border-2 border-dashed bg-muted/30 p-3">
+                  <div className="text-[10px] font-bold uppercase text-muted-foreground">Pix copia-e-cola</div>
+                  <div className="mt-1 break-all text-[11px] font-mono">{pixTxn.qr_code_payload.slice(0, 80)}…</div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-2 w-full"
+                    onClick={() => {
+                      navigator.clipboard.writeText(pixTxn.qr_code_payload);
+                      toast.success("Código copiado");
+                    }}
+                  >
+                    <Copy className="mr-1 h-4 w-4" /> Copiar código
+                  </Button>
+                </div>
+              )}
+              <p className="text-center text-xs text-muted-foreground">
+                ⏳ Aguardando confirmação… A tela atualiza sozinha.
+              </p>
+            </div>
           )}
         </DialogContent>
       </Dialog>
