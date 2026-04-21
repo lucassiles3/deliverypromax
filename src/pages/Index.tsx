@@ -171,18 +171,19 @@ const Index = () => {
     return list;
   }, [enriched, inRangeStores, showOutOfRange, activeCat, activeFilters]);
 
-  // Rails
-  const promoStores = enriched.filter((s) => !!s.promo).slice(0, 8);
-  const featuredStores = [...enriched]
+  // Rails — sempre baseadas em lojas dentro do raio
+  const railBase = showOutOfRange ? enriched : inRangeStores;
+  const promoStores = railBase.filter((s) => !!s.promo).slice(0, 8);
+  const featuredStores = [...railBase]
     .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
     .slice(0, 8);
   const nearbyStores = coords
-    ? [...enriched]
+    ? [...railBase]
         .filter((s) => s._distance !== null)
         .sort((a, b) => (a._distance! - b._distance!))
         .slice(0, 8)
     : [];
-  const newStores = [...enriched].slice(0, 8); // ordered by name in hook; placeholder
+  const newStores = [...railBase].slice(0, 8);
 
   const toggleFilter = (k: FilterKey) => {
     setActiveFilters((prev) => {
