@@ -318,7 +318,7 @@ const Admin = () => {
     { id: "orders", label: "Pedidos ao vivo", icon: ShoppingCart },
     { id: "pdv", label: "PDV", icon: Receipt },
     { id: "tables", label: "Salão / Mesas", icon: Utensils },
-    { id: "products", label: "Cardápio", icon: Package },
+    { id: "products", label: "Catálogo", icon: Package },
     { id: "customers", label: "Clientes", icon: UsersIcon },
     { id: "couriers", label: "Entregadores", icon: Bike },
     { id: "marketing", label: "Marketing", icon: Megaphone },
