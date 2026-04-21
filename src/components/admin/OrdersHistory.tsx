@@ -53,10 +53,26 @@ const RANGES = [
 ] as const;
 
 export const OrdersHistory = ({ storeId }: { storeId: string }) => {
+  const qc = useQueryClient();
   const [range, setRange] = useState<(typeof RANGES)[number]["id"]>("7d");
   const [statusFilter, setStatusFilter] = useState<DbStatus | "all">("all");
   const [search, setSearch] = useState("");
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const updateStatus = async (id: string, next: DbStatus, successMsg: string) => {
+    setBusyId(id);
+    const { error } = await supabase.from("orders").update({ status: next }).eq("id", id);
+    setBusyId(null);
+    if (error) return toast.error(error.message);
+    toast.success(successMsg);
+    qc.invalidateQueries({ queryKey: ["orders-history", storeId] });
+  };
+
+  const cancelOrder = async (id: string) => {
+    if (!confirm("Cancelar este pedido?")) return;
+    await updateStatus(id, "cancelled", "Pedido cancelado");
+  };
 
   const fromDate = useMemo(() => {
     const r = RANGES.find((x) => x.id === range) ?? RANGES[1];
