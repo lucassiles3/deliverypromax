@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, ReactNode, useMemo, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, useMemo, useEffect, useRef } from "react";
 import type { Product, AddonOption } from "@/data/stores";
+import { supabase } from "@/integrations/supabase/client";
 
 export type CartCustomization = {
   groupId: string;
@@ -49,8 +50,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
   const [isOpen, setOpen] = useState(false);
+  const userIdRef = useRef<string | null>(null);
+  const storeIdRef = useRef<string | null>(null);
+  const syncTimer = useRef<number | null>(null);
 
-  // persist cart
+  // persist cart locally
   useEffect(() => {
     try {
       const raw = localStorage.getItem("ff_cart");
@@ -59,10 +63,81 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         setItems(parsed.items ?? []);
         setStoreSlug(parsed.storeSlug ?? null);
       }
-    } catch {}
+    } catch {
+      /* ignore */
+    }
   }, []);
+
   useEffect(() => {
     localStorage.setItem("ff_cart", JSON.stringify({ items, storeSlug }));
+  }, [items, storeSlug]);
+
+  // capture user
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      userIdRef.current = data.session?.user.id ?? null;
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      userIdRef.current = session?.user.id ?? null;
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  // resolve current store id from slug
+  useEffect(() => {
+    if (!storeSlug) {
+      storeIdRef.current = null;
+      return;
+    }
+    supabase
+      .from("stores")
+      .select("id")
+      .eq("slug", storeSlug)
+      .maybeSingle()
+      .then(({ data }) => {
+        storeIdRef.current = data?.id ?? null;
+      });
+  }, [storeSlug]);
+
+  // sync to abandoned_carts (debounced)
+  useEffect(() => {
+    if (syncTimer.current) window.clearTimeout(syncTimer.current);
+    syncTimer.current = window.setTimeout(async () => {
+      const uid = userIdRef.current;
+      const sid = storeIdRef.current;
+      if (!uid || !sid) return;
+
+      if (items.length === 0) {
+        // Mark as recovered (or simply remove)
+        await supabase.from("abandoned_carts").delete().eq("user_id", uid).eq("store_id", sid);
+        return;
+      }
+
+      const total = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+      const slim = items.map((i) => ({
+        productId: i.product.id,
+        name: i.product.name,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice,
+        notes: i.notes ?? null,
+      }));
+
+      await supabase.from("abandoned_carts").upsert(
+        {
+          user_id: uid,
+          store_id: sid,
+          items: slim,
+          estimated_total: total,
+          notified_at: null,
+          recovered_at: null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,store_id" },
+      );
+    }, 1500);
+    return () => {
+      if (syncTimer.current) window.clearTimeout(syncTimer.current);
+    };
   }, [items, storeSlug]);
 
   const addCustom: CartContextType["addCustom"] = (product, slug, customizations, quantity, notes) => {
@@ -133,6 +208,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const clear = () => {
+    // mark as recovered when cart is cleared after checkout
+    const uid = userIdRef.current;
+    const sid = storeIdRef.current;
+    if (uid && sid) {
+      supabase
+        .from("abandoned_carts")
+        .update({ recovered_at: new Date().toISOString() })
+        .eq("user_id", uid)
+        .eq("store_id", sid)
+        .then(() => undefined);
+    }
     setItems([]);
     setStoreSlug(null);
   };
