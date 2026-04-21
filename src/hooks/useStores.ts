@@ -51,6 +51,7 @@ const mapStore = (s: DbStore, products: Product[] = []): Store => ({
   openingHours: s.opening_hours ?? undefined,
   lat: s.lat != null ? Number(s.lat) : undefined,
   lng: s.lng != null ? Number(s.lng) : undefined,
+  deliveryRadiusKm: s.delivery_radius_km != null ? Number(s.delivery_radius_km) : undefined,
 });
 
 export const useStores = () =>
