@@ -4,6 +4,7 @@ import { ArrowLeft, Clock, Package, Truck, CheckCircle2, XCircle, ChevronRight, 
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AdBanner } from "@/components/AdBanner";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
 
