@@ -7,10 +7,45 @@ import { Loader2, Grid3x3 } from "lucide-react";
 
 const categories = [
   { label: "Todos", emoji: "✨" },
+  // Comida
   { label: "Hambúrgueres", emoji: "🍔" },
   { label: "Pizzaria", emoji: "🍕" },
   { label: "Japonesa", emoji: "🍣" },
+  { label: "Brasileira", emoji: "🍛" },
+  { label: "Italiana", emoji: "🍝" },
+  { label: "Mexicana", emoji: "🌮" },
+  { label: "Árabe", emoji: "🥙" },
+  { label: "Saudável", emoji: "🥗" },
+  { label: "Vegana", emoji: "🌱" },
+  { label: "Frutos do mar", emoji: "🦐" },
+  { label: "Churrasco", emoji: "🥩" },
+  { label: "Lanches", emoji: "🥪" },
+  { label: "Açaí", emoji: "🍧" },
   { label: "Sobremesas", emoji: "🍰" },
+  { label: "Doces", emoji: "🍩" },
+  { label: "Padaria", emoji: "🥐" },
+  { label: "Cafeteria", emoji: "☕" },
+  { label: "Sucos", emoji: "🥤" },
+  { label: "Bebidas", emoji: "🍹" },
+  // Outros segmentos
+  { label: "Mercado", emoji: "🛒" },
+  { label: "Hortifruti", emoji: "🥦" },
+  { label: "Conveniência", emoji: "🏪" },
+  { label: "Farmácia", emoji: "💊" },
+  { label: "Pet shop", emoji: "🐶" },
+  { label: "Floricultura", emoji: "💐" },
+  { label: "Presentes", emoji: "🎁" },
+  { label: "Moda", emoji: "👕" },
+  { label: "Beleza", emoji: "💄" },
+  { label: "Eletrônicos", emoji: "📱" },
+  { label: "Casa", emoji: "🏠" },
+  { label: "Bebê", emoji: "🍼" },
+  { label: "Brinquedos", emoji: "🧸" },
+  { label: "Livraria", emoji: "📚" },
+  { label: "Esportes", emoji: "⚽" },
+  { label: "Material de construção", emoji: "🔨" },
+  { label: "Auto peças", emoji: "🔧" },
+  { label: "Tabacaria", emoji: "🚬" },
 ];
 
 const Categorias = () => {
@@ -31,7 +66,7 @@ const Categorias = () => {
           <h1 className="font-display text-2xl font-bold md:text-3xl">Categorias</h1>
         </div>
 
-        <div className="scrollbar-hide -mx-4 mb-6 flex gap-2 overflow-x-auto px-4">
+        <div className="scrollbar-hide -mx-4 mb-6 flex gap-2 overflow-x-auto px-4 md:flex-wrap md:overflow-visible">
           {categories.map((c) => (
             <button
               key={c.label}
@@ -52,7 +87,7 @@ const Categorias = () => {
           <Loader2 className="mx-auto my-12 h-6 w-6 animate-spin text-primary" />
         ) : filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed py-16 text-center text-muted-foreground">
-            Nenhuma loja nesta categoria.
+            Nenhuma loja nesta categoria por enquanto.
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

@@ -489,35 +489,35 @@ export const DashboardTab = ({ storeId }: { storeId: string }) => {
   ).length;
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 animate-fade-in md:space-y-6">
       {/* Hero / saudação */}
-      <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-secondary p-6 text-primary-foreground shadow-card">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex-1 min-w-[260px]">
-            <p className="text-sm font-medium opacity-90">Bem-vindo de volta 👋</p>
-            <h1 className="font-display text-2xl font-bold sm:text-3xl">
+      <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary to-secondary p-3 text-primary-foreground shadow-card md:rounded-3xl md:p-6">
+        <div className="flex flex-wrap items-center gap-3 md:gap-4">
+          <div className="min-w-0 flex-1 md:min-w-[260px]">
+            <p className="text-[11px] font-medium opacity-90 md:text-sm">Bem-vindo de volta 👋</p>
+            <h1 className="font-display text-base font-bold leading-snug md:text-2xl sm:text-3xl">
               {store?.name ?? "Sua loja"} já faturou{" "}
-              <span className="bg-background/20 px-2 py-0.5 rounded-lg">
+              <span className="rounded-md bg-background/20 px-1.5 py-0.5 md:rounded-lg md:px-2">
                 {fmtBRL(todayRevenue)}
               </span>{" "}
               hoje 🚀
             </h1>
-            <p className="mt-2 text-sm opacity-90">
-              {todayValid.length} pedidos • ticket médio {fmtBRL(todayTicket)} • {newCustomersToday} cliente
-              {newCustomersToday !== 1 ? "s" : ""} novo{newCustomersToday !== 1 ? "s" : ""}
+            <p className="mt-1.5 text-[11px] opacity-90 md:mt-2 md:text-sm">
+              {todayValid.length} pedidos • ticket {fmtBRL(todayTicket)} • {newCustomersToday} novo
+              {newCustomersToday !== 1 ? "s" : ""}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-center sm:flex sm:gap-3">
-            <div className="rounded-2xl bg-background/15 px-4 py-3 backdrop-blur">
-              <div className="text-xs opacity-80">Crescimento mês</div>
-              <div className="font-display text-xl font-bold">
+          <div className="grid w-full grid-cols-2 gap-2 text-center sm:w-auto sm:flex sm:gap-3">
+            <div className="rounded-xl bg-background/15 px-2.5 py-1.5 backdrop-blur md:rounded-2xl md:px-4 md:py-3">
+              <div className="text-[10px] opacity-80 md:text-xs">Crescimento mês</div>
+              <div className="font-display text-sm font-bold md:text-xl">
                 {monthGrowth >= 0 ? "+" : ""}
                 {monthGrowth.toFixed(1)}%
               </div>
             </div>
-            <div className="rounded-2xl bg-background/15 px-4 py-3 backdrop-blur">
-              <div className="text-xs opacity-80">Ranking cidade</div>
-              <div className="font-display text-xl font-bold">Top 18%</div>
+            <div className="rounded-xl bg-background/15 px-2.5 py-1.5 backdrop-blur md:rounded-2xl md:px-4 md:py-3">
+              <div className="text-[10px] opacity-80 md:text-xs">Ranking cidade</div>
+              <div className="font-display text-sm font-bold md:text-xl">Top 18%</div>
             </div>
           </div>
         </div>
@@ -905,12 +905,12 @@ const Section = ({
   cta?: string;
   children: React.ReactNode;
 }) => (
-  <section className="space-y-3">
+  <section className="space-y-2 md:space-y-3">
     <div className="flex items-center gap-2">
-      <Icon className="h-4 w-4 text-primary" />
-      <h2 className="font-display text-lg font-bold uppercase tracking-wide">{title}</h2>
+      <Icon className="h-3.5 w-3.5 text-primary md:h-4 md:w-4" />
+      <h2 className="font-display text-sm font-bold uppercase tracking-wide md:text-lg">{title}</h2>
       {cta && (
-        <Button variant="ghost" size="sm" className="ml-auto text-xs font-bold text-primary">
+        <Button variant="ghost" size="sm" className="ml-auto h-7 text-[11px] font-bold text-primary md:text-xs">
           {cta} →
         </Button>
       )}
@@ -940,24 +940,24 @@ const Kpi = ({
       : "";
   return (
     <div
-      className={`rounded-2xl border p-3 transition-smooth hover:shadow-soft ${
+      className={`rounded-xl border p-2 transition-smooth hover:shadow-soft md:rounded-2xl md:p-3 ${
         accent
           ? "border-transparent bg-gradient-to-br from-primary to-secondary text-primary-foreground"
           : toneCls || "border-border bg-card"
       }`}
     >
-      <div className="flex items-center gap-1.5 text-xs font-medium opacity-80">
-        <Icon className="h-3.5 w-3.5" />
+      <div className="flex items-center gap-1 text-[10px] font-medium opacity-80 md:gap-1.5 md:text-xs">
+        <Icon className="h-3 w-3 md:h-3.5 md:w-3.5" />
         <span className="truncate">{label}</span>
       </div>
-      <div className="mt-1.5 font-display text-lg font-bold leading-tight sm:text-xl">{value}</div>
+      <div className="mt-1 font-display text-sm font-bold leading-tight md:mt-1.5 md:text-lg sm:text-xl">{value}</div>
     </div>
   );
 };
 
 const QuickAction = ({ icon: Icon, label }: { icon: typeof Plus; label: string }) => (
-  <button className="group flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-bold transition-smooth hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-soft">
-    <Icon className="h-4 w-4 transition-transform group-hover:scale-110" />
+  <button className="group flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1.5 text-xs font-bold transition-smooth hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-soft md:gap-2 md:px-4 md:py-2 md:text-sm">
+    <Icon className="h-3.5 w-3.5 transition-transform group-hover:scale-110 md:h-4 md:w-4" />
     {label}
   </button>
 );
