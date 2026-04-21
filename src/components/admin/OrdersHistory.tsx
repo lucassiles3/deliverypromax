@@ -232,12 +232,38 @@ export const OrdersHistory = ({ storeId }: { storeId: string }) => {
                       R$ {Number(o.total).toFixed(2).replace(".", ",")}
                     </td>
                     <td className="px-3 py-2">
-                      <button
-                        onClick={() => setDetailId(o.id)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-xs font-bold hover:bg-muted/70"
-                      >
-                        <Eye className="h-3 w-3" /> Ver
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        {(() => {
+                          const adv = NEXT_STATUS[o.status as DbStatus];
+                          if (!adv) return null;
+                          return (
+                            <button
+                              onClick={() => updateStatus(o.id, adv.next, `Pedido: ${STATUS_LABEL[adv.next]}`)}
+                              disabled={busyId === o.id}
+                              className="inline-flex items-center gap-1 rounded-lg bg-primary px-2 py-1 text-xs font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                              title={adv.label}
+                            >
+                              {adv.label} <ChevronRight className="h-3 w-3" />
+                            </button>
+                          );
+                        })()}
+                        {o.status !== "delivered" && o.status !== "cancelled" && (
+                          <button
+                            onClick={() => cancelOrder(o.id)}
+                            disabled={busyId === o.id}
+                            className="inline-flex items-center justify-center rounded-lg bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20 disabled:opacity-50"
+                            title="Cancelar pedido"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setDetailId(o.id)}
+                          className="inline-flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-xs font-bold hover:bg-muted/70"
+                        >
+                          <Eye className="h-3 w-3" /> Ver
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
