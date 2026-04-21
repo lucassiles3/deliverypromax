@@ -300,6 +300,24 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Aviso de raio de entrega */}
+      {coords && outOfRangeCount > 0 && (
+        <section className="container pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5 text-primary" />
+              <strong className="text-foreground">{outOfRangeCount}</strong>{" "}
+              {outOfRangeCount === 1 ? "loja não atende" : "lojas não atendem"} seu endereço.
+            </span>
+            <button
+              onClick={() => setShowOutOfRange((v) => !v)}
+              className="rounded-full bg-primary/10 px-3 py-1 font-bold text-primary hover:bg-primary/20"
+            >
+              {showOutOfRange ? "Ocultar fora do raio" : "Ver mesmo assim"}
+            </button>
+          </div>
+        </section>
+      )}
       {/* Conteúdo */}
       {isLoading ? (
         <div className="flex justify-center py-16">
