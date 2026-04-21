@@ -492,6 +492,58 @@ const Mesa = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Modal PIX */}
+      <Dialog open={pixOpen} onOpenChange={(o) => { if (!o) { setPixOpen(false); setPixTxn(null); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><QrCode className="h-5 w-5 text-primary" /> Pagar com PIX</DialogTitle>
+          </DialogHeader>
+          {pixLoading || !pixTxn ? (
+            <div className="flex flex-col items-center justify-center py-10">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <p className="mt-3 text-sm text-muted-foreground">Gerando QR Code…</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-center text-sm text-muted-foreground">
+                Escaneie com o app do seu banco
+              </p>
+              <div className="flex items-baseline justify-center gap-1">
+                <span className="text-xs text-muted-foreground">Valor:</span>
+                <span className="font-display text-2xl font-bold text-primary">{brl(Number(pixTxn.amount))}</span>
+              </div>
+              {pixTxn.qr_code_base64 && (
+                <img
+                  src={`data:image/png;base64,${pixTxn.qr_code_base64}`}
+                  alt="QR Code PIX"
+                  className="mx-auto h-56 w-56 rounded-xl border"
+                />
+              )}
+              {pixTxn.qr_code_payload && (
+                <div className="rounded-xl border-2 border-dashed bg-muted/30 p-3">
+                  <div className="text-[10px] font-bold uppercase text-muted-foreground">Pix copia-e-cola</div>
+                  <div className="mt-1 break-all text-[11px] font-mono">{pixTxn.qr_code_payload.slice(0, 80)}…</div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-2 w-full"
+                    onClick={() => {
+                      navigator.clipboard.writeText(pixTxn.qr_code_payload);
+                      toast.success("Código copiado");
+                    }}
+                  >
+                    <Copy className="mr-1 h-4 w-4" /> Copiar código
+                  </Button>
+                </div>
+              )}
+              <p className="text-center text-xs text-muted-foreground">
+                ⏳ Aguardando confirmação… A tela atualiza sozinha.
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
