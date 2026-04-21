@@ -584,11 +584,11 @@ const KpiBlock = ({
   divider?: boolean;
 }) => (
   <div className={divider ? "md:border-l md:border-primary-foreground/20 md:pl-4" : ""}>
-    <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider opacity-80">
-      <Icon className="h-3.5 w-3.5" />
-      {label}
+    <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider opacity-80 md:text-[11px] md:gap-1.5">
+      <Icon className="h-3 w-3 md:h-3.5 md:w-3.5" />
+      <span className="truncate">{label}</span>
     </div>
-    <div className="mt-1 font-display text-2xl font-bold leading-tight">{value}</div>
+    <div className="mt-0.5 font-display text-sm font-bold leading-tight md:mt-1 md:text-2xl">{value}</div>
   </div>
 );
 
