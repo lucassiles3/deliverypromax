@@ -24,8 +24,23 @@ import {
   Search,
   History,
   Trash2,
+  Menu as MenuIcon,
+  LayoutDashboard,
+  ShoppingCart,
+  Receipt,
+  Utensils,
+  Users as UsersIcon,
+  Bike,
+  Megaphone,
+  Wallet,
+  BarChart3,
+  Store as StoreIcon,
+  Settings as SettingsIcon,
+  UserCog,
+  Plug,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
