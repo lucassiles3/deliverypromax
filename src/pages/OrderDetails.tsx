@@ -32,6 +32,8 @@ import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { StatusTimeline } from "@/components/order/StatusTimeline";
 import { OrderReviews } from "@/components/order/OrderReviews";
+import { CourierMap } from "@/components/CourierMap";
+import { useCourierLocation } from "@/hooks/useCourierLocation";
 
 type DbStatus =
   | "pending_payment"
@@ -79,7 +81,7 @@ const OrderDetails = () => {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, cashback_earned, change_for, status, method, payment_method, address, notes, customer_name, customer_phone, created_at, accepted_at, updated_at, store_id, table_number, stores(name, logo, phone, whatsapp_phone, slug), order_items(id, product_id, product_name, quantity, unit_price, notes, customizations)",
+          "id, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, cashback_earned, change_for, status, method, payment_method, address, delivery_lat, delivery_lng, notes, customer_name, customer_phone, created_at, accepted_at, updated_at, store_id, table_number, courier_id, couriers:courier_id(id, name, phone, vehicle_type, vehicle_plate, photo_url), stores(name, logo, phone, whatsapp_phone, slug), order_items(id, product_id, product_name, quantity, unit_price, notes, customizations)",
         )
         .eq("id", id!)
         .eq("user_id", user!.id)
