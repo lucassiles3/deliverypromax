@@ -998,6 +998,143 @@ export type Database = {
           },
         ]
       }
+      loyalty_redemptions: {
+        Row: {
+          coupon_code: string
+          coupon_id: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          order_id: string | null
+          points_spent: number
+          reward_id: string
+          status: string
+          store_id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          coupon_code: string
+          coupon_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          order_id?: string | null
+          points_spent: number
+          reward_id: string
+          status?: string
+          store_id: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          coupon_code?: string
+          coupon_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          order_id?: string | null
+          points_spent?: number
+          reward_id?: string
+          status?: string
+          store_id?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_rewards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_redemptions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_rewards: {
+        Row: {
+          active: boolean
+          cost_points: number
+          created_at: string
+          description: string | null
+          free_product_id: string | null
+          id: string
+          name: string
+          position: number
+          reward_type: string
+          reward_value: number
+          stock: number | null
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          cost_points: number
+          created_at?: string
+          description?: string | null
+          free_product_id?: string | null
+          id?: string
+          name: string
+          position?: number
+          reward_type: string
+          reward_value?: number
+          stock?: number | null
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          cost_points?: number
+          created_at?: string
+          description?: string | null
+          free_product_id?: string | null
+          id?: string
+          name?: string
+          position?: number
+          reward_type?: string
+          reward_value?: number
+          stock?: number | null
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_rewards_free_product_id_fkey"
+            columns: ["free_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_rewards_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -3094,6 +3231,7 @@ export type Database = {
         Args: { _cashback_used: number; _order_total: number }
         Returns: number
       }
+      award_order_points: { Args: { _order_id: string }; Returns: number }
       can_access_section: {
         Args: { _section: string; _store_id: string; _user_id: string }
         Returns: boolean
@@ -3139,6 +3277,7 @@ export type Database = {
         Args: { _session_id: string }
         Returns: undefined
       }
+      redeem_loyalty_reward: { Args: { _reward_id: string }; Returns: Json }
       resolve_api_key: {
         Args: { _key_hash: string }
         Returns: {
