@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_carts: {
+        Row: {
+          created_at: string
+          estimated_total: number
+          id: string
+          items: Json
+          notified_at: string | null
+          recovered_at: string | null
+          store_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          estimated_total?: number
+          id?: string
+          items?: Json
+          notified_at?: string | null
+          recovered_at?: string | null
+          store_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          estimated_total?: number
+          id?: string
+          items?: Json
+          notified_at?: string | null
+          recovered_at?: string | null
+          store_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "abandoned_carts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       addon_groups: {
         Row: {
           id: string
@@ -479,6 +523,107 @@ export type Database = {
           },
         ]
       }
+      courier_locations: {
+        Row: {
+          accuracy: number | null
+          courier_id: string
+          heading: number | null
+          lat: number
+          lng: number
+          speed: number | null
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          accuracy?: number | null
+          courier_id: string
+          heading?: number | null
+          lat: number
+          lng: number
+          speed?: number | null
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          accuracy?: number | null
+          courier_id?: string
+          heading?: number | null
+          lat?: number
+          lng?: number
+          speed?: number | null
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_locations_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: true
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_locations_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      couriers: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          is_online: boolean
+          name: string
+          phone: string | null
+          photo_url: string | null
+          store_id: string
+          updated_at: string
+          user_id: string | null
+          vehicle_plate: string | null
+          vehicle_type: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          is_online?: boolean
+          name: string
+          phone?: string | null
+          photo_url?: string | null
+          store_id: string
+          updated_at?: string
+          user_id?: string | null
+          vehicle_plate?: string | null
+          vehicle_type?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          is_online?: boolean
+          name?: string
+          phone?: string | null
+          photo_url?: string | null
+          store_id?: string
+          updated_at?: string
+          user_id?: string | null
+          vehicle_plate?: string | null
+          vehicle_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "couriers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorite_products: {
         Row: {
           created_at: string
@@ -734,6 +879,7 @@ export type Database = {
           change_for: number | null
           coupon_code: string | null
           coupon_discount: number
+          courier_id: string | null
           created_at: string
           customer_name: string
           customer_phone: string
@@ -764,6 +910,7 @@ export type Database = {
           change_for?: number | null
           coupon_code?: string | null
           coupon_discount?: number
+          courier_id?: string | null
           created_at?: string
           customer_name: string
           customer_phone: string
@@ -794,6 +941,7 @@ export type Database = {
           change_for?: number | null
           coupon_code?: string | null
           coupon_discount?: number
+          courier_id?: string | null
           created_at?: string
           customer_name?: string
           customer_phone?: string
@@ -815,6 +963,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_store_id_fkey"
             columns: ["store_id"]

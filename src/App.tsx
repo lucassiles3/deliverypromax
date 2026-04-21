@@ -27,6 +27,7 @@ const Favoritos = lazy(() => import("./pages/Favoritos.tsx"));
 const Notificacoes = lazy(() => import("./pages/Notificacoes.tsx"));
 const Categorias = lazy(() => import("./pages/Categorias.tsx"));
 const Mesa = lazy(() => import("./pages/Mesa.tsx"));
+const Entregador = lazy(() => import("./pages/Entregador.tsx"));
 
 const PageFallback = () => (
   <div className="flex min-h-[60vh] items-center justify-center">
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="/notificacoes" element={<Notificacoes />} />
               <Route path="/categorias" element={<Categorias />} />
               <Route path="/mesa/:token" element={<Mesa />} />
+              <Route path="/entregador" element={<Entregador />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
