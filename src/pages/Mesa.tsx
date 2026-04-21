@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Receipt, HelpCircle, Check, Plus, Minus, ShoppingBag, Search, X } from "lucide-react";
+import { Bell, Receipt, HelpCircle, Check, Plus, Minus, ShoppingBag, Search, X, QrCode, Copy, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,6 +32,9 @@ const Mesa = () => {
   const [confirmProduct, setConfirmProduct] = useState<Product | null>(null);
   const [confirmQty, setConfirmQty] = useState(1);
   const [confirmNotes, setConfirmNotes] = useState("");
+  const [pixOpen, setPixOpen] = useState(false);
+  const [pixLoading, setPixLoading] = useState(false);
+  const [pixTxn, setPixTxn] = useState<any>(null);
 
   useEffect(() => {
     document.title = "Mesa · Pedido";
@@ -145,6 +148,53 @@ const Mesa = () => {
     setConfirmNotes("");
     qc.invalidateQueries({ queryKey: ["mesa-items", session.id] });
     setTab("comanda");
+  };
+
+  // Polling do status do PIX após gerar
+  useEffect(() => {
+    if (!pixTxn?.id) return;
+    const ch = supabase
+      .channel(`pix-${pixTxn.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "payment_transactions", filter: `id=eq.${pixTxn.id}` },
+        (payload: any) => {
+          if (payload.new?.status === "approved") {
+            toast.success("✅ Pagamento confirmado!");
+            setPixOpen(false);
+            setPixTxn(null);
+            qc.invalidateQueries({ queryKey: ["mesa-session", table?.id] });
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [pixTxn?.id, qc, table?.id]);
+
+  const payWithPix = async () => {
+    if (!token || !session) return;
+    setPixLoading(true);
+    setPixOpen(true);
+    setPixTxn(null);
+    try {
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pix-create-table`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ qr_token: token }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Falha ao gerar PIX");
+      setPixTxn(json.data);
+    } catch (e: any) {
+      toast.error(e.message);
+      setPixOpen(false);
+    } finally {
+      setPixLoading(false);
+    }
   };
 
   if (loading) return <div className="min-h-screen" />;
