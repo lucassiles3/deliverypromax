@@ -3,16 +3,18 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Key, Webhook, Copy, Trash2, Plus, Activity, CheckCircle2, XCircle, BookOpen } from "lucide-react";
+import { Key, Webhook, Copy, Trash2, Plus, Activity, CheckCircle2, XCircle, BookOpen, Wallet } from "lucide-react";
+import { PixGatewaySection } from "./integrations/PixGatewaySection";
 
-type Section = "keys" | "webhooks" | "deliveries" | "docs";
+type Section = "pix" | "keys" | "webhooks" | "deliveries" | "docs";
 
 export const IntegrationsTab = ({ storeId }: { storeId: string }) => {
-  const [section, setSection] = useState<Section>("keys");
+  const [section, setSection] = useState<Section>("pix");
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         {[
+          { id: "pix" as const, label: "PIX / Gateways", icon: Wallet },
           { id: "keys" as const, label: "API Keys", icon: Key },
           { id: "webhooks" as const, label: "Webhooks", icon: Webhook },
           { id: "deliveries" as const, label: "Entregas", icon: Activity },
@@ -30,6 +32,7 @@ export const IntegrationsTab = ({ storeId }: { storeId: string }) => {
           </button>
         ))}
       </div>
+      {section === "pix" && <PixGatewaySection storeId={storeId} />}
       {section === "keys" && <KeysSection storeId={storeId} />}
       {section === "webhooks" && <WebhooksSection storeId={storeId} />}
       {section === "deliveries" && <DeliveriesSection storeId={storeId} />}
