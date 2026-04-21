@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductModal } from "@/components/ProductModal";
 import { PromoCountdown } from "@/components/PromoCountdown";
+import { AdBanner } from "@/components/AdBanner";
 import { useStoreBySlug } from "@/hooks/useStores";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useUserLocation } from "@/hooks/useUserLocation";
