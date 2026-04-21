@@ -500,65 +500,76 @@ const Admin = () => {
         </div>
       </header>
 
-      <div className="container py-3 md:py-6">
-        <div className="mb-4 rounded-2xl gradient-primary p-2 text-primary-foreground shadow-soft md:mb-6 md:p-5">
-          <div className="grid grid-cols-4 gap-1 md:grid-cols-4 md:gap-4">
-            <KpiBlock icon={DollarSign} label="Faturamento" value={`R$ ${kpis.revenue.toFixed(2).replace(".", ",")}`} />
-            <KpiBlock icon={ShoppingBag} label="Pedidos" value={String(kpis.count)} divider />
-            <KpiBlock icon={Package} label="Andamento" value={String(kpis.active)} divider />
-            <KpiBlock icon={TrendingUp} label="Ticket" value={`R$ ${kpis.avg.toFixed(0)}`} divider />
-          </div>
-        </div>
+      <div className="container py-3 md:py-6 md:flex md:gap-6">
+        {/* Sidebar (tablet/desktop) */}
+        <aside className="hidden md:block md:w-56 lg:w-64 shrink-0">
+          <nav className="sticky top-20 flex flex-col gap-1 rounded-2xl border-2 border-border bg-card p-2 shadow-soft">
+            {visibleSections.map((s) => {
+              const Icon = s.icon;
+              const active = tab === s.id;
+              const showBadge = s.id === "orders" && pendingCount > 0;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setTab(s.id)}
+                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold transition-smooth ${
+                    active
+                      ? "bg-primary/10 text-primary"
+                      : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Icon className={`h-4 w-4 shrink-0 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                  <span className="flex-1 truncate">{s.label}</span>
+                  {showBadge && (
+                    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground animate-pulse">
+                      {pendingCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
 
-        {/* Desktop: tabs horizontais. Mobile: usa menu lateral (Sheet) */}
-        <div className="mb-5 hidden gap-2 border-b overflow-x-auto md:flex">
-          {visibleSections.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`relative flex items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-bold transition-smooth ${
-                tab === t.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t.label}
-              {t.id === "orders" && pendingCount > 0 && (
-                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground animate-pulse">
-                  {pendingCount}
-                </span>
-              )}
-              {tab === t.id && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
-            </button>
-          ))}
-        </div>
-
-        {tab === "dashboard" && storeId && canAccessSection(currentRole, "dashboard") && <DashboardTab storeId={storeId} />}
-        {tab === "orders" && storeId && canAccessSection(currentRole, "orders") && <OrdersKanban storeId={storeId} />}
-        {tab === "pdv" && storeId && currentStore && canAccessSection(currentRole, "pdv") && toggles.pdv_enabled && (
-          <PDVTab storeId={storeId} storeName={currentStore.name} />
-        )}
-        {tab === "pdv" && storeId && !toggles.pdv_enabled && (
-          <div className="rounded-2xl border-2 border-dashed border-border bg-card p-8 text-center">
-            <h3 className="font-display text-lg font-bold">PDV desabilitado</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Habilite o PDV em <strong>Operação → PDV</strong> para vender no balcão.
-            </p>
+        <div className="min-w-0 flex-1">
+          <div className="mb-4 rounded-2xl gradient-primary p-2 text-primary-foreground shadow-soft md:mb-6 md:p-5">
+            <div className="grid grid-cols-4 gap-1 md:grid-cols-4 md:gap-4">
+              <KpiBlock icon={DollarSign} label="Faturamento" value={`R$ ${kpis.revenue.toFixed(2).replace(".", ",")}`} />
+              <KpiBlock icon={ShoppingBag} label="Pedidos" value={String(kpis.count)} divider />
+              <KpiBlock icon={Package} label="Andamento" value={String(kpis.active)} divider />
+              <KpiBlock icon={TrendingUp} label="Ticket" value={`R$ ${kpis.avg.toFixed(0)}`} divider />
+            </div>
           </div>
-        )}
-        {tab === "tables" && storeId && canAccessSection(currentRole, "tables") && <TablesTab storeId={storeId} />}
-        {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
-        {tab === "customers" && storeId && canAccessSection(currentRole, "customers") && <CustomersTab storeId={storeId} />}
-        {tab === "couriers" && storeId && canAccessSection(currentRole, "couriers") && <CouriersTab storeId={storeId} />}
-        {tab === "marketing" && storeId && canAccessSection(currentRole, "marketing") && <MarketingTab storeId={storeId} />}
-        {tab === "financial" && storeId && currentStore && canAccessSection(currentRole, "financial") && (
-          <FinancialTab storeId={storeId} storeName={currentStore.name} />
-        )}
-        {tab === "reports" && storeId && currentStore && canAccessSection(currentRole, "reports") && (
-          <ReportsTab storeId={storeId} storeName={currentStore.name} />
-        )}
-        {tab === "store" && storeId && canAccessSection(currentRole, "store") && <StoreSettingsTab storeId={storeId} />}
-        {tab === "settings" && storeId && canAccessSection(currentRole, "settings") && <SettingsTab storeId={storeId} />}
-        {tab === "team" && storeId && canAccessSection(currentRole, "team") && <TeamTab storeId={storeId} />}
-        {tab === "integrations" && storeId && canAccessSection(currentRole, "integrations") && <IntegrationsTab storeId={storeId} />}
+
+          {tab === "dashboard" && storeId && canAccessSection(currentRole, "dashboard") && <DashboardTab storeId={storeId} />}
+          {tab === "orders" && storeId && canAccessSection(currentRole, "orders") && <OrdersKanban storeId={storeId} />}
+          {tab === "pdv" && storeId && currentStore && canAccessSection(currentRole, "pdv") && toggles.pdv_enabled && (
+            <PDVTab storeId={storeId} storeName={currentStore.name} />
+          )}
+          {tab === "pdv" && storeId && !toggles.pdv_enabled && (
+            <div className="rounded-2xl border-2 border-dashed border-border bg-card p-8 text-center">
+              <h3 className="font-display text-lg font-bold">PDV desabilitado</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Habilite o PDV em <strong>Operação → PDV</strong> para vender no balcão.
+              </p>
+            </div>
+          )}
+          {tab === "tables" && storeId && canAccessSection(currentRole, "tables") && <TablesTab storeId={storeId} />}
+          {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
+          {tab === "customers" && storeId && canAccessSection(currentRole, "customers") && <CustomersTab storeId={storeId} />}
+          {tab === "couriers" && storeId && canAccessSection(currentRole, "couriers") && <CouriersTab storeId={storeId} />}
+          {tab === "marketing" && storeId && canAccessSection(currentRole, "marketing") && <MarketingTab storeId={storeId} />}
+          {tab === "financial" && storeId && currentStore && canAccessSection(currentRole, "financial") && (
+            <FinancialTab storeId={storeId} storeName={currentStore.name} />
+          )}
+          {tab === "reports" && storeId && currentStore && canAccessSection(currentRole, "reports") && (
+            <ReportsTab storeId={storeId} storeName={currentStore.name} />
+          )}
+          {tab === "store" && storeId && canAccessSection(currentRole, "store") && <StoreSettingsTab storeId={storeId} />}
+          {tab === "settings" && storeId && canAccessSection(currentRole, "settings") && <SettingsTab storeId={storeId} />}
+          {tab === "team" && storeId && canAccessSection(currentRole, "team") && <TeamTab storeId={storeId} />}
+          {tab === "integrations" && storeId && canAccessSection(currentRole, "integrations") && <IntegrationsTab storeId={storeId} />}
+        </div>
       </div>
 
       {storeId && (
