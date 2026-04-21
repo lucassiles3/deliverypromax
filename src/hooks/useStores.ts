@@ -25,6 +25,7 @@ type DbStore = {
   opening_hours?: OpeningHours | null;
   lat?: number | null;
   lng?: number | null;
+  delivery_radius_km?: number | null;
 };
 
 const mapStore = (s: DbStore, products: Product[] = []): Store => ({
@@ -50,6 +51,7 @@ const mapStore = (s: DbStore, products: Product[] = []): Store => ({
   openingHours: s.opening_hours ?? undefined,
   lat: s.lat != null ? Number(s.lat) : undefined,
   lng: s.lng != null ? Number(s.lng) : undefined,
+  deliveryRadiusKm: s.delivery_radius_km != null ? Number(s.delivery_radius_km) : undefined,
 });
 
 export const useStores = () =>

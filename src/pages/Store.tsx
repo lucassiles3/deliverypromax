@@ -1,11 +1,14 @@
 import { useMemo, useState, useEffect } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
-import { ArrowLeft, Star, Clock, Bike, MapPin, Search, Flame } from "lucide-react";
+import { ArrowLeft, Star, Clock, Bike, MapPin, Search, Flame, AlertTriangle } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductModal } from "@/components/ProductModal";
 import { PromoCountdown } from "@/components/PromoCountdown";
 import { useStoreBySlug } from "@/hooks/useStores";
+import { useAddresses } from "@/hooks/useAddresses";
+import { useUserLocation } from "@/hooks/useUserLocation";
+import { distanceKm, formatDistance } from "@/lib/distance";
 import { isStoreOpen, nextOpeningLabel, formatHoursList } from "@/lib/storeHours";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Product } from "@/data/stores";
@@ -13,9 +16,26 @@ import type { Product } from "@/data/stores";
 const Store = () => {
   const { slug = "" } = useParams();
   const { data: store, isLoading } = useStoreBySlug(slug);
+  const { data: addresses } = useAddresses();
+  const defaultAddr = useMemo(
+    () => addresses?.find((a: any) => a.is_default) ?? addresses?.[0] ?? null,
+    [addresses],
+  );
+  const addrCoords =
+    defaultAddr && defaultAddr.lat && defaultAddr.lng
+      ? { lat: Number(defaultAddr.lat), lng: Number(defaultAddr.lng) }
+      : null;
+  const { coords } = useUserLocation(addrCoords);
   const [activeCat, setActiveCat] = useState("");
   const [query, setQuery] = useState("");
   const [openProduct, setOpenProduct] = useState<Product | null>(null);
+
+  const distance =
+    coords && store?.lat && store?.lng
+      ? distanceKm(coords, { lat: store.lat, lng: store.lng })
+      : null;
+  const radius = store?.deliveryRadiusKm ?? null;
+  const outOfRange = distance !== null && radius !== null && distance > radius;
 
   useEffect(() => {
     document.title = store ? `${store.name} • FoodFlash` : "FoodFlash";
@@ -129,6 +149,23 @@ const Store = () => {
           )}
         </div>
       </div>
+
+      {/* Aviso fora do raio de entrega */}
+      {outOfRange && (
+        <div className="container mt-4">
+          <div className="flex items-start gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-destructive" />
+            <div className="flex-1 text-sm">
+              <p className="font-bold text-destructive">Fora da área de entrega</p>
+              <p className="mt-0.5 text-muted-foreground">
+                Você está a <strong>{formatDistance(distance!)}</strong> desta loja, mas ela só
+                entrega em até <strong>{radius} km</strong>. Você pode ver o cardápio, mas não
+                poderá finalizar pedido para entrega neste endereço.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <div className="container mt-6">

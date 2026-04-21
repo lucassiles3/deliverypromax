@@ -119,7 +119,7 @@ const Index = () => {
     [stores],
   );
 
-  // Enrich with distance + open
+  // Enrich with distance + open + inRange
   const enriched = useMemo(() => {
     return stores.map((s: any) => {
       const open = isStoreOpen(s.openingHours) && s.open;
@@ -127,12 +127,35 @@ const Index = () => {
       if (coords && s.lat && s.lng) {
         distance = distanceKm(coords, { lat: Number(s.lat), lng: Number(s.lng) });
       }
-      return { ...s, _open: open, _distance: distance } as Store & { _open: boolean; _distance: number | null };
+      const radius = s.deliveryRadiusKm ?? null;
+      // Se não temos coords do usuário OU loja não tem raio definido => assume "no raio"
+      const inRange = distance === null || radius === null ? true : distance <= radius;
+      return {
+        ...s,
+        _open: open,
+        _distance: distance,
+        _radius: radius,
+        _inRange: inRange,
+      } as Store & {
+        _open: boolean;
+        _distance: number | null;
+        _radius: number | null;
+        _inRange: boolean;
+      };
     });
   }, [stores, coords]);
 
+  const [showOutOfRange, setShowOutOfRange] = useState(false);
+
+  // Lojas no raio (sempre aplicado quando temos coords) — base para tudo
+  const inRangeStores = useMemo(
+    () => (coords ? enriched.filter((s) => s._inRange) : enriched),
+    [enriched, coords],
+  );
+  const outOfRangeCount = enriched.length - inRangeStores.length;
+
   const filtered = useMemo(() => {
-    let list = enriched;
+    let list = showOutOfRange ? enriched : inRangeStores;
     if (activeCat) {
       const cat = CATEGORIES.find((c) => c.key === activeCat);
       if (cat) list = list.filter((s) => matchCategory(s.cuisine, cat));
@@ -146,20 +169,21 @@ const Index = () => {
         return m ? Number(m[1]) <= 30 : false;
       });
     return list;
-  }, [enriched, activeCat, activeFilters]);
+  }, [enriched, inRangeStores, showOutOfRange, activeCat, activeFilters]);
 
-  // Rails
-  const promoStores = enriched.filter((s) => !!s.promo).slice(0, 8);
-  const featuredStores = [...enriched]
+  // Rails — sempre baseadas em lojas dentro do raio
+  const railBase = showOutOfRange ? enriched : inRangeStores;
+  const promoStores = railBase.filter((s) => !!s.promo).slice(0, 8);
+  const featuredStores = [...railBase]
     .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
     .slice(0, 8);
   const nearbyStores = coords
-    ? [...enriched]
+    ? [...railBase]
         .filter((s) => s._distance !== null)
         .sort((a, b) => (a._distance! - b._distance!))
         .slice(0, 8)
     : [];
-  const newStores = [...enriched].slice(0, 8); // ordered by name in hook; placeholder
+  const newStores = [...railBase].slice(0, 8);
 
   const toggleFilter = (k: FilterKey) => {
     setActiveFilters((prev) => {
@@ -276,6 +300,24 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Aviso de raio de entrega */}
+      {coords && outOfRangeCount > 0 && (
+        <section className="container pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5 text-primary" />
+              <strong className="text-foreground">{outOfRangeCount}</strong>{" "}
+              {outOfRangeCount === 1 ? "loja não atende" : "lojas não atendem"} seu endereço.
+            </span>
+            <button
+              onClick={() => setShowOutOfRange((v) => !v)}
+              className="rounded-full bg-primary/10 px-3 py-1 font-bold text-primary hover:bg-primary/20"
+            >
+              {showOutOfRange ? "Ocultar fora do raio" : "Ver mesmo assim"}
+            </button>
+          </div>
+        </section>
+      )}
       {/* Conteúdo */}
       {isLoading ? (
         <div className="flex justify-center py-16">
