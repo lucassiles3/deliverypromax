@@ -78,6 +78,9 @@ export const OrderDetailsModal = ({
     },
   });
 
+  const qc = useQueryClient();
+  const { data: couriers = [] } = useCouriers(order?.store_id ?? null);
+
   if (!order) return null;
 
   const addr = order.address as
