@@ -119,7 +119,7 @@ const Index = () => {
     [stores],
   );
 
-  // Enrich with distance + open
+  // Enrich with distance + open + inRange
   const enriched = useMemo(() => {
     return stores.map((s: any) => {
       const open = isStoreOpen(s.openingHours) && s.open;
@@ -127,12 +127,35 @@ const Index = () => {
       if (coords && s.lat && s.lng) {
         distance = distanceKm(coords, { lat: Number(s.lat), lng: Number(s.lng) });
       }
-      return { ...s, _open: open, _distance: distance } as Store & { _open: boolean; _distance: number | null };
+      const radius = s.deliveryRadiusKm ?? null;
+      // Se não temos coords do usuário OU loja não tem raio definido => assume "no raio"
+      const inRange = distance === null || radius === null ? true : distance <= radius;
+      return {
+        ...s,
+        _open: open,
+        _distance: distance,
+        _radius: radius,
+        _inRange: inRange,
+      } as Store & {
+        _open: boolean;
+        _distance: number | null;
+        _radius: number | null;
+        _inRange: boolean;
+      };
     });
   }, [stores, coords]);
 
+  const [showOutOfRange, setShowOutOfRange] = useState(false);
+
+  // Lojas no raio (sempre aplicado quando temos coords) — base para tudo
+  const inRangeStores = useMemo(
+    () => (coords ? enriched.filter((s) => s._inRange) : enriched),
+    [enriched, coords],
+  );
+  const outOfRangeCount = enriched.length - inRangeStores.length;
+
   const filtered = useMemo(() => {
-    let list = enriched;
+    let list = showOutOfRange ? enriched : inRangeStores;
     if (activeCat) {
       const cat = CATEGORIES.find((c) => c.key === activeCat);
       if (cat) list = list.filter((s) => matchCategory(s.cuisine, cat));
@@ -146,7 +169,7 @@ const Index = () => {
         return m ? Number(m[1]) <= 30 : false;
       });
     return list;
-  }, [enriched, activeCat, activeFilters]);
+  }, [enriched, inRangeStores, showOutOfRange, activeCat, activeFilters]);
 
   // Rails
   const promoStores = enriched.filter((s) => !!s.promo).slice(0, 8);
