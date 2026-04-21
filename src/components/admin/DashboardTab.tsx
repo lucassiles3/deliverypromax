@@ -28,6 +28,7 @@ import {
   Banknote,
   Settings as SettingsIcon,
   CreditCard,
+  QrCode,
   Wallet,
   MapPin,
   Activity,
@@ -754,7 +755,7 @@ export const DashboardTab = ({ storeId }: { storeId: string }) => {
             <Kpi icon={DollarSign} label="Receita bruta" value={fmtBRL(monthRevenue)} accent />
             <Kpi icon={Receipt} label="Taxas" value={fmtBRL(monthRevenue * 0.05)} />
             <Kpi icon={Wallet} label="Lucro líq." value={fmtBRL(estimatedProfit)} tone="success" />
-            <Kpi icon={QrIcon} label="PIX" value={fmtBRL(payments.pix)} />
+            <Kpi icon={QrCode} label="PIX" value={fmtBRL(payments.pix)} />
             <Kpi icon={CreditCard} label="Cartão" value={fmtBRL(payments.credit + payments.debit)} />
             <Kpi icon={Banknote} label="Dinheiro" value={fmtBRL(payments.cash)} />
           </div>
