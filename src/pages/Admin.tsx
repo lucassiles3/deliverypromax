@@ -444,10 +444,10 @@ const Admin = () => {
           <div className="flex min-w-0 flex-1 items-center gap-2 md:hidden">
             {currentSection && (
               <>
-                <currentSection.icon className="h-4 w-4 shrink-0 text-primary" />
-                <h1 className="truncate font-display text-base font-bold">{currentSection.label}</h1>
+                <currentSection.icon className="h-3.5 w-3.5 shrink-0 text-primary" />
+                <h1 className="truncate font-display text-sm font-bold leading-tight">{currentSection.label}</h1>
                 {tab === "orders" && pendingCount > 0 && (
-                  <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground animate-pulse">
+                  <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground animate-pulse">
                     {pendingCount}
                   </span>
                 )}
