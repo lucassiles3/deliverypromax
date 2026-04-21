@@ -52,8 +52,8 @@ export const ProductCard = ({ product, storeId, onOpen }: Props) => {
         </div>
         <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
 
-        <div className="mt-auto flex items-end justify-between pt-2">
-          <div>
+        <div className="mt-auto flex items-end justify-between pt-3 gap-4">
+          <div className="flex-1 min-w-0">
             {product.oldPrice && (
               <div className="text-xs text-muted-foreground line-through">
                 R$ {product.oldPrice.toFixed(2).replace(".", ",")}
@@ -69,7 +69,7 @@ export const ProductCard = ({ product, storeId, onOpen }: Props) => {
               onOpen(product);
             }}
             aria-label={`Adicionar ${product.name}`}
-            className="flex h-10 w-10 items-center justify-center rounded-full gradient-primary text-primary-foreground shadow-glow transition-bounce hover:scale-110 active:scale-95"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full gradient-primary text-primary-foreground shadow-glow transition-bounce hover:scale-110 active:scale-95"
           >
             <Plus className="h-5 w-5" strokeWidth={3} />
           </button>
