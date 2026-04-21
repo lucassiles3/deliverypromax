@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { History } from "lucide-react";
 
@@ -13,6 +14,7 @@ const labels: Record<string, string> = {
 };
 
 export const StatusTimeline = ({ orderId }: { orderId: string }) => {
+  const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["order-status-history", orderId],
     queryFn: async () => {
@@ -25,6 +27,26 @@ export const StatusTimeline = ({ orderId }: { orderId: string }) => {
       return data ?? [];
     },
   });
+
+  useEffect(() => {
+    if (!orderId) return;
+    const ch = supabase
+      .channel(`order-status-history:${orderId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "order_status_history",
+          filter: `order_id=eq.${orderId}`,
+        },
+        () => qc.invalidateQueries({ queryKey: ["order-status-history", orderId] }),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [orderId, qc]);
 
   return (
     <section className="rounded-2xl bg-card p-5 shadow-soft">
