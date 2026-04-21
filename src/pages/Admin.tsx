@@ -444,10 +444,10 @@ const Admin = () => {
           <div className="flex min-w-0 flex-1 items-center gap-2 md:hidden">
             {currentSection && (
               <>
-                <currentSection.icon className="h-4 w-4 shrink-0 text-primary" />
-                <h1 className="truncate font-display text-base font-bold">{currentSection.label}</h1>
+                <currentSection.icon className="h-3.5 w-3.5 shrink-0 text-primary" />
+                <h1 className="truncate font-display text-sm font-bold leading-tight">{currentSection.label}</h1>
                 {tab === "orders" && pendingCount > 0 && (
-                  <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground animate-pulse">
+                  <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground animate-pulse">
                     {pendingCount}
                   </span>
                 )}
@@ -501,12 +501,12 @@ const Admin = () => {
       </header>
 
       <div className="container py-3 md:py-6">
-        <div className="mb-4 rounded-2xl gradient-primary p-3 text-primary-foreground shadow-soft md:mb-6 md:p-5">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+        <div className="mb-4 rounded-2xl gradient-primary p-2 text-primary-foreground shadow-soft md:mb-6 md:p-5">
+          <div className="grid grid-cols-4 gap-1 md:grid-cols-4 md:gap-4">
             <KpiBlock icon={DollarSign} label="Faturamento" value={`R$ ${kpis.revenue.toFixed(2).replace(".", ",")}`} />
             <KpiBlock icon={ShoppingBag} label="Pedidos" value={String(kpis.count)} divider />
-            <KpiBlock icon={Package} label="Em andamento" value={String(kpis.active)} divider />
-            <KpiBlock icon={TrendingUp} label="Ticket médio" value={`R$ ${kpis.avg.toFixed(2).replace(".", ",")}`} divider />
+            <KpiBlock icon={Package} label="Andamento" value={String(kpis.active)} divider />
+            <KpiBlock icon={TrendingUp} label="Ticket" value={`R$ ${kpis.avg.toFixed(0)}`} divider />
           </div>
         </div>
 
@@ -584,11 +584,11 @@ const KpiBlock = ({
   divider?: boolean;
 }) => (
   <div className={divider ? "md:border-l md:border-primary-foreground/20 md:pl-4" : ""}>
-    <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider opacity-80">
-      <Icon className="h-3.5 w-3.5" />
-      {label}
+    <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider opacity-80 md:text-[11px] md:gap-1.5">
+      <Icon className="h-3 w-3 md:h-3.5 md:w-3.5" />
+      <span className="truncate">{label}</span>
     </div>
-    <div className="mt-1 font-display text-2xl font-bold leading-tight">{value}</div>
+    <div className="mt-0.5 font-display text-sm font-bold leading-tight md:mt-1 md:text-2xl">{value}</div>
   </div>
 );
 
