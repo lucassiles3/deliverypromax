@@ -155,6 +155,15 @@ const Index = () => {
   );
   const outOfRangeCount = enriched.length - inRangeStores.length;
 
+  // Fallback: se temos coords mas NENHUMA loja está no raio, mostra a mais próxima
+  const nearestFallback = useMemo(() => {
+    if (!coords || inRangeStores.length > 0) return null;
+    const withDistance = enriched
+      .filter((s) => s._distance !== null)
+      .sort((a, b) => (a._distance! - b._distance!));
+    return withDistance[0] ?? null;
+  }, [coords, inRangeStores, enriched]);
+
   const filtered = useMemo(() => {
     let list = showOutOfRange ? enriched : inRangeStores;
     if (activeCat) {
