@@ -501,12 +501,12 @@ const Admin = () => {
       </header>
 
       <div className="container py-3 md:py-6">
-        <div className="mb-4 rounded-2xl gradient-primary p-3 text-primary-foreground shadow-soft md:mb-6 md:p-5">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+        <div className="mb-4 rounded-2xl gradient-primary p-2 text-primary-foreground shadow-soft md:mb-6 md:p-5">
+          <div className="grid grid-cols-4 gap-1 md:grid-cols-4 md:gap-4">
             <KpiBlock icon={DollarSign} label="Faturamento" value={`R$ ${kpis.revenue.toFixed(2).replace(".", ",")}`} />
             <KpiBlock icon={ShoppingBag} label="Pedidos" value={String(kpis.count)} divider />
-            <KpiBlock icon={Package} label="Em andamento" value={String(kpis.active)} divider />
-            <KpiBlock icon={TrendingUp} label="Ticket médio" value={`R$ ${kpis.avg.toFixed(2).replace(".", ",")}`} divider />
+            <KpiBlock icon={Package} label="Andamento" value={String(kpis.active)} divider />
+            <KpiBlock icon={TrendingUp} label="Ticket" value={`R$ ${kpis.avg.toFixed(0)}`} divider />
           </div>
         </div>
 
