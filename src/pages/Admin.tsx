@@ -100,6 +100,7 @@ const Admin = () => {
   const [productSearch, setProductSearch] = useState("");
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const playDing = () => {
     if (!soundEnabled) return;
