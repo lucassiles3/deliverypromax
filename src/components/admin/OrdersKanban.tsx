@@ -35,6 +35,7 @@ import { OrderDetailsModal } from "./OrderDetailsModal";
 import { CancelOrderModal } from "./CancelOrderModal";
 import { OrdersHistory } from "./OrdersHistory";
 import { printReceipt, type PrintData } from "@/lib/printReceipt";
+import { StaleCouriersAlert } from "./StaleCouriersAlert";
 
 type DbStatus =
   | "pending_payment"
@@ -463,6 +464,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
         <OrdersHistory storeId={storeId} />
       ) : (
         <>
+      <div className="mb-4"><StaleCouriersAlert storeId={storeId} /></div>
       {totalActive === 0 && (
         <div className="mb-4 rounded-2xl border-2 border-dashed border-border bg-card p-6 text-center">
           <Bell className="mx-auto h-8 w-8 text-muted-foreground" />

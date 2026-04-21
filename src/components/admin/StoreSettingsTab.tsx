@@ -650,7 +650,7 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
       const { data, error } = await supabase
         .from("stores")
         .select(
-          "delivery_mode, delivery_radius_km, delivery_fee, delivery_fee_per_km, free_shipping_threshold, min_order, delivery_time, courier_mode, pickup_enabled, pickup_prep_time_min",
+          "delivery_mode, delivery_radius_km, delivery_fee, delivery_fee_per_km, free_shipping_threshold, min_order, delivery_time, courier_mode, pickup_enabled, pickup_prep_time_min, courier_gps_alert_min, courier_gps_reassign_min",
         )
         .eq("id", storeId)
         .maybeSingle();
@@ -839,6 +839,30 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
               </div>
             )}
           </div>
+        </div>
+      </Card>
+
+      <Card title="Monitoramento de GPS dos entregadores" icon={MapPin}>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Define quando o painel deve alertar sobre entregadores que pararam de enviar a localização e quando o sistema pode liberar o pedido automaticamente para reatribuição.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="⚠️ Alerta após (minutos sem GPS)">
+            <Input
+              type="number"
+              min={1}
+              value={form.courier_gps_alert_min ?? 5}
+              onChange={(e) => setForm({ ...form, courier_gps_alert_min: Number(e.target.value) })}
+            />
+          </Field>
+          <Field label="🔁 Reatribuir automaticamente após (minutos)">
+            <Input
+              type="number"
+              min={1}
+              value={form.courier_gps_reassign_min ?? 10}
+              onChange={(e) => setForm({ ...form, courier_gps_reassign_min: Number(e.target.value) })}
+            />
+          </Field>
         </div>
       </Card>
 

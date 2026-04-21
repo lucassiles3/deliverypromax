@@ -523,6 +523,67 @@ export type Database = {
           },
         ]
       }
+      courier_location_history: {
+        Row: {
+          accuracy: number | null
+          courier_id: string
+          heading: number | null
+          id: string
+          lat: number
+          lng: number
+          order_id: string
+          recorded_at: string
+          speed: number | null
+          store_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          courier_id: string
+          heading?: number | null
+          id?: string
+          lat: number
+          lng: number
+          order_id: string
+          recorded_at?: string
+          speed?: number | null
+          store_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          courier_id?: string
+          heading?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          order_id?: string
+          recorded_at?: string
+          speed?: number | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_location_history_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_location_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_location_history_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courier_locations: {
         Row: {
           accuracy: number | null
@@ -1836,6 +1897,8 @@ export type Database = {
           autocancel_min: number
           categories: string[] | null
           city: string | null
+          courier_gps_alert_min: number
+          courier_gps_reassign_min: number
           courier_mode: string
           cover_url: string | null
           created_at: string
@@ -1894,6 +1957,8 @@ export type Database = {
           autocancel_min?: number
           categories?: string[] | null
           city?: string | null
+          courier_gps_alert_min?: number
+          courier_gps_reassign_min?: number
           courier_mode?: string
           cover_url?: string | null
           created_at?: string
@@ -1952,6 +2017,8 @@ export type Database = {
           autocancel_min?: number
           categories?: string[] | null
           city?: string | null
+          courier_gps_alert_min?: number
+          courier_gps_reassign_min?: number
           courier_mode?: string
           cover_url?: string | null
           created_at?: string
@@ -2651,6 +2718,10 @@ export type Database = {
       is_store_owner: {
         Args: { _store_id: string; _user_id: string }
         Returns: boolean
+      }
+      reassign_stale_courier_orders: {
+        Args: { _store_id: string }
+        Returns: number
       }
       recalc_table_session: {
         Args: { _session_id: string }

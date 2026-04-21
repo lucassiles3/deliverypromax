@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Broadcasts the courier's GPS position to the courier_locations table while enabled.
+ * Also appends to courier_location_history for any orders currently 'out_for_delivery'.
  */
 export const useCourierLocationBroadcast = (
   courierId: string | null,
@@ -29,6 +30,7 @@ export const useCourierLocationBroadcast = (
         if (now - lastSent < 5000) return;
         lastSent = now;
         const { latitude, longitude, accuracy, heading, speed } = pos.coords;
+
         const { error: upErr } = await supabase.from("courier_locations").upsert(
           {
             courier_id: courierId,
@@ -42,10 +44,32 @@ export const useCourierLocationBroadcast = (
           },
           { onConflict: "courier_id" },
         );
-        if (upErr) setError(upErr.message);
-        else {
+        if (upErr) {
+          setError(upErr.message);
+        } else {
           setError(null);
           setLastUpdate(new Date());
+
+          // Append to history for active deliveries
+          const { data: activeOrders } = await supabase
+            .from("orders")
+            .select("id")
+            .eq("courier_id", courierId)
+            .eq("status", "out_for_delivery");
+
+          if (activeOrders && activeOrders.length > 0) {
+            const rows = activeOrders.map((o) => ({
+              order_id: o.id,
+              courier_id: courierId,
+              store_id: storeId,
+              lat: latitude,
+              lng: longitude,
+              accuracy,
+              heading,
+              speed,
+            }));
+            await supabase.from("courier_location_history").insert(rows);
+          }
         }
       },
       (err) => setError(err.message),
@@ -115,4 +139,41 @@ export const useCourierLocation = (courierId: string | null) => {
   }, [courierId]);
 
   return location;
+};
+
+export type CourierHistoryPoint = {
+  lat: number;
+  lng: number;
+  recorded_at: string;
+  accuracy: number | null;
+  speed: number | null;
+};
+
+/**
+ * Fetches the full GPS path for a given order.
+ */
+export const useCourierOrderHistory = (orderId: string | null, enabled = true) => {
+  const [points, setPoints] = useState<CourierHistoryPoint[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!orderId || !enabled) return;
+    let cancelled = false;
+    setLoading(true);
+    supabase
+      .from("courier_location_history")
+      .select("lat, lng, recorded_at, accuracy, speed")
+      .eq("order_id", orderId)
+      .order("recorded_at", { ascending: true })
+      .then(({ data }) => {
+        if (cancelled) return;
+        setPoints((data ?? []) as CourierHistoryPoint[]);
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId, enabled]);
+
+  return { points, loading };
 };
