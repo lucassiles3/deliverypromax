@@ -1,10 +1,19 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Search, Eye, Filter, Calendar } from "lucide-react";
+import { Search, Eye, Filter, Calendar, ChevronRight, X } from "lucide-react";
+import { toast } from "sonner";
 import { OrderDetailsModal } from "./OrderDetailsModal";
+
+const NEXT_STATUS: Partial<Record<DbStatus, { next: DbStatus; label: string }>> = {
+  pending_payment: { next: "received", label: "Confirmar pgto" },
+  received: { next: "preparing", label: "Iniciar preparo" },
+  preparing: { next: "ready", label: "Marcar pronto" },
+  ready: { next: "out_for_delivery", label: "Saiu p/ entrega" },
+  out_for_delivery: { next: "delivered", label: "Entregue" },
+};
 
 type DbStatus =
   | "pending_payment"
