@@ -24,18 +24,22 @@ export const ProductCard = ({ product, storeId, onOpen }: Props) => {
           height={300}
           className="h-full w-full object-cover transition-bounce group-hover:scale-110"
         />
-        {product.bestseller && (
-          <div className="absolute left-1 top-1 flex items-center gap-0.5 rounded-md bg-foreground/85 px-1.5 py-0.5 text-[10px] font-bold text-background backdrop-blur">
-            <Flame className="h-3 w-3 text-accent" /> Top
-          </div>
-        )}
-        {storeId && (
-          <FavoriteProductButton
-            productId={product.id}
-            storeId={storeId}
-            className="absolute right-1 top-1"
-          />
-        )}
+        
+        {/* Top badges row */}
+        <div className="absolute inset-x-2 top-2 flex items-start justify-between">
+          {product.bestseller && (
+            <div className="flex items-center gap-0.5 rounded-md bg-foreground/85 px-1.5 py-0.5 text-[10px] font-bold text-background backdrop-blur shadow-sm">
+              <Flame className="h-3 w-3 text-accent" /> Top
+            </div>
+          )}
+          {storeId && (
+            <FavoriteProductButton
+              productId={product.id}
+              storeId={storeId}
+              className="ml-auto"
+            />
+          )}
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col">
