@@ -266,6 +266,10 @@ const Checkout = () => {
       if (!address.cep || !address.street || !address.number)
         return toast.error("Preencha o endereço");
       if (!coords) return toast.error("Marque sua localização no mapa");
+      if (outOfDeliveryRange)
+        return toast.error(
+          `Endereço fora da área de entrega (${formatDistance(deliveryDistance!)} — máx. ${deliveryRadius} km)`,
+        );
     }
     if (payment === "cash" && changeFor) {
       const v = parseFloat(changeFor.replace(",", "."));
