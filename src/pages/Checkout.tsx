@@ -893,9 +893,19 @@ const Checkout = () => {
                     <p className="font-bold text-destructive">Fora da área de entrega</p>
                     <p className="mt-0.5 text-muted-foreground">
                       Você está a <strong>{formatDistance(deliveryDistance!)}</strong> da loja —
-                      ela entrega em até <strong>{deliveryRadius} km</strong>. Escolha{" "}
-                      <strong>retirada na loja</strong> ou outro endereço.
+                      ela entrega em até <strong>{deliveryRadius} km</strong>.
                     </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMethod("pickup");
+                        toast.success("Trocamos para retirada na loja — seu carrinho foi preservado ✅");
+                      }}
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-bold text-background transition-smooth hover:opacity-90"
+                    >
+                      <StoreIcon className="h-3.5 w-3.5" />
+                      Trocar para retirada na loja
+                    </button>
                   </div>
                 )}
                 <Button
