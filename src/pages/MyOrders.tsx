@@ -81,6 +81,11 @@ const MyOrders = () => {
       </header>
 
       <div className="container max-w-3xl py-6">
+        <AdBanner
+          slotId={import.meta.env.VITE_ADSENSE_SLOT_ORDERS}
+          variant="leaderboard"
+          label="Banner meus pedidos — topo"
+        />
         {orders.length === 0 ? (
           <div className="rounded-2xl bg-card p-12 text-center shadow-soft">
             <Package className="mx-auto h-12 w-12 text-muted-foreground" />
