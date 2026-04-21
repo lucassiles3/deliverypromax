@@ -401,19 +401,30 @@ const Mesa = () => {
                   </div>
                 </div>
 
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-14 w-full text-base"
-                  onClick={() => call("bill")}
-                  disabled={sent === "bill"}
-                >
-                  {sent === "bill" ? (
-                    <><Check className="mr-2 h-5 w-5" />Aviso enviado ao garçom</>
-                  ) : (
-                    <><Receipt className="mr-2 h-5 w-5" />Pedir a conta</>
-                  )}
-                </Button>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Button
+                    size="lg"
+                    className="h-14 w-full text-base"
+                    onClick={payWithPix}
+                    disabled={pixLoading}
+                  >
+                    <QrCode className="mr-2 h-5 w-5" />
+                    {pixLoading ? "Gerando…" : "Pagar com PIX"}
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-14 w-full text-base"
+                    onClick={() => call("bill")}
+                    disabled={sent === "bill"}
+                  >
+                    {sent === "bill" ? (
+                      <><Check className="mr-2 h-5 w-5" />Aviso enviado</>
+                    ) : (
+                      <><Receipt className="mr-2 h-5 w-5" />Chamar garçom</>
+                    )}
+                  </Button>
+                </div>
               </>
             )}
           </div>
