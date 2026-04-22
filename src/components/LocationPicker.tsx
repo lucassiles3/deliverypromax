@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -43,7 +43,6 @@ interface LocationPickerProps {
 export const LocationPicker = ({ value, onChange, defaultCenter }: LocationPickerProps) => {
   const [locating, setLocating] = useState(false);
   const center = value ?? defaultCenter ?? { lat: -23.5505, lng: -46.6333 };
-  const markerRef = useRef<L.Marker>(null);
 
   const useMyLocation = () => {
     if (!navigator.geolocation) return;
@@ -93,11 +92,9 @@ export const LocationPicker = ({ value, onChange, defaultCenter }: LocationPicke
               position={[value.lat, value.lng]}
               icon={icon}
               draggable
-              ref={markerRef}
               eventHandlers={{
-                dragend: () => {
-                  const m = markerRef.current;
-                  if (!m) return;
+                dragend: (e) => {
+                  const m = e.target as L.Marker;
                   const { lat, lng } = m.getLatLng();
                   onChange({ lat, lng });
                 },
