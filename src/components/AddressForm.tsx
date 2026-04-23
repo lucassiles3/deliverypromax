@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { Crosshair, Loader2, Search } from "lucide-react";
+import { Crosshair, Loader2, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { LocationPicker } from "@/components/LocationPicker";
 import { lookupCep, formatCep, reverseGeocode, geocodeAddress } from "@/lib/cep";
 import { toast } from "@/hooks/use-toast";
 import type { AddressInput } from "@/hooks/useAddresses";
@@ -170,13 +169,59 @@ export const AddressForm = ({
         </p>
       </div>
 
-      <LocationPicker
-        value={value.lat && value.lng ? { lat: value.lat, lng: value.lng } : null}
-        onChange={(c) => {
-          vibrate(15);
-          applyReverse(c.lat, c.lng);
-        }}
-      />
+      <div className="rounded-xl border border-border bg-card p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="flex items-center gap-1.5 text-sm font-semibold">
+              <MapPin className="h-4 w-4 text-primary" />
+              Localização para entrega
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Use GPS, busca por endereço ou informe latitude e longitude manualmente.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <div>
+            <Label>Latitude</Label>
+            <Input
+              type="number"
+              inputMode="decimal"
+              step="any"
+              value={value.lat ?? ""}
+              onChange={(e) => set({ lat: e.target.value === "" ? null : Number(e.target.value) })}
+              placeholder="-23.550520"
+            />
+          </div>
+          <div>
+            <Label>Longitude</Label>
+            <Input
+              type="number"
+              inputMode="decimal"
+              step="any"
+              value={value.lng ?? ""}
+              onChange={(e) => set({ lng: e.target.value === "" ? null : Number(e.target.value) })}
+              placeholder="-46.633308"
+            />
+          </div>
+        </div>
+
+        {value.lat != null && value.lng != null && (
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-3 w-full"
+            onClick={() => {
+              vibrate(15);
+              applyReverse(value.lat as number, value.lng as number);
+            }}
+          >
+            <MapPin className="mr-1.5 h-4 w-4" />
+            Atualizar endereço pelas coordenadas
+          </Button>
+        )}
+      </div>
 
       <div>
         <Label>Tipo</Label>
