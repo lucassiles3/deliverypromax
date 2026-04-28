@@ -365,6 +365,9 @@ const Admin = () => {
                     </option>
                   ))}
                 </select>
+                <div className="mt-3">
+                  <StoreOpenToggle storeId={storeId} variant="inline" className="w-full justify-center" />
+                </div>
 
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <button
