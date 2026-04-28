@@ -108,17 +108,17 @@ const Store = () => {
               <PopoverTrigger asChild>
                 <button
                   className={`hidden shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-bounce hover:scale-105 md:flex ${
-                    isStoreOpen(store.openingHours)
+                    store.open && isStoreOpen(store.openingHours)
                       ? "bg-success/10 text-success"
                       : "bg-destructive/10 text-destructive"
                   }`}
                 >
                   <span
                     className={`h-2 w-2 rounded-full ${
-                      isStoreOpen(store.openingHours) ? "animate-pulse bg-success" : "bg-destructive"
+                      store.open && isStoreOpen(store.openingHours) ? "animate-pulse bg-success" : "bg-destructive"
                     }`}
                   />
-                  {isStoreOpen(store.openingHours) ? "Aberto agora" : "Fechado"}
+                  {store.open && isStoreOpen(store.openingHours) ? "Aberto agora" : "Fechado"}
                   <Clock className="h-3.5 w-3.5 opacity-70" />
                 </button>
               </PopoverTrigger>
@@ -132,11 +132,15 @@ const Store = () => {
                     </li>
                   ))}
                 </ul>
-                {!isStoreOpen(store.openingHours) && (
+                {!store.open ? (
+                  <p className="mt-2 rounded-md bg-destructive/10 p-2 text-xs font-bold text-destructive">
+                    Loja temporariamente fechada pelo lojista
+                  </p>
+                ) : !isStoreOpen(store.openingHours) ? (
                   <p className="mt-2 rounded-md bg-muted p-2 text-xs font-bold text-foreground">
                     {nextOpeningLabel(store.openingHours)}
                   </p>
-                )}
+                ) : null}
               </PopoverContent>
             </Popover>
           </div>
