@@ -251,6 +251,9 @@ const Checkout = () => {
 
   const proceed = () => {
     if (!store) return;
+    if (!store.open) {
+      return toast.error("A loja está temporariamente fechada pelo lojista. Tente novamente em alguns minutos.");
+    }
     if (!isStoreOpen(store.openingHours)) {
       return toast.error("A loja está fechada no momento. Tente novamente no horário de funcionamento.");
     }
