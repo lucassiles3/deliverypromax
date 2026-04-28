@@ -69,6 +69,7 @@ const PDV = () => {
           <span className="text-border">|</span>
           <h1 className="font-display text-lg font-bold">PDV — Balcão</h1>
           <div className="ml-auto flex items-center gap-2">
+            <StoreOpenToggle storeId={storeId} variant="inline" />
             <select
               value={storeId ?? ""}
               onChange={(e) => setStoreId(e.target.value)}
