@@ -579,6 +579,8 @@ const Admin = () => {
           onClose={() => setHistoryPhone(null)}
         />
       )}
+
+      {storeId && currentRole === "owner" && <StoreOpenToggle storeId={storeId} />}
     </div>
   );
 };
