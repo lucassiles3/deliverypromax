@@ -115,6 +115,8 @@ const PDV = () => {
           </div>
         )
       )}
+
+      {storeId && role === "owner" && <StoreOpenToggle storeId={storeId} />}
     </div>
   );
 };
