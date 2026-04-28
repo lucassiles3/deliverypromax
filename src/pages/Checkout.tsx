@@ -251,37 +251,129 @@ const Checkout = () => {
 
   const proceed = () => {
     if (!store) return;
+
+    // 1) Loja fechada (manual)
     if (!store.open) {
-      return toast.error("A loja está temporariamente fechada pelo lojista. Tente novamente em alguns minutos.");
+      return toast.error("Loja fechada pelo lojista", {
+        description: "O lojista fechou a loja temporariamente. Tente novamente em alguns minutos.",
+      });
     }
+    // 2) Loja fora do horário
     if (!isStoreOpen(store.openingHours)) {
-      return toast.error("A loja está fechada no momento. Tente novamente no horário de funcionamento.");
+      return toast.error("Loja fora do horário de funcionamento", {
+        description: "Volte durante os horários de atendimento para finalizar seu pedido.",
+      });
     }
+    // 3) Login obrigatório
     if (!user) {
-      toast.error("Faça login para finalizar o pedido");
+      toast.error("Faça login para continuar", {
+        description: "Você precisa estar logado para finalizar o pedido. Vamos te levar para o login.",
+      });
       navigate("/auth");
       return;
     }
-    if (subtotal < store.minOrder)
-      return toast.error(`Pedido mínimo: R$ ${store.minOrder.toFixed(2).replace(".", ",")}`);
-    if (!name.trim() || !phone.trim()) return toast.error("Preencha nome e telefone");
+    // 4) Pedido mínimo
+    if (subtotal < store.minOrder) {
+      const falta = (store.minOrder - subtotal).toFixed(2).replace(".", ",");
+      return toast.error("Pedido abaixo do mínimo", {
+        description: `Pedido mínimo: R$ ${store.minOrder.toFixed(2).replace(".", ",")}. Faltam R$ ${falta} para fechar o pedido.`,
+      });
+    }
+    // 5) Contato
+    if (!name.trim() && !phone.trim()) {
+      return toast.error("Informe seus dados de contato", {
+        description: "Preencha seu nome completo e WhatsApp para a loja entrar em contato.",
+      });
+    }
+    if (!name.trim()) {
+      return toast.error("Nome obrigatório", {
+        description: "Digite seu nome completo no campo 'Nome'.",
+      });
+    }
+    if (!phone.trim()) {
+      return toast.error("WhatsApp obrigatório", {
+        description: "Digite um número de WhatsApp válido para confirmação do pedido.",
+      });
+    }
+    if (phone.replace(/\D/g, "").length < 10) {
+      return toast.error("WhatsApp inválido", {
+        description: "Informe um número com DDD, ex: (11) 99999-9999.",
+      });
+    }
+
+    // 6) Endereço (apenas entrega)
     if (method === "delivery") {
-      if (!address.cep || !address.street || !address.number)
-        return toast.error("Preencha o endereço");
-      if (!coords) return toast.error("Marque sua localização no mapa");
-      if (outOfDeliveryRange)
-        return toast.error(
-          `Endereço fora da área de entrega (${formatDistance(deliveryDistance!)} — máx. ${deliveryRadius} km)`,
-        );
+      if (!address.cep) {
+        return toast.error("CEP obrigatório", {
+          description: "Informe o CEP da entrega ou use o GPS para detectar sua localização.",
+        });
+      }
+      if (address.cep.replace(/\D/g, "").length !== 8) {
+        return toast.error("CEP inválido", {
+          description: "O CEP deve conter 8 dígitos. Confira e tente novamente.",
+        });
+      }
+      if (!address.street.trim()) {
+        return toast.error("Rua obrigatória", {
+          description: "Preencha o nome da rua para a entrega.",
+        });
+      }
+      if (!address.number.trim()) {
+        return toast.error("Número obrigatório", {
+          description: "Informe o número da residência (ou 'S/N' se não houver).",
+        });
+      }
+      if (!address.neighborhood.trim()) {
+        return toast.error("Bairro obrigatório", {
+          description: "Preencha o bairro para a entrega.",
+        });
+      }
+      if (!coords) {
+        return toast.error("Marque sua localização no mapa", {
+          description: "Toque em 'Usar minha localização' ou ajuste o pino no mapa para confirmar o endereço.",
+        });
+      }
+      if (outOfDeliveryRange) {
+        return toast.error("Fora da área de entrega", {
+          description: `Seu endereço está a ${formatDistance(deliveryDistance!)} da loja. Máximo permitido: ${deliveryRadius} km. Tente retirar na loja.`,
+        });
+      }
+    }
+
+    // 7) Forma de pagamento
+    if (!payment) {
+      return toast.error("Escolha a forma de pagamento", {
+        description: "Selecione uma das formas de pagamento disponíveis para continuar.",
+      });
+    }
+    if (!enabledMethods[payment === "credit_link" ? "credit_link" : payment]) {
+      return toast.error("Forma de pagamento indisponível", {
+        description: "A loja não aceita esta forma de pagamento. Escolha outra opção.",
+      });
+    }
+    if (payment === "credit_link" && !creditLinkEnabled) {
+      return toast.error("Link de pagamento indisponível", {
+        description: "A loja não configurou o link de pagamento. Escolha outra forma.",
+      });
     }
     if (payment === "cash" && changeFor) {
       const v = parseFloat(changeFor.replace(",", "."));
-      if (isNaN(v) || v < total) return toast.error("Troco deve ser maior ou igual ao total");
+      if (isNaN(v)) {
+        return toast.error("Valor de troco inválido", {
+          description: "Informe um valor numérico para o troco, ex: 50,00.",
+        });
+      }
+      if (v < total) {
+        return toast.error("Troco insuficiente", {
+          description: `O valor para troco (R$ ${v.toFixed(2).replace(".", ",")}) deve ser maior ou igual ao total do pedido (R$ ${total.toFixed(2).replace(".", ",")}).`,
+        });
+      }
     }
+
+    // Tudo certo — segue o fluxo
     if (payment === "pix") {
       setStep("pix");
     } else {
-      // Cash / card on delivery → confirm directly
       void confirmPayment();
     }
   };
