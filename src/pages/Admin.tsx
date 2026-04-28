@@ -64,6 +64,7 @@ import { TablesTab } from "@/components/admin/TablesTab";
 import { CouriersTab } from "@/components/admin/CouriersTab";
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 import { useStoreToggles } from "@/hooks/useStoreToggles";
+import { StoreOpenToggle } from "@/components/admin/StoreOpenToggle";
 import { Printer } from "lucide-react";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
