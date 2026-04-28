@@ -5,15 +5,16 @@ const DAY_LABELS: Record<keyof OpeningHours, string> = {
   sun: "Dom", mon: "Seg", tue: "Ter", wed: "Qua", thu: "Qui", fri: "Sex", sat: "Sáb",
 };
 
-const toMin = (hhmm: string) => {
+const toMin = (hhmm?: string) => {
+  if (!hhmm || typeof hhmm !== "string" || !hhmm.includes(":")) return 0;
   const [h, m] = hhmm.split(":").map(Number);
-  return h * 60 + m;
+  return (h || 0) * 60 + (m || 0);
 };
 
 export const isStoreOpen = (hours?: OpeningHours, now: Date = new Date()): boolean => {
   if (!hours) return true;
   const today = hours[DAY_KEYS[now.getDay()]];
-  if (!today) return false;
+  if (!today || !today.open || !today.close) return false;
   const cur = now.getHours() * 60 + now.getMinutes();
   const open = toMin(today.open);
   const close = toMin(today.close);
@@ -27,7 +28,7 @@ export const nextOpeningLabel = (hours?: OpeningHours, now: Date = new Date()): 
   for (let i = 1; i <= 7; i++) {
     const idx = (now.getDay() + i) % 7;
     const d = hours[DAY_KEYS[idx]];
-    if (d) return `Abre ${DAY_LABELS[DAY_KEYS[idx]]} às ${d.open}`;
+    if (d && d.open) return `Abre ${DAY_LABELS[DAY_KEYS[idx]]} às ${d.open}`;
   }
   return "Temporariamente fechada";
 };
@@ -36,6 +37,6 @@ export const formatHoursList = (hours?: OpeningHours): { day: string; range: str
   if (!hours) return [];
   return DAY_KEYS.map((k) => ({
     day: DAY_LABELS[k],
-    range: hours[k] ? `${hours[k]!.open} – ${hours[k]!.close}` : "Fechado",
+    range: hours[k]?.open && hours[k]?.close ? `${hours[k]!.open} – ${hours[k]!.close}` : "Fechado",
   }));
 };
