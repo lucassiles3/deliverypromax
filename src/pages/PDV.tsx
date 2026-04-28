@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 import { useStoreToggles } from "@/hooks/useStoreToggles";
 import { PDVTab } from "@/components/admin/PDVTab";
+import { StoreOpenToggle } from "@/components/admin/StoreOpenToggle";
 
 const PDV = () => {
   const { user, loading } = useAuth();
