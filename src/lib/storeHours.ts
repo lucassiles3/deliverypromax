@@ -28,7 +28,7 @@ export const nextOpeningLabel = (hours?: OpeningHours, now: Date = new Date()): 
   for (let i = 1; i <= 7; i++) {
     const idx = (now.getDay() + i) % 7;
     const d = hours[DAY_KEYS[idx]];
-    if (d) return `Abre ${DAY_LABELS[DAY_KEYS[idx]]} às ${d.open}`;
+    if (d && d.open) return `Abre ${DAY_LABELS[DAY_KEYS[idx]]} às ${d.open}`;
   }
   return "Temporariamente fechada";
 };
@@ -37,6 +37,6 @@ export const formatHoursList = (hours?: OpeningHours): { day: string; range: str
   if (!hours) return [];
   return DAY_KEYS.map((k) => ({
     day: DAY_LABELS[k],
-    range: hours[k] ? `${hours[k]!.open} – ${hours[k]!.close}` : "Fechado",
+    range: hours[k]?.open && hours[k]?.close ? `${hours[k]!.open} – ${hours[k]!.close}` : "Fechado",
   }));
 };
