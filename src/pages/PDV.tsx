@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 import { useStoreToggles } from "@/hooks/useStoreToggles";
 import { PDVTab } from "@/components/admin/PDVTab";
+import { StoreOpenToggle } from "@/components/admin/StoreOpenToggle";
 
 const PDV = () => {
   const { user, loading } = useAuth();
@@ -68,6 +69,7 @@ const PDV = () => {
           <span className="text-border">|</span>
           <h1 className="font-display text-lg font-bold">PDV — Balcão</h1>
           <div className="ml-auto flex items-center gap-2">
+            <StoreOpenToggle storeId={storeId} variant="inline" />
             <select
               value={storeId ?? ""}
               onChange={(e) => setStoreId(e.target.value)}
@@ -113,6 +115,8 @@ const PDV = () => {
           </div>
         )
       )}
+
+      {storeId && role === "owner" && <StoreOpenToggle storeId={storeId} />}
     </div>
   );
 };

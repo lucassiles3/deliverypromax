@@ -64,6 +64,7 @@ import { TablesTab } from "@/components/admin/TablesTab";
 import { CouriersTab } from "@/components/admin/CouriersTab";
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 import { useStoreToggles } from "@/hooks/useStoreToggles";
+import { StoreOpenToggle } from "@/components/admin/StoreOpenToggle";
 import { Printer } from "lucide-react";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
@@ -364,6 +365,9 @@ const Admin = () => {
                     </option>
                   ))}
                 </select>
+                <div className="mt-3">
+                  <StoreOpenToggle storeId={storeId} variant="inline" className="w-full justify-center" />
+                </div>
 
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <button
@@ -579,6 +583,8 @@ const Admin = () => {
           onClose={() => setHistoryPhone(null)}
         />
       )}
+
+      {storeId && currentRole === "owner" && <StoreOpenToggle storeId={storeId} />}
     </div>
   );
 };
