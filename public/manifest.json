@@ -1,11 +1,11 @@
 {
-  "name": "FoodFlash",
-  "short_name": "FoodFlash",
+  "name": "Itchat Brasil",
+  "short_name": "Itchat Brasil",
   "description": "Peça comida em minutos",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#FF4500",
+  "theme_color": "#9996f1",
   "icons": [
     {
       "src": "/placeholder.svg",

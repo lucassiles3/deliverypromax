@@ -181,7 +181,7 @@ export const FinancialTab = ({ storeId, storeName }: { storeId: string; storeNam
       <h1>${title}</h1>
       <div class="sub">${storeName} • Emitido em ${new Date().toLocaleString("pt-BR")}</div>
       ${lines.join("")}
-      <div class="foot">Documento gerado pelo FoodFlash. Não substitui Nota Fiscal Eletrônica oficial.</div>
+      <div class="foot">Documento gerado pelo Itchat Brasil. Não substitui Nota Fiscal Eletrônica oficial.</div>
       </body></html>`;
     const w = window.open("", "_blank");
     if (!w) return toast.error("Permita pop-ups para gerar o PDF");
@@ -242,7 +242,7 @@ export const FinancialTab = ({ storeId, storeName }: { storeId: string; storeNam
       .filter((o) => o.status === "delivered")
       .reduce((s, o) => s + Number(o.total), 0);
     exportPDF(`Declaração de Faturamento`, [
-      `<p>Declaramos para os devidos fins que o estabelecimento <strong>${storeName}</strong> apurou, no período de ${fmtDate(from)} a ${fmtDate(to)}, o faturamento bruto total de <strong>${fmt(totGross)}</strong>, considerando exclusivamente os pedidos efetivamente entregues através da plataforma FoodFlash.</p>
+      `<p>Declaramos para os devidos fins que o estabelecimento <strong>${storeName}</strong> apurou, no período de ${fmtDate(from)} a ${fmtDate(to)}, o faturamento bruto total de <strong>${fmt(totGross)}</strong>, considerando exclusivamente os pedidos efetivamente entregues através da plataforma Itchat Brasil.</p>
        <p>Quantidade de pedidos entregues: <strong>${orders.filter((o) => o.status === "delivered").length}</strong></p>
        <p>Taxa de marketplace praticada no período: <strong>${feePct}%</strong></p>`,
     ]);
@@ -487,10 +487,10 @@ export const FinancialTab = ({ storeId, storeName }: { storeId: string; storeNam
           <DocCard
             icon={FileText}
             title="Contrato com o marketplace"
-            desc="Termo padrão FoodFlash"
+            desc="Termo padrão Itchat Brasil"
             onClick={() =>
-              exportPDF("Contrato de credenciamento — FoodFlash", [
-                `<p>Pelo presente instrumento, <strong>${storeName}</strong> ("Estabelecimento") credencia-se à plataforma FoodFlash para intermediação de pedidos.</p>
+              exportPDF("Contrato de credenciamento — Itchat Brasil", [
+                `<p>Pelo presente instrumento, <strong>${storeName}</strong> ("Estabelecimento") credencia-se à plataforma Itchat Brasil para intermediação de pedidos.</p>
                  <p><strong>1.</strong> A plataforma cobrará taxa de <strong>${feePct}%</strong> sobre o valor bruto de cada pedido entregue.</p>
                  <p><strong>2.</strong> Os repasses ocorrerão semanalmente, em até 2 dias úteis após o encerramento do período.</p>
                  <p><strong>3.</strong> O Estabelecimento é o único responsável pela emissão das notas fiscais aos consumidores finais.</p>
@@ -503,7 +503,7 @@ export const FinancialTab = ({ storeId, storeName }: { storeId: string; storeNam
             title={`Política de taxas (${feePct}%)`}
             desc="Taxa vigente do marketplace"
             onClick={() =>
-              exportPDF("Política de Taxas — FoodFlash", [
+              exportPDF("Política de Taxas — Itchat Brasil", [
                 `<p>A taxa de marketplace vigente para <strong>${storeName}</strong> é de <strong>${feePct}%</strong> sobre o valor bruto de cada pedido entregue.</p>
                  <p>A taxa é debitada automaticamente no momento da composição de cada repasse semanal.</p>
                  <p>Alterações de taxa são comunicadas com 30 dias de antecedência.</p>`,
