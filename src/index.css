@@ -56,7 +56,7 @@
     /* Shadows */
     --shadow-soft: 0 2px 12px -2px hsl(20 14% 10% / 0.08);
     --shadow-card: 0 4px 20px -4px hsl(20 14% 10% / 0.12);
-    --shadow-glow: 0 8px 32px -8px hsl(16 92% 54% / 0.5);
+    --shadow-glow: 0 8px 32px -8px hsl(242 76% 77% / 0.5);
     --shadow-float: 0 12px 40px -10px hsl(20 14% 10% / 0.2);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
