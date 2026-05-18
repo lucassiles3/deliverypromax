@@ -19,13 +19,13 @@
     --popover: 0 0% 100%;
     --popover-foreground: 20 14% 10%;
 
-    /* Brand: warm appetizing orange */
-    --primary: 16 92% 54%;
+    /* Brand: soft purple */
+    --primary: 242 76% 77%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 24 95% 62%;
+    --primary-glow: 242 85% 85%;
 
-    /* Deep red secondary for urgency */
-    --secondary: 0 78% 48%;
+    /* Deeper purple secondary */
+    --secondary: 242 60% 60%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 30 20% 95%;
