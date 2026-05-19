@@ -1380,6 +1380,9 @@ export type Database = {
           coupon_code: string | null
           coupon_discount: number
           courier_id: string | null
+          courier_tracking_notes: string | null
+          courier_tracking_provider: string | null
+          courier_tracking_url: string | null
           created_at: string
           customer_name: string
           customer_phone: string
@@ -1411,6 +1414,9 @@ export type Database = {
           coupon_code?: string | null
           coupon_discount?: number
           courier_id?: string | null
+          courier_tracking_notes?: string | null
+          courier_tracking_provider?: string | null
+          courier_tracking_url?: string | null
           created_at?: string
           customer_name: string
           customer_phone: string
@@ -1442,6 +1448,9 @@ export type Database = {
           coupon_code?: string | null
           coupon_discount?: number
           courier_id?: string | null
+          courier_tracking_notes?: string | null
+          courier_tracking_provider?: string | null
+          courier_tracking_url?: string | null
           created_at?: string
           customer_name?: string
           customer_phone?: string
@@ -2576,6 +2585,7 @@ export type Database = {
           instagram: string | null
           lat: number | null
           lng: number | null
+          logistics_pickup_enabled: boolean
           logo: string | null
           marketplace_fee_percent: number
           max_orders_per_hour: number | null
@@ -2636,6 +2646,7 @@ export type Database = {
           instagram?: string | null
           lat?: number | null
           lng?: number | null
+          logistics_pickup_enabled?: boolean
           logo?: string | null
           marketplace_fee_percent?: number
           max_orders_per_hour?: number | null
@@ -2696,6 +2707,7 @@ export type Database = {
           instagram?: string | null
           lat?: number | null
           lng?: number | null
+          logistics_pickup_enabled?: boolean
           logo?: string | null
           marketplace_fee_percent?: number
           max_orders_per_hour?: number | null
@@ -3414,7 +3426,7 @@ export type Database = {
       app_role: "admin" | "store_owner" | "customer"
       cancel_source: "store" | "system" | "customer" | "courier"
       coupon_type: "percent" | "fixed" | "free_shipping"
-      delivery_method: "delivery" | "pickup"
+      delivery_method: "delivery" | "pickup" | "logistics"
       kitchen_status:
         | "pending"
         | "preparing"
@@ -3570,7 +3582,7 @@ export const Constants = {
       app_role: ["admin", "store_owner", "customer"],
       cancel_source: ["store", "system", "customer", "courier"],
       coupon_type: ["percent", "fixed", "free_shipping"],
-      delivery_method: ["delivery", "pickup"],
+      delivery_method: ["delivery", "pickup", "logistics"],
       kitchen_status: [
         "pending",
         "preparing",
