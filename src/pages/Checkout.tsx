@@ -237,7 +237,7 @@ const Checkout = () => {
   const fee =
     !store
       ? 0
-      : method === "pickup"
+      : method !== "delivery"
         ? 0
         : subtotal >= store.freeShippingThreshold
           ? 0
@@ -502,9 +502,9 @@ const Checkout = () => {
           cashback_earned: earned,
           total,
           notes: orderNotes,
-          // PIX aguarda confirmação do gateway (webhook promove a "preparing").
-          // Demais formas entram direto na fila como "received".
-          status: payment === "pix" ? "pending_payment" : "received",
+          // PIX só fica em "pending_payment" se a loja tiver gateway integrado (MP/Asaas).
+          // Sem gateway, o PIX é confirmado manualmente — entra direto como "received".
+          status: payment === "pix" && pixGatewayActive ? "pending_payment" : "received",
         })
         .select("id")
         .single();
