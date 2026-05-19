@@ -1078,7 +1078,7 @@ const ImageDropper = ({
 );
 
 /* ---------- Link público da loja ---------- */
-const PublicLinkCard = ({ slug, name }: { storeId: string; slug?: string; name?: string }) => {
+export const PublicLinkCard = ({ slug, name, title = "Link público do cardápio", description = "Compartilhe este link para que clientes acessem o cardápio direto." }: { storeId: string; slug?: string; name?: string; title?: string; description?: string }) => {
   const [showQr, setShowQr] = useState(false);
   if (!slug) return null;
   const url = `${window.location.origin}/loja/${slug}`;
