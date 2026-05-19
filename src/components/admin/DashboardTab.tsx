@@ -956,8 +956,8 @@ const Kpi = ({
   );
 };
 
-const QuickAction = ({ icon: Icon, label }: { icon: typeof Plus; label: string }) => (
-  <button className="group flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1.5 text-xs font-bold transition-smooth hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-soft md:gap-2 md:px-4 md:py-2 md:text-sm">
+const QuickAction = ({ icon: Icon, label, onClick }: { icon: typeof Plus; label: string; onClick?: () => void }) => (
+  <button onClick={onClick} className="group flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1.5 text-xs font-bold transition-smooth hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-soft md:gap-2 md:px-4 md:py-2 md:text-sm">
     <Icon className="h-3.5 w-3.5 transition-transform group-hover:scale-110 md:h-4 md:w-4" />
     {label}
   </button>
