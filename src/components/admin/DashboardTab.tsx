@@ -80,7 +80,8 @@ const SOURCE_LABELS: Record<string, string> = {
   table: "Mesa",
 };
 
-export const DashboardTab = ({ storeId }: { storeId: string }) => {
+export const DashboardTab = ({ storeId, onNavigate }: { storeId: string; onNavigate?: (tab: string) => void }) => {
+  const go = (t: string) => onNavigate?.(t);
   const [, force] = useState(0);
   useEffect(() => {
     const t = setInterval(() => force((v) => v + 1), 30000);
