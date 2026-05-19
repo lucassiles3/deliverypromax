@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.webhook-dispatcher]
 verify_jwt = false
+
+[functions.chatbot-qr-receive]
+verify_jwt = false
