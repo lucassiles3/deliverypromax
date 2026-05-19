@@ -526,12 +526,12 @@ export const DashboardTab = ({ storeId, onNavigate }: { storeId: string; onNavig
 
       {/* Quick actions */}
       <section className="flex flex-wrap gap-2">
-        <QuickAction icon={Plus} label="Adicionar produto" />
-        <QuickAction icon={Tag} label="Criar cupom" />
-        <QuickAction icon={Megaphone} label="Abrir campanha" />
-        <QuickAction icon={ShoppingBag} label="Ver pedidos" />
-        <QuickAction icon={Banknote} label="Solicitar saque" />
-        <QuickAction icon={SettingsIcon} label="Configurar loja" />
+        <QuickAction icon={Plus} label="Adicionar produto" onClick={() => go("products")} />
+        <QuickAction icon={Tag} label="Criar cupom" onClick={() => go("marketing")} />
+        <QuickAction icon={Megaphone} label="Abrir campanha" onClick={() => go("marketing")} />
+        <QuickAction icon={ShoppingBag} label="Ver pedidos" onClick={() => go("orders")} />
+        <QuickAction icon={Banknote} label="Solicitar saque" onClick={() => go("financial")} />
+        <QuickAction icon={SettingsIcon} label="Configurar loja" onClick={() => go("store")} />
       </section>
 
       {/* HOJE */}
