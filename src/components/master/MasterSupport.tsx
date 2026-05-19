@@ -60,7 +60,7 @@ export default function MasterSupport() {
 
   const setStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("support_tickets").update({
-      status, resolved_at: status === "resolved" ? new Date().toISOString() : null,
+      status: status as any, resolved_at: status === "resolved" ? new Date().toISOString() : null,
     }).eq("id", id);
     if (error) return toast.error(error.message);
     load();
