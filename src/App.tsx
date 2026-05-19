@@ -1,4 +1,26 @@
 import { lazy, Suspense } from "react";
+
+// Auto-reload quando um chunk dinâmico antigo não puder ser carregado (após novo deploy)
+if (typeof window !== "undefined") {
+  const isChunkLoadError = (msg: string) =>
+    /Failed to fetch dynamically imported module|Importing a module script failed|ChunkLoadError/i.test(msg);
+  const reloadOnce = () => {
+    const key = "__chunk_reloaded_at";
+    const last = Number(sessionStorage.getItem(key) || 0);
+    if (Date.now() - last > 10000) {
+      sessionStorage.setItem(key, String(Date.now()));
+      window.location.reload();
+    }
+  };
+  window.addEventListener("error", (e) => {
+    if (e?.message && isChunkLoadError(e.message)) reloadOnce();
+  });
+  window.addEventListener("unhandledrejection", (e: PromiseRejectionEvent) => {
+    const msg = (e?.reason?.message || String(e?.reason || "")) as string;
+    if (isChunkLoadError(msg)) reloadOnce();
+  });
+}
+
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
