@@ -31,7 +31,7 @@ import { lookupCep, geocodeAddress, formatCep, reverseGeocode } from "@/lib/cep"
 import { distanceKm, formatDistance } from "@/lib/distance";
 import { toast } from "sonner";
 
-type Method = "delivery" | "pickup";
+type Method = "delivery" | "pickup" | "logistics";
 type PaymentMethod = "pix" | "cash" | "credit" | "debit" | "credit_link";
 
 const Checkout = () => {
@@ -88,6 +88,41 @@ const Checkout = () => {
     return () => {
       cancelled = true;
     };
+  }, [store?.id]);
+
+  // Verifica se a loja tem gateway PIX ativo (Mercado Pago / Asaas).
+  // Se NÃO houver gateway, o PIX é manual: o pedido cai direto em "received".
+  const [pixGatewayActive, setPixGatewayActive] = useState(false);
+  useEffect(() => {
+    if (!store?.id) return;
+    let cancelled = false;
+    supabase
+      .from("payment_gateways")
+      .select("id")
+      .eq("store_id", store.id)
+      .eq("active", true)
+      .in("provider", ["mercadopago", "asaas"])
+      .limit(1)
+      .then(({ data }) => {
+        if (!cancelled) setPixGatewayActive((data?.length ?? 0) > 0);
+      });
+    return () => { cancelled = true; };
+  }, [store?.id]);
+
+  // Detecta se a loja também aceita "retirada por app de logística"
+  const [logisticsEnabled, setLogisticsEnabled] = useState(false);
+  useEffect(() => {
+    if (!store?.id) return;
+    let cancelled = false;
+    supabase
+      .from("stores")
+      .select("logistics_pickup_enabled")
+      .eq("id", store.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setLogisticsEnabled(!!(data as any)?.logistics_pickup_enabled);
+      });
+    return () => { cancelled = true; };
   }, [store?.id]);
 
   const creditLinkTemplate = enabledMethods["credit_link"]?.notes ?? null;
