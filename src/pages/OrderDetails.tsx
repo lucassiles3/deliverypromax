@@ -654,4 +654,159 @@ const LiveCourierTracking = ({
   );
 };
 
+/* =========================================================================
+ * Logística por app (Uber/Lalamove/99/iFood Pegue&Leve, etc.)
+ *  - Mostra endereço da loja com botões de copiar
+ *  - Quando o pedido fica "pronto", cliente pode colar o link de rastreio
+ *    do entregador, opcionalmente o app usado e instruções.
+ *  - Salvar promove status para "out_for_delivery" e libera o link para o admin.
+ * =======================================================================*/
+const LogisticsPickupSection = ({
+  order,
+}: {
+  order: any;
+}) => {
+  const qc = useQueryClient();
+  const store = order.stores ?? {};
+  const fullAddress = [
+    store.address_street && `${store.address_street}${store.address_number ? `, ${store.address_number}` : ""}`,
+    store.address_complement,
+    store.address_neighborhood,
+    store.city,
+    store.address_cep && `CEP ${store.address_cep}`,
+  ]
+    .filter(Boolean)
+    .join(" • ");
+
+  const copy = (text: string, label: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copiado`);
+  };
+
+  const [provider, setProvider] = useState<string>(order.courier_tracking_provider ?? "");
+  const [url, setUrl] = useState<string>(order.courier_tracking_url ?? "");
+  const [note, setNote] = useState<string>(order.courier_tracking_notes ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const status = order.status as string;
+  const canSendCourier = status === "ready" || status === "out_for_delivery";
+  const alreadySent = !!order.courier_tracking_url;
+
+  const validUrl = (s: string) => {
+    try {
+      const u = new URL(s.trim());
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
+
+  const submit = async () => {
+    if (!validUrl(url)) {
+      return toast.error("Cole um link válido (https://...)");
+    }
+    setSaving(true);
+    try {
+      const patch: any = {
+        courier_tracking_url: url.trim(),
+        courier_tracking_provider: provider.trim() || null,
+        courier_tracking_notes: note.trim() || null,
+      };
+      // Sai para entrega ao registrar o entregador
+      if (status === "ready") patch.status = "out_for_delivery";
+      const { error } = await supabase.from("orders").update(patch).eq("id", order.id);
+      if (error) throw error;
+      toast.success("Link enviado para a loja!");
+      qc.invalidateQueries({ queryKey: ["order-details", order.id] });
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao salvar link");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <section className="rounded-2xl bg-card p-5 shadow-soft">
+      <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        📦 Retirada por app de logística
+      </h3>
+
+      {/* Endereço da loja para copiar */}
+      <div className="rounded-xl border-2 border-dashed bg-muted/40 p-3">
+        <p className="mb-2 text-xs font-bold uppercase text-muted-foreground">
+          Endereço de retirada (copie para o app do entregador)
+        </p>
+        <p className="text-sm font-bold">{store.name}</p>
+        <p className="mt-0.5 text-sm">{fullAddress || "Endereço não cadastrado pela loja."}</p>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            onClick={() => copy(fullAddress, "Endereço")}
+            className="flex h-10 items-center justify-center gap-1.5 rounded-xl border-2 border-border bg-background text-xs font-bold hover:border-primary"
+          >
+            <Copy className="h-3.5 w-3.5" /> Copiar endereço
+          </button>
+          {store.phone && (
+            <button
+              onClick={() => copy(store.phone, "Telefone da loja")}
+              className="flex h-10 items-center justify-center gap-1.5 rounded-xl border-2 border-border bg-background text-xs font-bold hover:border-primary"
+            >
+              <Phone className="h-3.5 w-3.5" /> Copiar telefone
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Form para chamar entregador / colar link */}
+      <div className="mt-4">
+        {!canSendCourier && !alreadySent && (
+          <p className="rounded-xl bg-warning/10 p-3 text-xs text-foreground">
+            ⏳ Aguarde a loja marcar o pedido como <strong>pronto</strong>. Em seguida você poderá chamar
+            um entregador no app de logística que preferir e colar o link de rastreio aqui.
+          </p>
+        )}
+        {canSendCourier && (
+          <div className="space-y-2">
+            <p className="text-xs font-bold uppercase text-muted-foreground">
+              {alreadySent ? "Atualizar entregador" : "Chamar entregador no app"}
+            </p>
+            <input
+              placeholder="App utilizado (Uber, Lalamove, 99, iFood Pegue&Leve…)"
+              value={provider}
+              onChange={(e) => setProvider(e.target.value)}
+              className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
+            />
+            <input
+              placeholder="Cole aqui o link de rastreio do entregador (https://...)"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
+            />
+            <textarea
+              placeholder="Instruções para o entregador (ex: ponto de referência, código de retirada)"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={3}
+              className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
+            />
+            <Button onClick={submit} disabled={saving} className="h-12 w-full rounded-xl gradient-primary font-bold">
+              {saving ? "Enviando..." : alreadySent ? "Atualizar link" : "Enviar link para a loja"}
+            </Button>
+          </div>
+        )}
+        {alreadySent && (
+          <a
+            href={order.courier_tracking_url}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-primary-foreground hover:opacity-90"
+          >
+            🔗 Abrir rastreio do entregador
+          </a>
+        )}
+      </div>
+    </section>
+  );
+};
+
 export default OrderDetails;
