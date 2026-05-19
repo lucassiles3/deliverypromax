@@ -52,6 +52,8 @@ const Mesa = lazy(() => import("./pages/Mesa.tsx"));
 const Entregador = lazy(() => import("./pages/Entregador.tsx"));
 const Recompensas = lazy(() => import("./pages/Recompensas.tsx"));
 const Master = lazy(() => import("./pages/Master.tsx"));
+const Landing = lazy(() => import("./pages/Landing.tsx"));
+const Cadastro = lazy(() => import("./pages/Cadastro.tsx"));
 
 const PageFallback = () => (
   <div className="flex min-h-[60vh] items-center justify-center">
@@ -120,6 +122,8 @@ const App = () => (
               <Route path="/entregador" element={<Entregador />} />
               <Route path="/recompensas" element={<Recompensas />} />
               <Route path="/master" element={<Master />} />
+              <Route path="/landing" element={<Landing />} />
+              <Route path="/cadastro" element={<Cadastro />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
