@@ -24,10 +24,12 @@ import {
   ExternalLink,
   QrCode,
   Share2,
+  Bot,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { ChatbotSection } from "./ChatbotSection";
 
-type Section = "profile" | "hours" | "delivery" | "payment";
+type Section = "profile" | "hours" | "delivery" | "payment" | "chatbot";
 
 const WEEK = [
   { key: "mon", label: "Segunda" },
@@ -71,6 +73,7 @@ export const StoreSettingsTab = ({ storeId }: { storeId: string }) => {
             { id: "hours", label: "Horários", icon: Clock },
             { id: "delivery", label: "Entrega", icon: Truck },
             { id: "payment", label: "Pagamento", icon: CreditCard },
+            { id: "chatbot", label: "Chatbot WhatsApp", icon: Bot },
           ] as const
         ).map((s) => (
           <button
@@ -92,6 +95,7 @@ export const StoreSettingsTab = ({ storeId }: { storeId: string }) => {
       {section === "hours" && <HoursSection storeId={storeId} qc={qc} />}
       {section === "delivery" && <DeliverySection storeId={storeId} qc={qc} />}
       {section === "payment" && <PaymentSection storeId={storeId} qc={qc} />}
+      {section === "chatbot" && <ChatbotSection storeId={storeId} />}
     </div>
   );
 };
