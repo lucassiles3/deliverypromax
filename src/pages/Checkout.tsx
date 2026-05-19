@@ -93,6 +93,19 @@ const Checkout = () => {
   const creditLinkTemplate = enabledMethods["credit_link"]?.notes ?? null;
   const creditLinkEnabled = !!enabledMethods["credit_link"]?.enabled && !!creditLinkTemplate;
 
+  // Se o método selecionado não estiver habilitado pela loja, seleciona o primeiro disponível
+  useEffect(() => {
+    const keys = Object.keys(enabledMethods);
+    if (keys.length === 0) return;
+    const available: PaymentMethod[] = (["pix", "cash", "credit", "debit"] as const).filter(
+      (k) => enabledMethods[k]?.enabled
+    );
+    if (creditLinkEnabled) available.push("credit_link");
+    if (available.length > 0 && !available.includes(payment)) {
+      setPayment(available[0]);
+    }
+  }, [enabledMethods, creditLinkEnabled, payment]);
+
   useEffect(() => {
     document.title = "Checkout • FoodFlash";
   }, []);
