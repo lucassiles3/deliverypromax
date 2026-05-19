@@ -253,6 +253,63 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
     }
   };
 
+  // 🔔 Pede permissão de notificação do navegador assim que entra no Kanban
+  useEffect(() => {
+    if (typeof Notification === "undefined") return;
+    if (Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
+  // 🔓 Destrava áudio na primeira interação do usuário (autoplay policy)
+  const audioUnlockedRef = useRef(false);
+  useEffect(() => {
+    const unlock = () => {
+      if (audioUnlockedRef.current) return;
+      try {
+        const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+        const ctx = new Ctx();
+        if (ctx.state === "suspended") ctx.resume().catch(() => {});
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        g.gain.value = 0.0001;
+        o.connect(g).connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + 0.01);
+        setTimeout(() => ctx.close(), 200);
+        audioUnlockedRef.current = true;
+      } catch { /* ignore */ }
+    };
+    window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
+
+  const notifyNewOrder = (orderId: string, extra?: { total?: number; customer?: string }) => {
+    try {
+      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+        const short = orderId.slice(0, 6).toUpperCase();
+        const body = extra?.customer
+          ? `${extra.customer}${extra?.total ? ` · R$ ${Number(extra.total).toFixed(2).replace(".", ",")}` : ""}`
+          : "Toque para abrir o painel";
+        const n = new Notification(`🔔 Novo pedido #${short}`, {
+          body,
+          icon: "/favicon.ico",
+          badge: "/favicon.ico",
+          tag: orderId,
+          requireInteraction: true,
+        } as NotificationOptions);
+        n.onclick = () => { window.focus(); n.close(); };
+      }
+    } catch { /* ignore */ }
+    if (navigator.vibrate) {
+      try { navigator.vibrate([300, 120, 300, 120, 600]); } catch { /* ignore */ }
+    }
+  };
+
   // Realtime + auto-print on INSERT received
   useEffect(() => {
     if (!storeId) return;
@@ -265,6 +322,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
           qc.invalidateQueries({ queryKey: ["kanban-orders", storeId] });
           if (payload.eventType === "INSERT" && payload.new?.status === "received") {
             playDing();
+            notifyNewOrder(payload.new.id, { total: payload.new.total, customer: payload.new.customer_name });
             autoPrintOrder(payload.new.id);
           }
           if (
@@ -273,6 +331,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
             (payload.new?.status === "received" || payload.new?.status === "preparing")
           ) {
             playDing();
+            notifyNewOrder(payload.new.id, { total: payload.new.total, customer: payload.new.customer_name });
             autoPrintOrder(payload.new.id);
           }
         }
@@ -294,20 +353,25 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders.length === 0 ? null : orders[0]?.id]);
 
-  // 🔔 Sino ALTO (3 badaladas com harmônicos) — toca a campainha de alerta
+  // 🔔 Sino ALTO (4 badaladas com harmônicos) — toca a campainha de alerta no volume máximo
   const playDing = () => {
     if (!settings?.sound_alerts_enabled) return;
     try {
       const Ctx = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new Ctx();
-      // Tenta destravar autoplay
       if (ctx.state === "suspended") ctx.resume().catch(() => {});
       const master = ctx.createGain();
-      master.gain.value = 0.9; // volume alto
-      master.connect(ctx.destination);
+      master.gain.value = 1.0; // volume MÁXIMO
+      // compressor para evitar clipping mantendo alto volume percebido
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -10;
+      comp.knee.value = 20;
+      comp.ratio.value = 6;
+      comp.attack.value = 0.003;
+      comp.release.value = 0.25;
+      master.connect(comp).connect(ctx.destination);
 
       const ringAt = (offset: number) => {
-        // sino = fundamental + harmônicos com decaimento longo
         const freqs = [880, 1320, 1760, 2640];
         const t0 = ctx.currentTime + offset;
         freqs.forEach((f, idx) => {
@@ -315,26 +379,27 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
           const g = ctx.createGain();
           osc.type = idx === 0 ? "triangle" : "sine";
           osc.frequency.value = f;
-          const peak = idx === 0 ? 0.55 : 0.22 / (idx + 1);
+          const peak = idx === 0 ? 0.95 : 0.4 / (idx + 1);
           g.gain.setValueAtTime(0, t0);
           g.gain.linearRampToValueAtTime(peak, t0 + 0.01);
-          g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.2);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.4);
           osc.connect(g).connect(master);
           osc.start(t0);
-          osc.stop(t0 + 1.25);
+          osc.stop(t0 + 1.45);
         });
       };
 
-      // 3 badaladas espaçadas — clássico som de "campainha de balcão"
       ringAt(0);
       ringAt(0.45);
       ringAt(0.9);
+      ringAt(1.35);
 
-      setTimeout(() => ctx.close(), 3000);
+      setTimeout(() => ctx.close(), 3500);
     } catch {
       /* ignore */
     }
   };
+
 
   // 🔁 Toca a campainha em loop enquanto houver pedidos "received" não aceitos
   useEffect(() => {
