@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { resolveAsset } from "@/lib/assetMap";
 import { ProductFormModal, ProductFormData } from "./ProductFormModal";
+import { PublicLinkCard } from "./StoreSettingsTab";
 import {
   DndContext,
   closestCenter,
@@ -69,6 +70,21 @@ export const MenuTab = ({ storeId }: { storeId: string }) => {
   const [editing, setEditing] = useState<ProductFormData | null>(null);
   const [movingProduct, setMovingProduct] = useState<Product | null>(null);
   const [catModalOpen, setCatModalOpen] = useState(false);
+  // Loja (slug + name) para o card de link público do catálogo
+  const { data: storeInfo } = useQuery({
+    queryKey: ["menu-store-info", storeId],
+    enabled: !!storeId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stores")
+        .select("slug, name")
+        .eq("id", storeId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { slug: string | null; name: string | null } | null;
+    },
+  });
+
 
   // Categorias
   const { data: categories = [] } = useQuery({
@@ -270,6 +286,13 @@ export const MenuTab = ({ storeId }: { storeId: string }) => {
 
   return (
     <div className="space-y-4">
+      <PublicLinkCard
+        storeId={storeId}
+        slug={storeInfo?.slug ?? undefined}
+        name={storeInfo?.name ?? undefined}
+        title="Link público do catálogo"
+        description="Compartilhe o catálogo digital da loja — copie ou envie pelo WhatsApp."
+      />
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-card p-3 shadow-soft">
         <div className="relative min-w-[200px] flex-1">

@@ -1078,7 +1078,7 @@ const ImageDropper = ({
 );
 
 /* ---------- Link público da loja ---------- */
-const PublicLinkCard = ({ slug, name }: { storeId: string; slug?: string; name?: string }) => {
+export const PublicLinkCard = ({ slug, name, title = "Link público do cardápio", description = "Compartilhe este link para que clientes acessem o cardápio direto." }: { storeId: string; slug?: string; name?: string; title?: string; description?: string }) => {
   const [showQr, setShowQr] = useState(false);
   if (!slug) return null;
   const url = `${window.location.origin}/loja/${slug}`;
@@ -1113,9 +1113,9 @@ const PublicLinkCard = ({ slug, name }: { storeId: string; slug?: string; name?:
   };
 
   return (
-    <Card title="Link público do cardápio" icon={Link2}>
+    <Card title={title} icon={Link2}>
       <p className="mb-3 text-xs text-muted-foreground">
-        Compartilhe este link para que clientes acessem o cardápio direto.
+        {description}
       </p>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="flex-1 truncate rounded-lg border bg-muted/40 px-3 py-2 font-mono text-xs">
