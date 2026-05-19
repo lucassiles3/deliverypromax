@@ -80,7 +80,8 @@ const SOURCE_LABELS: Record<string, string> = {
   table: "Mesa",
 };
 
-export const DashboardTab = ({ storeId }: { storeId: string }) => {
+export const DashboardTab = ({ storeId, onNavigate }: { storeId: string; onNavigate?: (tab: string) => void }) => {
+  const go = (t: string) => onNavigate?.(t);
   const [, force] = useState(0);
   useEffect(() => {
     const t = setInterval(() => force((v) => v + 1), 30000);
@@ -525,12 +526,12 @@ export const DashboardTab = ({ storeId }: { storeId: string }) => {
 
       {/* Quick actions */}
       <section className="flex flex-wrap gap-2">
-        <QuickAction icon={Plus} label="Adicionar produto" />
-        <QuickAction icon={Tag} label="Criar cupom" />
-        <QuickAction icon={Megaphone} label="Abrir campanha" />
-        <QuickAction icon={ShoppingBag} label="Ver pedidos" />
-        <QuickAction icon={Banknote} label="Solicitar saque" />
-        <QuickAction icon={SettingsIcon} label="Configurar loja" />
+        <QuickAction icon={Plus} label="Adicionar produto" onClick={() => go("products")} />
+        <QuickAction icon={Tag} label="Criar cupom" onClick={() => go("marketing")} />
+        <QuickAction icon={Megaphone} label="Abrir campanha" onClick={() => go("marketing")} />
+        <QuickAction icon={ShoppingBag} label="Ver pedidos" onClick={() => go("orders")} />
+        <QuickAction icon={Banknote} label="Solicitar saque" onClick={() => go("financial")} />
+        <QuickAction icon={SettingsIcon} label="Configurar loja" onClick={() => go("store")} />
       </section>
 
       {/* HOJE */}
@@ -955,8 +956,8 @@ const Kpi = ({
   );
 };
 
-const QuickAction = ({ icon: Icon, label }: { icon: typeof Plus; label: string }) => (
-  <button className="group flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1.5 text-xs font-bold transition-smooth hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-soft md:gap-2 md:px-4 md:py-2 md:text-sm">
+const QuickAction = ({ icon: Icon, label, onClick }: { icon: typeof Plus; label: string; onClick?: () => void }) => (
+  <button onClick={onClick} className="group flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1.5 text-xs font-bold transition-smooth hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-soft md:gap-2 md:px-4 md:py-2 md:text-sm">
     <Icon className="h-3.5 w-3.5 transition-transform group-hover:scale-110 md:h-4 md:w-4" />
     {label}
   </button>
