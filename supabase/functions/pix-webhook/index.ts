@@ -82,12 +82,13 @@ Deno.serve(async (req) => {
       .eq("id", txn.id);
 
     if (approved) {
-      // promove pedido de pending_payment -> received
+      // pagamento confirmado -> entra direto em "preparo" (real time no Kanban)
+      const nowIso = new Date().toISOString();
       await admin
         .from("orders")
-        .update({ status: "received" })
+        .update({ status: "preparing", accepted_at: nowIso })
         .eq("id", txn.order_id)
-        .eq("status", "pending_payment");
+        .in("status", ["pending_payment", "received"]);
     }
 
     return ok();
