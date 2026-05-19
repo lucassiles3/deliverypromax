@@ -408,8 +408,9 @@ const Checkout = () => {
       }
     }
 
-    // Tudo certo — segue o fluxo
-    if (payment === "pix") {
+    // Tudo certo — segue o fluxo.
+    // QR Code Pix só faz sentido quando há gateway integrado.
+    if (payment === "pix" && pixGatewayActive) {
       setStep("pix");
     } else {
       void confirmPayment();
@@ -426,7 +427,7 @@ const Checkout = () => {
     lines.push("");
     lines.push(`*Cliente:* ${name}`);
     lines.push(`*WhatsApp:* ${phone}`);
-    lines.push(`*Tipo:* ${method === "delivery" ? "Entrega 🛵" : "Retirada na loja 🏪"}`);
+    lines.push(`*Tipo:* ${method === "delivery" ? "Entrega 🛵" : method === "logistics" ? "Retirada por app de logística 📦" : "Retirada na loja 🏪"}`);
     if (method === "delivery") {
       lines.push(
         `*Endereço:* ${address.street}, ${address.number}${
