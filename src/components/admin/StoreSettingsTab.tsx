@@ -188,20 +188,13 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
     <div className="grid gap-5 lg:grid-cols-3">
       <div className="space-y-5 lg:col-span-2">
         <Card title="Identidade visual" icon={StoreIcon}>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="max-w-xs">
             <ImageDropper
               label="Logo (quadrado, 200x200+)"
               value={form.logo}
               uploading={uploading === "logo"}
               onPick={(f) => upload("logo", f)}
               aspect="square"
-            />
-            <ImageDropper
-              label="Capa (1200x400+)"
-              value={form.cover_url}
-              uploading={uploading === "cover"}
-              onPick={(f) => upload("cover", f)}
-              aspect="banner"
             />
           </div>
         </Card>

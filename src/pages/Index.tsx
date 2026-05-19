@@ -14,7 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useUserLocation } from "@/hooks/useUserLocation";
-import { isStoreOpen } from "@/lib/storeHours";
+
 import { distanceKm, formatDistance } from "@/lib/distance";
 import {
   Loader2,
@@ -68,10 +68,9 @@ const useFeaturedProducts = (stores: Store[]) =>
     },
   });
 
-type FilterKey = "open" | "promo" | "rated" | "fast";
+type FilterKey = "promo" | "rated" | "fast";
 
 const FILTERS: { key: FilterKey; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { key: "open", label: "Aberto agora", icon: Zap },
   { key: "promo", label: "Promoções", icon: Flame },
   { key: "rated", label: "Melhor avaliado", icon: Star },
   { key: "fast", label: "Entrega rápida", icon: Compass },
@@ -123,7 +122,7 @@ const Index = () => {
   // Enrich with distance + open + inRange
   const enriched = useMemo(() => {
     return stores.map((s: any) => {
-      const open = isStoreOpen(s.openingHours) && s.open;
+      const open = s.open !== false;
       let distance: number | null = null;
       if (coords && s.lat && s.lng) {
         distance = distanceKm(coords, { lat: Number(s.lat), lng: Number(s.lng) });
@@ -170,7 +169,7 @@ const Index = () => {
       const cat = CATEGORIES.find((c) => c.key === activeCat);
       if (cat) list = list.filter((s) => matchCategory(s.cuisine, cat));
     }
-    if (activeFilters.has("open")) list = list.filter((s) => s._open);
+    // filtro "Aberto agora" removido — clientes podem comprar a qualquer hora
     if (activeFilters.has("promo")) list = list.filter((s) => !!s.promo);
     if (activeFilters.has("rated")) list = list.filter((s) => s.rating >= 4.5);
     if (activeFilters.has("fast"))

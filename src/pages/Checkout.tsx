@@ -252,18 +252,8 @@ const Checkout = () => {
   const proceed = () => {
     if (!store) return;
 
-    // 1) Loja fechada (manual)
-    if (!store.open) {
-      return toast.error("Loja fechada pelo lojista", {
-        description: "O lojista fechou a loja temporariamente. Tente novamente em alguns minutos.",
-      });
-    }
-    // 2) Loja fora do horário
-    if (!isStoreOpen(store.openingHours)) {
-      return toast.error("Loja fora do horário de funcionamento", {
-        description: "Volte durante os horários de atendimento para finalizar seu pedido.",
-      });
-    }
+    // (Horário de funcionamento desabilitado: o cliente pode comprar a qualquer hora)
+
     // 3) Login obrigatório
     if (!user) {
       toast.error("Faça login para continuar", {
