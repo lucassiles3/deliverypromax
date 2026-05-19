@@ -841,13 +841,24 @@ const Checkout = () => {
                   <CreditCard className="h-5 w-5 text-primary" /> Forma de pagamento
                 </h2>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {([
-                    { v: "pix" as const, label: "Pix", icon: QrCode, hint: "Aprovação instantânea", show: true },
-                    { v: "cash" as const, label: "Dinheiro", icon: Banknote, hint: "Na entrega", show: true },
-                    { v: "credit" as const, label: "Crédito", icon: CreditCard, hint: "Maquininha", show: true },
-                    { v: "debit" as const, label: "Débito", icon: CreditCard, hint: "Maquininha", show: true },
-                    { v: "credit_link" as const, label: "Crédito (link)", icon: CreditCard, hint: "Pague online agora", show: creditLinkEnabled },
-                  ]).filter((o) => o.show).map((opt) => {
+                  {(() => {
+                    const hasConfig = Object.keys(enabledMethods).length > 0;
+                    const isOn = (k: string) => (hasConfig ? !!enabledMethods[k]?.enabled : true);
+                    const items = [
+                      { v: "pix" as const, label: "Pix", icon: QrCode, hint: "Aprovação instantânea", show: isOn("pix") },
+                      { v: "cash" as const, label: "Dinheiro", icon: Banknote, hint: "Na entrega", show: isOn("cash") },
+                      { v: "credit" as const, label: "Crédito", icon: CreditCard, hint: "Maquininha", show: isOn("credit") },
+                      { v: "debit" as const, label: "Débito", icon: CreditCard, hint: "Maquininha", show: isOn("debit") },
+                      { v: "credit_link" as const, label: "Crédito (link)", icon: CreditCard, hint: "Pague online agora", show: creditLinkEnabled },
+                    ].filter((o) => o.show);
+                    if (items.length === 0) {
+                      return (
+                        <p className="col-span-full rounded-xl border-2 border-dashed border-border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
+                          A loja ainda não habilitou formas de pagamento.
+                        </p>
+                      );
+                    }
+                    return items.map((opt) => {
                     const Icon = opt.icon;
                     const active = payment === opt.v;
                     return (
@@ -863,7 +874,8 @@ const Checkout = () => {
                         <span className="text-[10px] text-muted-foreground">{opt.hint}</span>
                       </button>
                     );
-                  })}
+                    });
+                  })()}
                 </div>
 
                 {payment === "cash" && (
