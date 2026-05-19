@@ -34,6 +34,21 @@ Deno.serve(async (req) => {
       else if (body?.data?.id || body?.resource) provider = "mercadopago";
     }
 
+    // Valida token do Asaas (header asaas-access-token)
+    if (provider === "asaas") {
+      const expected = Deno.env.get("ASAAS_WEBHOOK_TOKEN");
+      const received = req.headers.get("asaas-access-token");
+      if (expected && received !== expected) {
+        return new Response("unauthorized", { status: 401, headers: corsHeaders });
+      }
+    }
+
+    // (gateway já detectado acima)
+    if (!provider) {
+      if (body?.payment?.id && body?.event) provider = "asaas";
+      else if (body?.data?.id || body?.resource) provider = "mercadopago";
+    }
+
     let externalId: string | null = null;
     let approved = false;
     let raw: any = body;
