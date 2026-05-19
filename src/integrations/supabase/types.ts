@@ -3423,7 +3423,7 @@ export type Database = {
     }
     Enums: {
       addon_type: "single" | "multi"
-      app_role: "admin" | "store_owner" | "customer"
+      app_role: "admin" | "store_owner" | "customer" | "super_admin"
       cancel_source: "store" | "system" | "customer" | "courier"
       coupon_type: "percent" | "fixed" | "free_shipping"
       delivery_method: "delivery" | "pickup" | "logistics"
@@ -3579,7 +3579,7 @@ export const Constants = {
   public: {
     Enums: {
       addon_type: ["single", "multi"],
-      app_role: ["admin", "store_owner", "customer"],
+      app_role: ["admin", "store_owner", "customer", "super_admin"],
       cancel_source: ["store", "system", "customer", "courier"],
       coupon_type: ["percent", "fixed", "free_shipping"],
       delivery_method: ["delivery", "pickup", "logistics"],
