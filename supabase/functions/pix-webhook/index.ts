@@ -23,35 +23,51 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     const url = new URL(req.url);
-    const provider = url.searchParams.get("gateway");
-    const storeId = url.searchParams.get("store");
+    let provider = url.searchParams.get("gateway");
+    let storeId = url.searchParams.get("store");
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
     const body = await req.json().catch(() => ({}));
+
+    // Auto-detecta gateway pelo formato do payload (permite webhook global sem ?gateway=)
+    if (!provider) {
+      if (body?.payment?.id && body?.event) provider = "asaas";
+      else if (body?.data?.id || body?.resource) provider = "mercadopago";
+    }
 
     let externalId: string | null = null;
     let approved = false;
     let raw: any = body;
 
     if (provider === "mercadopago") {
-      // payload: { type: 'payment', data: { id } }
       const id = body?.data?.id || body?.resource?.split?.("/")?.pop();
       if (!id) return ok();
-      // busca o pagamento para confirmar status (precisamos do token da loja)
-      const { data: gw } = await admin
-        .from("payment_gateways")
-        .select("access_token_secret_name")
-        .eq("store_id", storeId)
-        .eq("provider", "mercadopago")
-        .maybeSingle();
-      const token = gw?.access_token_secret_name ? Deno.env.get(gw.access_token_secret_name) : null;
-      if (token) {
-        const pay = await fetchMpPayment(token, String(id));
-        if (pay) {
-          externalId = String(pay.id);
-          approved = pay.status === "approved";
-          raw = pay;
+      // Se não veio storeId, tenta resolver pela txn já registrada
+      if (!storeId) {
+        const { data: t } = await admin
+          .from("payment_transactions")
+          .select("store_id")
+          .eq("external_id", String(id))
+          .maybeSingle();
+        storeId = t?.store_id ?? null;
+      }
+      if (storeId) {
+        const { data: gw } = await admin
+          .from("payment_gateways")
+          .select("access_token_secret_name")
+          .eq("store_id", storeId)
+          .eq("provider", "mercadopago")
+          .maybeSingle();
+        const token = gw?.access_token_secret_name ? Deno.env.get(gw.access_token_secret_name) : null;
+        if (token) {
+          const pay = await fetchMpPayment(token, String(id));
+          if (pay) {
+            externalId = String(pay.id);
+            approved = pay.status === "approved";
+            raw = pay;
+          }
         }
       }
+      if (!externalId) externalId = String(id);
     } else if (provider === "asaas") {
       // payload: { event: 'PAYMENT_RECEIVED', payment: { id, status, ... } }
       externalId = body?.payment?.id ?? null;
@@ -59,6 +75,7 @@ Deno.serve(async (req) => {
     } else {
       return new Response("unknown gateway", { status: 400, headers: corsHeaders });
     }
+
 
     if (!externalId) return ok();
 
