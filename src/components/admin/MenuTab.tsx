@@ -286,6 +286,13 @@ export const MenuTab = ({ storeId }: { storeId: string }) => {
 
   return (
     <div className="space-y-4">
+      <PublicLinkCard
+        storeId={storeId}
+        slug={storeInfo?.slug ?? undefined}
+        name={storeInfo?.name ?? undefined}
+        title="Link público do catálogo"
+        description="Compartilhe o catálogo digital da loja — copie ou envie pelo WhatsApp."
+      />
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-card p-3 shadow-soft">
         <div className="relative min-w-[200px] flex-1">
