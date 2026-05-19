@@ -35,8 +35,8 @@ export default function MasterSubscriptions() {
   };
   useEffect(() => { load(); }, []);
 
-  const updateSub = async (id: string, patch: Partial<Sub>) => {
-    const { error } = await supabase.from("store_subscriptions").update(patch).eq("id", id);
+  const updateSub = async (id: string, patch: Record<string, any>) => {
+    const { error } = await supabase.from("store_subscriptions").update(patch as any).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Assinatura atualizada");
     load();
