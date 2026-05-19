@@ -31,7 +31,7 @@ import { lookupCep, geocodeAddress, formatCep, reverseGeocode } from "@/lib/cep"
 import { distanceKm, formatDistance } from "@/lib/distance";
 import { toast } from "sonner";
 
-type Method = "delivery" | "pickup";
+type Method = "delivery" | "pickup" | "logistics";
 type PaymentMethod = "pix" | "cash" | "credit" | "debit" | "credit_link";
 
 const Checkout = () => {
@@ -88,6 +88,41 @@ const Checkout = () => {
     return () => {
       cancelled = true;
     };
+  }, [store?.id]);
+
+  // Verifica se a loja tem gateway PIX ativo (Mercado Pago / Asaas).
+  // Se NÃO houver gateway, o PIX é manual: o pedido cai direto em "received".
+  const [pixGatewayActive, setPixGatewayActive] = useState(false);
+  useEffect(() => {
+    if (!store?.id) return;
+    let cancelled = false;
+    supabase
+      .from("payment_gateways")
+      .select("id")
+      .eq("store_id", store.id)
+      .eq("active", true)
+      .in("provider", ["mercadopago", "asaas"])
+      .limit(1)
+      .then(({ data }) => {
+        if (!cancelled) setPixGatewayActive((data?.length ?? 0) > 0);
+      });
+    return () => { cancelled = true; };
+  }, [store?.id]);
+
+  // Detecta se a loja também aceita "retirada por app de logística"
+  const [logisticsEnabled, setLogisticsEnabled] = useState(false);
+  useEffect(() => {
+    if (!store?.id) return;
+    let cancelled = false;
+    supabase
+      .from("stores")
+      .select("logistics_pickup_enabled")
+      .eq("id", store.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setLogisticsEnabled(!!(data as any)?.logistics_pickup_enabled);
+      });
+    return () => { cancelled = true; };
   }, [store?.id]);
 
   const creditLinkTemplate = enabledMethods["credit_link"]?.notes ?? null;
@@ -202,7 +237,7 @@ const Checkout = () => {
   const fee =
     !store
       ? 0
-      : method === "pickup"
+      : method !== "delivery"
         ? 0
         : subtotal >= store.freeShippingThreshold
           ? 0
@@ -373,8 +408,9 @@ const Checkout = () => {
       }
     }
 
-    // Tudo certo — segue o fluxo
-    if (payment === "pix") {
+    // Tudo certo — segue o fluxo.
+    // QR Code Pix só faz sentido quando há gateway integrado.
+    if (payment === "pix" && pixGatewayActive) {
       setStep("pix");
     } else {
       void confirmPayment();
@@ -391,7 +427,7 @@ const Checkout = () => {
     lines.push("");
     lines.push(`*Cliente:* ${name}`);
     lines.push(`*WhatsApp:* ${phone}`);
-    lines.push(`*Tipo:* ${method === "delivery" ? "Entrega 🛵" : "Retirada na loja 🏪"}`);
+    lines.push(`*Tipo:* ${method === "delivery" ? "Entrega 🛵" : method === "logistics" ? "Retirada por app de logística 📦" : "Retirada na loja 🏪"}`);
     if (method === "delivery") {
       lines.push(
         `*Endereço:* ${address.street}, ${address.number}${
@@ -467,9 +503,9 @@ const Checkout = () => {
           cashback_earned: earned,
           total,
           notes: orderNotes,
-          // PIX aguarda confirmação do gateway (webhook promove a "preparing").
-          // Demais formas entram direto na fila como "received".
-          status: payment === "pix" ? "pending_payment" : "received",
+          // PIX só fica em "pending_payment" se a loja tiver gateway integrado (MP/Asaas).
+          // Sem gateway, o PIX é confirmado manualmente — entra direto como "received".
+          status: payment === "pix" && pixGatewayActive ? "pending_payment" : "received",
         })
         .select("id")
         .single();
@@ -690,7 +726,7 @@ const Checkout = () => {
               {/* Method */}
               <section className="rounded-2xl bg-card p-5 shadow-soft">
                 <h2 className="mb-3 font-display text-lg font-bold">Como você quer receber?</h2>
-                <div className="grid grid-cols-2 gap-2">
+                <div className={`grid gap-2 ${logisticsEnabled ? "grid-cols-3" : "grid-cols-2"}`}>
                   <button
                     onClick={() => setMethod("delivery")}
                     className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
@@ -709,9 +745,28 @@ const Checkout = () => {
                   >
                     <StoreIcon className="h-5 w-5 text-primary" />
                     <span className="text-sm font-bold">Retirar na loja</span>
-                    <span className="text-xs text-success">Sem taxa de entrega</span>
+                    <span className="text-xs text-success">Sem taxa</span>
                   </button>
+                  {logisticsEnabled && (
+                    <button
+                      onClick={() => setMethod("logistics")}
+                      className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
+                        method === "logistics" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                      }`}
+                    >
+                      <Bike className="h-5 w-5 text-primary" />
+                      <span className="text-center text-sm font-bold leading-tight">Retirada por app</span>
+                      <span className="text-[10px] text-muted-foreground">Uber/Lalamove/99</span>
+                    </button>
+                  )}
                 </div>
+                {method === "logistics" && (
+                  <p className="mt-3 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-3 text-xs text-foreground">
+                    📦 Você fará o pedido normalmente. Quando a loja marcar como <strong>pronto</strong>, você
+                    chama um entregador no aplicativo de logística que preferir e cola o link de rastreio
+                    na tela do pedido para a loja acompanhar.
+                  </p>
+                )}
               </section>
 
               {/* Personal */}

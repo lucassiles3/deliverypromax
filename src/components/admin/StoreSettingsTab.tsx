@@ -643,7 +643,7 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
       const { data, error } = await supabase
         .from("stores")
         .select(
-          "delivery_mode, delivery_radius_km, delivery_fee, delivery_fee_per_km, free_shipping_threshold, min_order, delivery_time, courier_mode, pickup_enabled, pickup_prep_time_min, courier_gps_alert_min, courier_gps_reassign_min",
+          "delivery_mode, delivery_radius_km, delivery_fee, delivery_fee_per_km, free_shipping_threshold, min_order, delivery_time, courier_mode, pickup_enabled, pickup_prep_time_min, logistics_pickup_enabled, courier_gps_alert_min, courier_gps_reassign_min",
         )
         .eq("id", storeId)
         .maybeSingle();
@@ -831,6 +831,22 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
                 />
               </div>
             )}
+          </div>
+        </div>
+
+        <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold">📦 Retirada por app de logística</p>
+              <p className="text-[11px] text-muted-foreground">
+                Cliente faz o pedido, a loja prepara e o cliente chama um entregador no app que preferir
+                (Uber, Lalamove, 99, iFood Pegue&amp;Leve). O cliente cola o link de rastreio e a loja acompanha a rota.
+              </p>
+            </div>
+            <Switch
+              checked={!!form.logistics_pickup_enabled}
+              onCheckedChange={(v) => setForm({ ...form, logistics_pickup_enabled: v })}
+            />
           </div>
         </div>
       </Card>
