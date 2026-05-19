@@ -253,6 +253,63 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
     }
   };
 
+  // 🔔 Pede permissão de notificação do navegador assim que entra no Kanban
+  useEffect(() => {
+    if (typeof Notification === "undefined") return;
+    if (Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
+  // 🔓 Destrava áudio na primeira interação do usuário (autoplay policy)
+  const audioUnlockedRef = useRef(false);
+  useEffect(() => {
+    const unlock = () => {
+      if (audioUnlockedRef.current) return;
+      try {
+        const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+        const ctx = new Ctx();
+        if (ctx.state === "suspended") ctx.resume().catch(() => {});
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        g.gain.value = 0.0001;
+        o.connect(g).connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + 0.01);
+        setTimeout(() => ctx.close(), 200);
+        audioUnlockedRef.current = true;
+      } catch { /* ignore */ }
+    };
+    window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
+
+  const notifyNewOrder = (orderId: string, extra?: { total?: number; customer?: string }) => {
+    try {
+      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+        const short = orderId.slice(0, 6).toUpperCase();
+        const body = extra?.customer
+          ? `${extra.customer}${extra?.total ? ` · R$ ${Number(extra.total).toFixed(2).replace(".", ",")}` : ""}`
+          : "Toque para abrir o painel";
+        const n = new Notification(`🔔 Novo pedido #${short}`, {
+          body,
+          icon: "/favicon.ico",
+          badge: "/favicon.ico",
+          tag: orderId,
+          requireInteraction: true,
+        } as NotificationOptions);
+        n.onclick = () => { window.focus(); n.close(); };
+      }
+    } catch { /* ignore */ }
+    if (navigator.vibrate) {
+      try { navigator.vibrate([300, 120, 300, 120, 600]); } catch { /* ignore */ }
+    }
+  };
+
   // Realtime + auto-print on INSERT received
   useEffect(() => {
     if (!storeId) return;
@@ -265,6 +322,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
           qc.invalidateQueries({ queryKey: ["kanban-orders", storeId] });
           if (payload.eventType === "INSERT" && payload.new?.status === "received") {
             playDing();
+            notifyNewOrder(payload.new.id, { total: payload.new.total, customer: payload.new.customer_name });
             autoPrintOrder(payload.new.id);
           }
           if (
@@ -273,6 +331,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
             (payload.new?.status === "received" || payload.new?.status === "preparing")
           ) {
             playDing();
+            notifyNewOrder(payload.new.id, { total: payload.new.total, customer: payload.new.customer_name });
             autoPrintOrder(payload.new.id);
           }
         }
