@@ -2678,6 +2678,12 @@ export type Database = {
           autocancel_enabled: boolean
           autocancel_min: number
           categories: string[] | null
+          chatbot_connected_at: string | null
+          chatbot_n8n_webhook_url: string | null
+          chatbot_phone: string | null
+          chatbot_qr_code: string | null
+          chatbot_qr_updated_at: string | null
+          chatbot_status: string | null
           city: string | null
           courier_gps_alert_min: number
           courier_gps_reassign_min: number
@@ -2742,6 +2748,12 @@ export type Database = {
           autocancel_enabled?: boolean
           autocancel_min?: number
           categories?: string[] | null
+          chatbot_connected_at?: string | null
+          chatbot_n8n_webhook_url?: string | null
+          chatbot_phone?: string | null
+          chatbot_qr_code?: string | null
+          chatbot_qr_updated_at?: string | null
+          chatbot_status?: string | null
           city?: string | null
           courier_gps_alert_min?: number
           courier_gps_reassign_min?: number
@@ -2806,6 +2818,12 @@ export type Database = {
           autocancel_enabled?: boolean
           autocancel_min?: number
           categories?: string[] | null
+          chatbot_connected_at?: string | null
+          chatbot_n8n_webhook_url?: string | null
+          chatbot_phone?: string | null
+          chatbot_qr_code?: string | null
+          chatbot_qr_updated_at?: string | null
+          chatbot_status?: string | null
           city?: string | null
           courier_gps_alert_min?: number
           courier_gps_reassign_min?: number
