@@ -18,7 +18,7 @@ export type PrintData = {
   createdAt: string;
   customerName: string;
   customerPhone?: string | null;
-  method: "delivery" | "pickup" | "pdv";
+  method: "delivery" | "pickup" | "logistics" | "pdv";
   paymentMethod: string;
   changeFor?: number | null;
   address?: any;
@@ -74,7 +74,13 @@ const buildAddress = (a: any) => {
 };
 
 const methodLabel = (m: string) =>
-  m === "delivery" ? "🛵 Entrega" : m === "pickup" ? "🏪 Retirada" : "💵 Balcão (PDV)";
+  m === "delivery"
+    ? "🛵 Entrega"
+    : m === "pickup"
+      ? "🏪 Retirada"
+      : m === "logistics"
+        ? "📦 Retirada por app de logística"
+        : "💵 Balcão (PDV)";
 
 const paymentLabel = (m: string) =>
   ({
