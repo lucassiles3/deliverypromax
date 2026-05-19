@@ -1776,6 +1776,47 @@ export type Database = {
           },
         ]
       }
+      platform_logs: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          message: string
+          metadata: Json | null
+          severity: string
+          store_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          severity?: string
+          store_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          severity?: string
+          store_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_logs_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_reviews: {
         Row: {
           comment: string | null
@@ -2555,6 +2596,75 @@ export type Database = {
           },
         ]
       }
+      store_subscriptions: {
+        Row: {
+          cancelled_at: string | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string
+          gateway: string | null
+          gateway_customer_id: string | null
+          gateway_subscription_id: string | null
+          id: string
+          monthly_amount: number
+          next_payment_at: string | null
+          plan_id: string | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          store_id: string
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string
+          gateway?: string | null
+          gateway_customer_id?: string | null
+          gateway_subscription_id?: string | null
+          id?: string
+          monthly_amount?: number
+          next_payment_at?: string | null
+          plan_id?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          store_id: string
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string
+          gateway?: string | null
+          gateway_customer_id?: string | null
+          gateway_subscription_id?: string | null
+          id?: string
+          monthly_amount?: number
+          next_payment_at?: string | null
+          plan_id?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          store_id?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_subscriptions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores: {
         Row: {
           accept_alert_min: number
@@ -2584,6 +2694,9 @@ export type Database = {
           id: string
           instagram: string | null
           lat: number | null
+          lifecycle_changed_at: string | null
+          lifecycle_reason: string | null
+          lifecycle_status: Database["public"]["Enums"]["store_lifecycle"]
           lng: number | null
           logistics_pickup_enabled: boolean
           logo: string | null
@@ -2645,6 +2758,9 @@ export type Database = {
           id?: string
           instagram?: string | null
           lat?: number | null
+          lifecycle_changed_at?: string | null
+          lifecycle_reason?: string | null
+          lifecycle_status?: Database["public"]["Enums"]["store_lifecycle"]
           lng?: number | null
           logistics_pickup_enabled?: boolean
           logo?: string | null
@@ -2706,6 +2822,9 @@ export type Database = {
           id?: string
           instagram?: string | null
           lat?: number | null
+          lifecycle_changed_at?: string | null
+          lifecycle_reason?: string | null
+          lifecycle_status?: Database["public"]["Enums"]["store_lifecycle"]
           lng?: number | null
           logistics_pickup_enabled?: boolean
           logo?: string | null
@@ -2740,6 +2859,133 @@ export type Database = {
           whatsapp_phone?: string | null
         }
         Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          active: boolean
+          created_at: string
+          features: Json
+          id: string
+          name: string
+          price_monthly: number
+          price_yearly: number | null
+          slug: string
+          sort_order: number
+          trial_days: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          features?: Json
+          id?: string
+          name: string
+          price_monthly?: number
+          price_yearly?: number | null
+          slug: string
+          sort_order?: number
+          trial_days?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          features?: Json
+          id?: string
+          name?: string
+          price_monthly?: number
+          price_yearly?: number | null
+          slug?: string
+          sort_order?: number
+          trial_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      support_ticket_messages: {
+        Row: {
+          author_id: string | null
+          author_role: string
+          body: string
+          created_at: string
+          id: string
+          ticket_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_role?: string
+          body: string
+          created_at?: string
+          id?: string
+          ticket_id: string
+        }
+        Update: {
+          author_id?: string | null
+          author_role?: string
+          body?: string
+          created_at?: string
+          id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          body: string
+          created_at: string
+          id: string
+          priority: Database["public"]["Enums"]["ticket_priority"]
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["ticket_status"]
+          store_id: string | null
+          subject: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          store_id?: string | null
+          subject: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          store_id?: string | null
+          subject?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       table_calls: {
         Row: {
@@ -3399,6 +3645,7 @@ export type Database = {
         Args: { _store_id: string; _user_id: string }
         Returns: boolean
       }
+      master_dashboard_kpis: { Args: never; Returns: Json }
       reassign_stale_courier_orders: {
         Args: { _store_id: string }
         Returns: number
@@ -3423,7 +3670,7 @@ export type Database = {
     }
     Enums: {
       addon_type: "single" | "multi"
-      app_role: "admin" | "store_owner" | "customer"
+      app_role: "admin" | "store_owner" | "customer" | "super_admin"
       cancel_source: "store" | "system" | "customer" | "courier"
       coupon_type: "percent" | "fixed" | "free_shipping"
       delivery_method: "delivery" | "pickup" | "logistics"
@@ -3450,7 +3697,21 @@ export type Database = {
         | "cancelled"
         | "no_show"
       staff_role: "manager" | "attendant" | "kitchen" | "courier"
+      store_lifecycle: "active" | "suspended" | "blocked"
+      subscription_status:
+        | "trial"
+        | "active"
+        | "overdue"
+        | "cancelled"
+        | "blocked"
       table_status: "available" | "occupied" | "reserved" | "blocked"
+      ticket_priority: "low" | "normal" | "high" | "urgent"
+      ticket_status:
+        | "open"
+        | "in_progress"
+        | "waiting_customer"
+        | "resolved"
+        | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3579,7 +3840,7 @@ export const Constants = {
   public: {
     Enums: {
       addon_type: ["single", "multi"],
-      app_role: ["admin", "store_owner", "customer"],
+      app_role: ["admin", "store_owner", "customer", "super_admin"],
       cancel_source: ["store", "system", "customer", "courier"],
       coupon_type: ["percent", "fixed", "free_shipping"],
       delivery_method: ["delivery", "pickup", "logistics"],
@@ -3609,7 +3870,23 @@ export const Constants = {
         "no_show",
       ],
       staff_role: ["manager", "attendant", "kitchen", "courier"],
+      store_lifecycle: ["active", "suspended", "blocked"],
+      subscription_status: [
+        "trial",
+        "active",
+        "overdue",
+        "cancelled",
+        "blocked",
+      ],
       table_status: ["available", "occupied", "reserved", "blocked"],
+      ticket_priority: ["low", "normal", "high", "urgent"],
+      ticket_status: [
+        "open",
+        "in_progress",
+        "waiting_customer",
+        "resolved",
+        "closed",
+      ],
     },
   },
 } as const
