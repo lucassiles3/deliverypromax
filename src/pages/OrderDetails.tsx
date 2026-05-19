@@ -288,6 +288,11 @@ const OrderDetails = () => {
           />
         )}
 
+        {/* Logística por app (Uber/Lalamove/99) */}
+        {order.method === "logistics" && !isCancelled && status !== "delivered" && (
+          <LogisticsPickupSection order={order as any} />
+        )}
+
         {/* Mapa de retirada (pickup) */}
         {order.method === "pickup" && !isCancelled && status !== "delivered" && (
           <PickupMap
