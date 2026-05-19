@@ -270,7 +270,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
           if (
             payload.eventType === "UPDATE" &&
             payload.old?.status === "pending_payment" &&
-            payload.new?.status === "received"
+            (payload.new?.status === "received" || payload.new?.status === "preparing")
           ) {
             playDing();
             autoPrintOrder(payload.new.id);
