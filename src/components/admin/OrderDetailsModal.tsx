@@ -55,7 +55,7 @@ export const OrderDetailsModal = ({
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, store_id, courier_id, customer_name, customer_phone, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, status, method, payment_method, change_for, address, delivery_lat, delivery_lng, created_at, accepted_at, cancel_reason, cancel_by, notes, order_items(id, product_name, quantity, unit_price, notes, customizations)"
+          "id, store_id, courier_id, customer_name, customer_phone, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, status, method, payment_method, change_for, address, delivery_lat, delivery_lng, created_at, accepted_at, cancel_reason, cancel_by, notes, courier_tracking_url, courier_tracking_provider, courier_tracking_notes, order_items(id, product_name, quantity, unit_price, notes, customizations)"
         )
         .eq("id", orderId!)
         .maybeSingle();
@@ -252,7 +252,39 @@ export const OrderDetailsModal = ({
               )}
             </div>
 
-            {order.method === "delivery" && !isFinal && (
+            {order.method === "logistics" && (
+              <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+                <h5 className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase text-primary">
+                  📦 Retirada por app de logística
+                </h5>
+                {(order as any).courier_tracking_url ? (
+                  <>
+                    {(order as any).courier_tracking_provider && (
+                      <p className="text-xs text-muted-foreground">
+                        App: <strong className="text-foreground">{(order as any).courier_tracking_provider}</strong>
+                      </p>
+                    )}
+                    <a
+                      href={(order as any).courier_tracking_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90"
+                    >
+                      🔗 Acompanhar rota do entregador
+                    </a>
+                    {(order as any).courier_tracking_notes && (
+                      <p className="mt-2 text-xs italic text-muted-foreground">
+                        📝 {(order as any).courier_tracking_notes}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Aguardando o cliente chamar e colar o link do entregador (após status “Pronto”).
+                  </p>
+                )}
+              </div>
+            )}
               <div className="mt-3 rounded-lg bg-muted/40 p-3">
                 <h5 className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase text-muted-foreground">
                   <Bike className="h-3.5 w-3.5" /> Entregador
