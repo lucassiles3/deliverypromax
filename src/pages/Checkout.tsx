@@ -467,7 +467,9 @@ const Checkout = () => {
           cashback_earned: earned,
           total,
           notes: orderNotes,
-          status: payment === "pix" ? "received" : "pending_payment",
+          // PIX aguarda confirmação do gateway (webhook promove a "preparing").
+          // Demais formas entram direto na fila como "received".
+          status: payment === "pix" ? "pending_payment" : "received",
         })
         .select("id")
         .single();
