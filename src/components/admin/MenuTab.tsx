@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { resolveAsset } from "@/lib/assetMap";
 import { ProductFormModal, ProductFormData } from "./ProductFormModal";
+import { PublicLinkCard } from "./StoreSettingsTab";
 import {
   DndContext,
   closestCenter,
