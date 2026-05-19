@@ -545,7 +545,7 @@ const Admin = () => {
             </div>
           </div>
 
-          {tab === "dashboard" && storeId && canAccessSection(currentRole, "dashboard") && <DashboardTab storeId={storeId} />}
+          {tab === "dashboard" && storeId && canAccessSection(currentRole, "dashboard") && <DashboardTab storeId={storeId} onNavigate={(t) => setTab(t as Tab)} />}
           {tab === "orders" && storeId && canAccessSection(currentRole, "orders") && <OrdersKanban storeId={storeId} />}
           {tab === "pdv" && storeId && currentStore && canAccessSection(currentRole, "pdv") && toggles.pdv_enabled && (
             <PDVTab storeId={storeId} storeName={currentStore.name} />
