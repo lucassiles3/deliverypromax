@@ -130,6 +130,7 @@ const App = () => (
           </Suspense>
           <CartDrawer />
           <BottomNav />
+          <NewOrderAlerts />
         </BrowserRouter>
       </CartProvider>
     </TooltipProvider>
