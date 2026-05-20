@@ -1891,7 +1891,9 @@ export type Database = {
           archived_at: string | null
           available_from: string | null
           available_to: string | null
+          barcode: string | null
           bestseller: boolean
+          brand: string | null
           category: string | null
           category_id: string | null
           cost_price: number | null
@@ -1903,6 +1905,8 @@ export type Database = {
           image_url: string | null
           is_combo: boolean
           is_new: boolean
+          location: string | null
+          min_stock: number | null
           name: string
           old_price: number | null
           position: number | null
@@ -1913,9 +1917,12 @@ export type Database = {
           promo_starts_at: string | null
           rating: number | null
           reviews: number | null
+          sku: string | null
           stock: number | null
           store_id: string
+          supplier_id: string | null
           track_stock: boolean
+          unit: string | null
           updated_at: string
         }
         Insert: {
@@ -1923,7 +1930,9 @@ export type Database = {
           archived_at?: string | null
           available_from?: string | null
           available_to?: string | null
+          barcode?: string | null
           bestseller?: boolean
+          brand?: string | null
           category?: string | null
           category_id?: string | null
           cost_price?: number | null
@@ -1935,6 +1944,8 @@ export type Database = {
           image_url?: string | null
           is_combo?: boolean
           is_new?: boolean
+          location?: string | null
+          min_stock?: number | null
           name: string
           old_price?: number | null
           position?: number | null
@@ -1945,9 +1956,12 @@ export type Database = {
           promo_starts_at?: string | null
           rating?: number | null
           reviews?: number | null
+          sku?: string | null
           stock?: number | null
           store_id: string
+          supplier_id?: string | null
           track_stock?: boolean
+          unit?: string | null
           updated_at?: string
         }
         Update: {
@@ -1955,7 +1969,9 @@ export type Database = {
           archived_at?: string | null
           available_from?: string | null
           available_to?: string | null
+          barcode?: string | null
           bestseller?: boolean
+          brand?: string | null
           category?: string | null
           category_id?: string | null
           cost_price?: number | null
@@ -1967,6 +1983,8 @@ export type Database = {
           image_url?: string | null
           is_combo?: boolean
           is_new?: boolean
+          location?: string | null
+          min_stock?: number | null
           name?: string
           old_price?: number | null
           position?: number | null
@@ -1977,9 +1995,12 @@ export type Database = {
           promo_starts_at?: string | null
           rating?: number | null
           reviews?: number | null
+          sku?: string | null
           stock?: number | null
           store_id?: string
+          supplier_id?: string | null
           track_stock?: boolean
+          unit?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2221,6 +2242,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string | null
+          product_id: string
+          quantity: number
+          reason: string | null
+          store_id: string
+          type: Database["public"]["Enums"]["stock_movement_type"]
+          unit_cost: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          product_id: string
+          quantity: number
+          reason?: string | null
+          store_id: string
+          type: Database["public"]["Enums"]["stock_movement_type"]
+          unit_cost?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          product_id?: string
+          quantity?: number
+          reason?: string | null
+          store_id?: string
+          type?: Database["public"]["Enums"]["stock_movement_type"]
+          unit_cost?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       store_fiscal_config: {
         Row: {
@@ -2916,6 +2976,48 @@ export type Database = {
           slug?: string
           sort_order?: number
           trial_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      suppliers: {
+        Row: {
+          active: boolean
+          cnpj: string | null
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          cnpj?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          cnpj?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          store_id?: string
           updated_at?: string
         }
         Relationships: []
@@ -3673,6 +3775,18 @@ export type Database = {
         Returns: undefined
       }
       redeem_loyalty_reward: { Args: { _reward_id: string }; Returns: Json }
+      register_stock_movement: {
+        Args: {
+          _order_id?: string
+          _product_id: string
+          _quantity: number
+          _reason?: string
+          _store_id: string
+          _type: Database["public"]["Enums"]["stock_movement_type"]
+          _unit_cost?: number
+        }
+        Returns: string
+      }
       resolve_api_key: {
         Args: { _key_hash: string }
         Returns: {
@@ -3715,6 +3829,14 @@ export type Database = {
         | "cancelled"
         | "no_show"
       staff_role: "manager" | "attendant" | "kitchen" | "courier"
+      stock_movement_type:
+        | "sale"
+        | "return"
+        | "purchase"
+        | "adjustment"
+        | "loss"
+        | "transfer_in"
+        | "transfer_out"
       store_lifecycle: "active" | "suspended" | "blocked"
       subscription_status:
         | "trial"
@@ -3888,6 +4010,15 @@ export const Constants = {
         "no_show",
       ],
       staff_role: ["manager", "attendant", "kitchen", "courier"],
+      stock_movement_type: [
+        "sale",
+        "return",
+        "purchase",
+        "adjustment",
+        "loss",
+        "transfer_in",
+        "transfer_out",
+      ],
       store_lifecycle: ["active", "suspended", "blocked"],
       subscription_status: [
         "trial",

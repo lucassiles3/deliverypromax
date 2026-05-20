@@ -38,7 +38,9 @@ import {
   Settings as SettingsIcon,
   UserCog,
   Plug,
+  Boxes,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
@@ -62,13 +64,15 @@ import { IntegrationsTab } from "@/components/admin/IntegrationsTab";
 import { PDVTab } from "@/components/admin/PDVTab";
 import { TablesTab } from "@/components/admin/TablesTab";
 import { CouriersTab } from "@/components/admin/CouriersTab";
+import StockTab from "@/components/admin/StockTab";
+
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 import { useStoreToggles } from "@/hooks/useStoreToggles";
 import { StoreOpenToggle } from "@/components/admin/StoreOpenToggle";
 import { Printer } from "lucide-react";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "pdv" | "tables" | "products" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team" | "integrations" | "couriers";
+type Tab = "dashboard" | "orders" | "pdv" | "tables" | "products" | "stock" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team" | "integrations" | "couriers";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
@@ -141,7 +145,7 @@ const Admin = () => {
   useEffect(() => {
     if (!currentRole) return;
     if (!canAccessSection(currentRole, tab)) {
-      const order: Tab[] = ["dashboard","orders","tables","products","customers","couriers","marketing","financial","reports","store","settings","team","integrations"];
+      const order: Tab[] = ["dashboard","orders","tables","products","stock","customers","couriers","marketing","financial","reports","store","settings","team","integrations"];
       const next = order.find((t) => canAccessSection(currentRole, t));
       if (next && next !== tab) setTab(next);
     }
@@ -320,7 +324,9 @@ const Admin = () => {
     { id: "pdv", label: "PDV", icon: Receipt },
     { id: "tables", label: "Salão / Mesas", icon: Utensils },
     { id: "products", label: "Catálogo", icon: Package },
+    { id: "stock", label: "Estoque", icon: Boxes },
     { id: "customers", label: "Clientes", icon: UsersIcon },
+
     { id: "couriers", label: "Entregadores", icon: Bike },
     { id: "marketing", label: "Marketing", icon: Megaphone },
     { id: "financial", label: "Financeiro", icon: Wallet },
@@ -560,6 +566,8 @@ const Admin = () => {
           )}
           {tab === "tables" && storeId && canAccessSection(currentRole, "tables") && <TablesTab storeId={storeId} />}
           {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
+          {tab === "stock" && storeId && canAccessSection(currentRole, "stock") && <StockTab storeId={storeId} />}
+
           {tab === "customers" && storeId && canAccessSection(currentRole, "customers") && <CustomersTab storeId={storeId} />}
           {tab === "couriers" && storeId && canAccessSection(currentRole, "couriers") && <CouriersTab storeId={storeId} />}
           {tab === "marketing" && storeId && canAccessSection(currentRole, "marketing") && <MarketingTab storeId={storeId} />}
