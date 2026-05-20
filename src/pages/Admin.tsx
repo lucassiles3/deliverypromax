@@ -145,7 +145,7 @@ const Admin = () => {
   useEffect(() => {
     if (!currentRole) return;
     if (!canAccessSection(currentRole, tab)) {
-      const order: Tab[] = ["dashboard","orders","tables","products","customers","couriers","marketing","financial","reports","store","settings","team","integrations"];
+      const order: Tab[] = ["dashboard","orders","tables","products","stock","customers","couriers","marketing","financial","reports","store","settings","team","integrations"];
       const next = order.find((t) => canAccessSection(currentRole, t));
       if (next && next !== tab) setTab(next);
     }
