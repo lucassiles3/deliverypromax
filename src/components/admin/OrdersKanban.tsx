@@ -514,6 +514,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
               onMoveNext={(id) => col.next && moveTo(id, col.next)}
               onView={(id) => setDetailId(id)}
               onCancel={(id) => setCancelId(id)}
+              onPrint={(id) => printOrderById(id)}
             />
           ))}
         </div>
@@ -527,6 +528,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
                 onView={() => {}}
                 onCancel={() => {}}
                 onMoveNext={() => {}}
+                onPrint={() => {}}
                 nextLabel=""
                 ghost
               />
