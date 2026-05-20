@@ -637,6 +637,7 @@ const OrderCard = ({
   onView,
   onCancel,
   onMoveNext,
+  onPrint,
   nextLabel,
   ghost,
 }: {
@@ -646,6 +647,7 @@ const OrderCard = ({
   onView: () => void;
   onCancel: () => void;
   onMoveNext: () => void;
+  onPrint: () => void;
   nextLabel: string;
   ghost?: boolean;
 }) => {
