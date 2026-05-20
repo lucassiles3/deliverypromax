@@ -32,6 +32,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { queryClient, persister, shouldPersistQuery } from "@/lib/queryClient";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { NewOrderAlerts } from "@/components/NewOrderAlerts";
+import { OrderReviewPrompt } from "@/components/OrderReviewPrompt";
 import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
 import NotFound from "./pages/NotFound.tsx";
