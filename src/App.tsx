@@ -109,6 +109,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/loja/:slug" element={<Store />} />
+              <Route path="/loja/:slug/produto/:productId" element={<Product />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/pdv" element={<PDV />} />
