@@ -207,7 +207,6 @@ const Admin = () => {
           qc.invalidateQueries({ queryKey: ["admin-orders", storeId] });
           if (payload.eventType === "INSERT") {
             toast.success("🔔 Novo pedido recebido!");
-            playDing();
           }
         },
       )
