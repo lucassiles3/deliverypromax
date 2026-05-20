@@ -210,9 +210,8 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
   const seenIdsRef = useRef<Set<string>>(new Set());
   const initializedRef = useRef(false);
 
-  // Auto-print de um pedido recém-chegado
-  const autoPrintOrder = async (orderId: string) => {
-    if (!settings?.auto_print_enabled) return;
+  // Imprime um pedido (usado tanto pelo auto-print quanto pelo botão da impressora)
+  const printOrderById = async (orderId: string, opts?: { silent?: boolean }) => {
     try {
       const { data: ord, error } = await supabase
         .from("orders")
@@ -221,7 +220,10 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
         )
         .eq("id", orderId)
         .maybeSingle();
-      if (error || !ord) return;
+      if (error || !ord) {
+        if (!opts?.silent) toast.error("Não foi possível carregar o pedido para imprimir");
+        return;
+      }
 
       const data: PrintData = {
         storeName: settings?.name ?? "Loja",
@@ -247,10 +249,17 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
         discount: Number(ord.coupon_discount || 0),
         total: Number(ord.total),
       };
-      printReceipt(data, (settings?.print_format as any) ?? "thermal_80mm");
+      const ok = printReceipt(data, (settings?.print_format as any) ?? "thermal_80mm");
+      if (!ok && !opts?.silent) toast.error("Popup bloqueado pelo navegador. Libere popups para imprimir.");
     } catch (e) {
-      console.warn("auto-print failed", e);
+      console.warn("print failed", e);
+      if (!opts?.silent) toast.error("Falha ao imprimir");
     }
+  };
+
+  const autoPrintOrder = async (orderId: string) => {
+    if (!settings?.auto_print_enabled) return;
+    printOrderById(orderId, { silent: true });
   };
 
   // 🔔 Pede permissão de notificação do navegador assim que entra no Kanban
