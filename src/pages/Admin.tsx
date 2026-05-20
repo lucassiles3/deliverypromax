@@ -579,6 +579,7 @@ const Admin = () => {
           {tab === "reports" && storeId && currentStore && canAccessSection(currentRole, "reports") && (
             <ReportsTab storeId={storeId} storeName={currentStore.name} />
           )}
+          {tab === "history" && storeId && canAccessSection(currentRole, "history") && <HistoryTab storeId={storeId} />}
           {tab === "store" && storeId && canAccessSection(currentRole, "store") && <StoreSettingsTab storeId={storeId} />}
           {tab === "settings" && storeId && canAccessSection(currentRole, "settings") && <SettingsTab storeId={storeId} />}
           {tab === "team" && storeId && canAccessSection(currentRole, "team") && <TeamTab storeId={storeId} />}
