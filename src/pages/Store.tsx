@@ -222,19 +222,19 @@ const Store = () => {
               <h2 className="mb-4 font-display text-xl font-bold md:text-2xl">{c}</h2>
               <div className="grid gap-3 md:grid-cols-2">
                 {list.map((p) => (
-                  <ProductCard key={p.id} product={p} storeSlug={store.slug} storeId={store.id} onOpen={setOpenProduct} />
+                  <ProductCard
+                    key={p.id}
+                    product={p}
+                    storeSlug={store.slug}
+                    storeId={store.id}
+                    onOpen={(prod) => navigate(`/loja/${store.slug}/produto/${prod.id}`)}
+                  />
                 ))}
               </div>
             </section>
           );
         })}
       </div>
-
-      <ProductModal
-        product={openProduct}
-        storeSlug={store.slug}
-        onClose={() => setOpenProduct(null)}
-      />
     </div>
   );
 };
