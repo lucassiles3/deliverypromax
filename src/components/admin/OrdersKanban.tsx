@@ -740,7 +740,7 @@ const OrderCard = ({
           </button>
           <button
             onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => window.print()}
+            onClick={onPrint}
             className="rounded-lg bg-muted p-1.5 hover:bg-muted/70"
             title="Imprimir comanda"
           >
