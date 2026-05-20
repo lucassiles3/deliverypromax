@@ -82,6 +82,20 @@ export const OrderDetailsModal = ({
   const qc = useQueryClient();
   const { data: couriers = [] } = useCouriers(order?.store_id ?? null);
 
+  const { data: storeInfo } = useQuery({
+    queryKey: ["store-print-info", order?.store_id],
+    enabled: !!order?.store_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stores")
+        .select("name, phone, print_format, address_street, address_number, address_neighborhood, city")
+        .eq("id", order!.store_id!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   if (!order) return null;
 
   const addr = order.address as
@@ -110,7 +124,34 @@ export const OrderDetailsModal = ({
           )}`
         : null;
 
-  const printOrder = () => window.print();
+  const printOrder = () => {
+    const data: PrintData = {
+      storeName: storeInfo?.name ?? "Loja",
+      storePhone: storeInfo?.phone ?? null,
+      storeAddress: [
+        storeInfo?.address_street && `${storeInfo.address_street}${storeInfo.address_number ? `, ${storeInfo.address_number}` : ""}`,
+        storeInfo?.address_neighborhood,
+        storeInfo?.city,
+      ].filter(Boolean).join(" — ") || null,
+      orderId: order.id,
+      orderShortId: order.id.slice(0, 6).toUpperCase(),
+      createdAt: order.created_at,
+      customerName: order.customer_name,
+      customerPhone: order.customer_phone,
+      method: order.method as any,
+      paymentMethod: order.payment_method,
+      changeFor: order.change_for,
+      address: order.address,
+      notes: order.notes,
+      items: items as any,
+      subtotal: Number(order.subtotal),
+      deliveryFee: Number(order.delivery_fee || 0),
+      discount: Number(order.coupon_discount || 0),
+      total: Number(order.total),
+    };
+    const ok = printReceipt(data, (storeInfo?.print_format as any) ?? "thermal_80mm");
+    if (!ok) toast.error("Popup bloqueado pelo navegador. Libere popups para imprimir.");
+  };
 
   const FLOW: Array<{ id: string; label: string }> = [
     { id: "received", label: "Recebido" },
