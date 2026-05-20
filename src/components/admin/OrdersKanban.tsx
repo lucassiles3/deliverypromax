@@ -562,6 +562,7 @@ const Column = ({
   onMoveNext,
   onView,
   onCancel,
+  onPrint,
 }: {
   col: (typeof COLUMNS)[number];
   orders: OrderRow[];
@@ -570,6 +571,7 @@ const Column = ({
   onMoveNext: (id: string) => void;
   onView: (id: string) => void;
   onCancel: (id: string) => void;
+  onPrint: (id: string) => void;
 }) => {
   const { setNodeRef, isOver } = useDroppable({ id: col.id });
   const Icon = col.icon;
@@ -603,6 +605,7 @@ const Column = ({
                 onView={() => onView(o.id)}
                 onCancel={() => onCancel(o.id)}
                 onMoveNext={() => onMoveNext(o.id)}
+                onPrint={() => onPrint(o.id)}
                 nextLabel={col.nextLabel ?? ""}
               />
             </DraggableCard>
