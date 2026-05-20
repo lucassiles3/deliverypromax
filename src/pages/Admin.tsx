@@ -324,7 +324,9 @@ const Admin = () => {
     { id: "pdv", label: "PDV", icon: Receipt },
     { id: "tables", label: "Salão / Mesas", icon: Utensils },
     { id: "products", label: "Catálogo", icon: Package },
+    { id: "stock", label: "Estoque", icon: Boxes },
     { id: "customers", label: "Clientes", icon: UsersIcon },
+
     { id: "couriers", label: "Entregadores", icon: Bike },
     { id: "marketing", label: "Marketing", icon: Megaphone },
     { id: "financial", label: "Financeiro", icon: Wallet },
