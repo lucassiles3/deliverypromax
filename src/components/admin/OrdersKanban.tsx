@@ -375,7 +375,19 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
         const last = lastAlertRef.current.get(o.id) ?? 0;
         if (Date.now() - last > 30_000) {
           lastAlertRef.current.set(o.id, Date.now());
-          playDing();
+          try {
+            const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+            const ctx = new Ctx();
+            const osc = ctx.createOscillator();
+            const g = ctx.createGain();
+            osc.type = "sine"; osc.frequency.value = 1200;
+            g.gain.setValueAtTime(0.0001, ctx.currentTime);
+            g.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
+            osc.connect(g).connect(ctx.destination);
+            osc.start(); osc.stop(ctx.currentTime + 0.65);
+            setTimeout(() => ctx.close(), 800);
+          } catch {/* ignore */}
         }
       }
       if (settings.autocancel_enabled && elapsed >= cancelMin) {
