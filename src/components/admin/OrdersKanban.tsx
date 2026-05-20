@@ -310,7 +310,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
     }
   };
 
-  // Realtime + auto-print on INSERT received
+  // Realtime: invalidate + auto-print on new order INSERT (sound/popup é global em <NewOrderAlerts />)
   useEffect(() => {
     if (!storeId) return;
     const ch = supabase
@@ -320,18 +320,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
         { event: "*", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
         (payload: any) => {
           qc.invalidateQueries({ queryKey: ["kanban-orders", storeId] });
-          if (payload.eventType === "INSERT" && payload.new?.status === "received") {
-            playDing();
-            notifyNewOrder(payload.new.id, { total: payload.new.total, customer: payload.new.customer_name });
-            autoPrintOrder(payload.new.id);
-          }
-          if (
-            payload.eventType === "UPDATE" &&
-            payload.old?.status === "pending_payment" &&
-            (payload.new?.status === "received" || payload.new?.status === "preparing")
-          ) {
-            playDing();
-            notifyNewOrder(payload.new.id, { total: payload.new.total, customer: payload.new.customer_name });
+          if (payload.eventType === "INSERT") {
             autoPrintOrder(payload.new.id);
           }
         }
@@ -341,7 +330,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
       supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeId, qc, settings?.auto_print_enabled, settings?.sound_alerts_enabled, settings?.print_format]);
+  }, [storeId, qc, settings?.auto_print_enabled, settings?.print_format]);
 
   // Inicializa o "já visto" na primeira carga (não imprime histórico)
   useEffect(() => {
@@ -353,63 +342,7 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders.length === 0 ? null : orders[0]?.id]);
 
-  // 🔔 Sino ALTO (4 badaladas com harmônicos) — toca a campainha de alerta no volume máximo
-  const playDing = () => {
-    if (!settings?.sound_alerts_enabled) return;
-    try {
-      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new Ctx();
-      if (ctx.state === "suspended") ctx.resume().catch(() => {});
-      const master = ctx.createGain();
-      master.gain.value = 1.0; // volume MÁXIMO
-      // compressor para evitar clipping mantendo alto volume percebido
-      const comp = ctx.createDynamicsCompressor();
-      comp.threshold.value = -10;
-      comp.knee.value = 20;
-      comp.ratio.value = 6;
-      comp.attack.value = 0.003;
-      comp.release.value = 0.25;
-      master.connect(comp).connect(ctx.destination);
 
-      const ringAt = (offset: number) => {
-        const freqs = [880, 1320, 1760, 2640];
-        const t0 = ctx.currentTime + offset;
-        freqs.forEach((f, idx) => {
-          const osc = ctx.createOscillator();
-          const g = ctx.createGain();
-          osc.type = idx === 0 ? "triangle" : "sine";
-          osc.frequency.value = f;
-          const peak = idx === 0 ? 0.95 : 0.4 / (idx + 1);
-          g.gain.setValueAtTime(0, t0);
-          g.gain.linearRampToValueAtTime(peak, t0 + 0.01);
-          g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.4);
-          osc.connect(g).connect(master);
-          osc.start(t0);
-          osc.stop(t0 + 1.45);
-        });
-      };
-
-      ringAt(0);
-      ringAt(0.45);
-      ringAt(0.9);
-      ringAt(1.35);
-
-      setTimeout(() => ctx.close(), 3500);
-    } catch {
-      /* ignore */
-    }
-  };
-
-
-  // 🔁 Toca a campainha em loop enquanto houver pedidos "received" não aceitos
-  useEffect(() => {
-    if (!settings?.sound_alerts_enabled) return;
-    const pending = orders.filter((o) => o.status === "received").length;
-    if (pending === 0) return;
-    const id = setInterval(() => playDing(), 8000);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orders, settings?.sound_alerts_enabled]);
 
   const autoCancel = async (id: string) => {
     if (autoCancelledRef.current.has(id)) return;
