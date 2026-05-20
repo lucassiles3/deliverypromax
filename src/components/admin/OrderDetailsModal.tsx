@@ -21,6 +21,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useCouriers } from "@/hooks/useCouriers";
+import { printReceipt, type PrintData } from "@/lib/printReceipt";
 
 const PAY_LABEL: Record<string, string> = {
   pix: "Pix",
@@ -81,6 +82,20 @@ export const OrderDetailsModal = ({
   const qc = useQueryClient();
   const { data: couriers = [] } = useCouriers(order?.store_id ?? null);
 
+  const { data: storeInfo } = useQuery({
+    queryKey: ["store-print-info", order?.store_id],
+    enabled: !!order?.store_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stores")
+        .select("name, phone, print_format, address_street, address_number, address_neighborhood, city")
+        .eq("id", order!.store_id!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   if (!order) return null;
 
   const addr = order.address as
@@ -109,7 +124,34 @@ export const OrderDetailsModal = ({
           )}`
         : null;
 
-  const printOrder = () => window.print();
+  const printOrder = () => {
+    const data: PrintData = {
+      storeName: storeInfo?.name ?? "Loja",
+      storePhone: storeInfo?.phone ?? null,
+      storeAddress: [
+        storeInfo?.address_street && `${storeInfo.address_street}${storeInfo.address_number ? `, ${storeInfo.address_number}` : ""}`,
+        storeInfo?.address_neighborhood,
+        storeInfo?.city,
+      ].filter(Boolean).join(" — ") || null,
+      orderId: order.id,
+      orderShortId: order.id.slice(0, 6).toUpperCase(),
+      createdAt: order.created_at,
+      customerName: order.customer_name,
+      customerPhone: order.customer_phone,
+      method: order.method as any,
+      paymentMethod: order.payment_method,
+      changeFor: order.change_for,
+      address: order.address,
+      notes: order.notes,
+      items: items as any,
+      subtotal: Number(order.subtotal),
+      deliveryFee: Number(order.delivery_fee || 0),
+      discount: Number(order.coupon_discount || 0),
+      total: Number(order.total),
+    };
+    const ok = printReceipt(data, (storeInfo?.print_format as any) ?? "thermal_80mm");
+    if (!ok) toast.error("Popup bloqueado pelo navegador. Libere popups para imprimir.");
+  };
 
   const FLOW: Array<{ id: string; label: string }> = [
     { id: "received", label: "Recebido" },
@@ -135,10 +177,10 @@ export const OrderDetailsModal = ({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            Pedido #{order.id.slice(0, 6).toUpperCase()}
+      <DialogContent className="max-h-[92vh] w-[96vw] max-w-5xl overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="pr-10">
+          <DialogTitle className="flex flex-wrap items-center gap-2 pr-2">
+            <span className="truncate">Pedido #{order.id.slice(0, 6).toUpperCase()}</span>
             <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold">
               {STATUS_LABEL[order.status] ?? order.status}
             </span>
