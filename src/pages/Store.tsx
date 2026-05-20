@@ -25,9 +25,9 @@ const Store = () => {
       ? { lat: Number(defaultAddr.lat), lng: Number(defaultAddr.lng) }
       : null;
   const { coords } = useUserLocation(addrCoords);
+  const navigate = useNavigate();
   const [activeCat, setActiveCat] = useState("");
   const [query, setQuery] = useState("");
-  const [openProduct, setOpenProduct] = useState<Product | null>(null);
 
   const distance =
     coords && store?.lat && store?.lng
