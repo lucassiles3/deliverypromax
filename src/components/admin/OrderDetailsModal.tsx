@@ -21,6 +21,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useCouriers } from "@/hooks/useCouriers";
+import { printReceipt, type PrintData } from "@/lib/printReceipt";
 
 const PAY_LABEL: Record<string, string> = {
   pix: "Pix",
