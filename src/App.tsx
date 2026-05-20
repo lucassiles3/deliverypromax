@@ -134,6 +134,7 @@ const App = () => (
           <CartDrawer />
           <BottomNav />
           <NewOrderAlerts />
+          <OrderReviewPrompt />
         </BrowserRouter>
       </CartProvider>
     </TooltipProvider>
