@@ -39,6 +39,7 @@ import NotFound from "./pages/NotFound.tsx";
 
 // Lazy: carregadas só quando o usuário acessa a rota
 const Store = lazy(() => import("./pages/Store.tsx"));
+const Product = lazy(() => import("./pages/Product.tsx"));
 const Checkout = lazy(() => import("./pages/Checkout.tsx"));
 const Admin = lazy(() => import("./pages/Admin.tsx"));
 const PDV = lazy(() => import("./pages/PDV.tsx"));
