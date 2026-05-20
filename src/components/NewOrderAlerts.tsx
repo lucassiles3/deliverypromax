@@ -108,6 +108,8 @@ export const NewOrderAlerts = () => {
           { event: "INSERT", schema: "public", table: "orders", filter: `store_id=eq.${s.id}` },
           (payload: any) => {
             const o = payload.new;
+            // Apenas tocar/alertar para pedidos novos: aguardando pagamento ou recém recebidos
+            if (!["pending_payment", "received"].includes(String(o.status))) return;
             const alert: Alert = {
               id: o.id,
               total: Number(o.total ?? 0),
