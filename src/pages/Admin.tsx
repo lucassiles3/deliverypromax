@@ -65,6 +65,7 @@ import { PDVTab } from "@/components/admin/PDVTab";
 import { TablesTab } from "@/components/admin/TablesTab";
 import { CouriersTab } from "@/components/admin/CouriersTab";
 import StockTab from "@/components/admin/StockTab";
+import HistoryTab from "@/components/admin/HistoryTab";
 
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 import { useStoreToggles } from "@/hooks/useStoreToggles";
