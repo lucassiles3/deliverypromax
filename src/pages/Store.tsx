@@ -1,9 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, Link, Navigate, useNavigate } from "react-router-dom";
 import { ArrowLeft, Star, Clock, Bike, MapPin, Search, Flame, AlertTriangle } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ProductCard } from "@/components/ProductCard";
-import { ProductModal } from "@/components/ProductModal";
 import { PromoCountdown } from "@/components/PromoCountdown";
 import { AdBanner } from "@/components/AdBanner";
 import { useStoreBySlug } from "@/hooks/useStores";
@@ -12,7 +11,6 @@ import { useUserLocation } from "@/hooks/useUserLocation";
 import { distanceKm, formatDistance } from "@/lib/distance";
 import { isStoreOpen, nextOpeningLabel, formatHoursList } from "@/lib/storeHours";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { Product } from "@/data/stores";
 
 const Store = () => {
   const { slug = "" } = useParams();
@@ -27,9 +25,9 @@ const Store = () => {
       ? { lat: Number(defaultAddr.lat), lng: Number(defaultAddr.lng) }
       : null;
   const { coords } = useUserLocation(addrCoords);
+  const navigate = useNavigate();
   const [activeCat, setActiveCat] = useState("");
   const [query, setQuery] = useState("");
-  const [openProduct, setOpenProduct] = useState<Product | null>(null);
 
   const distance =
     coords && store?.lat && store?.lng
@@ -224,19 +222,19 @@ const Store = () => {
               <h2 className="mb-4 font-display text-xl font-bold md:text-2xl">{c}</h2>
               <div className="grid gap-3 md:grid-cols-2">
                 {list.map((p) => (
-                  <ProductCard key={p.id} product={p} storeSlug={store.slug} storeId={store.id} onOpen={setOpenProduct} />
+                  <ProductCard
+                    key={p.id}
+                    product={p}
+                    storeSlug={store.slug}
+                    storeId={store.id}
+                    onOpen={(prod) => navigate(`/loja/${store.slug}/produto/${prod.id}`)}
+                  />
                 ))}
               </div>
             </section>
           );
         })}
       </div>
-
-      <ProductModal
-        product={openProduct}
-        storeSlug={store.slug}
-        onClose={() => setOpenProduct(null)}
-      />
     </div>
   );
 };

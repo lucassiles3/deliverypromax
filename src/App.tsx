@@ -32,12 +32,14 @@ import { BottomNav } from "@/components/BottomNav";
 import { queryClient, persister, shouldPersistQuery } from "@/lib/queryClient";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { NewOrderAlerts } from "@/components/NewOrderAlerts";
+import { OrderReviewPrompt } from "@/components/OrderReviewPrompt";
 import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 // Lazy: carregadas só quando o usuário acessa a rota
 const Store = lazy(() => import("./pages/Store.tsx"));
+const Product = lazy(() => import("./pages/Product.tsx"));
 const Checkout = lazy(() => import("./pages/Checkout.tsx"));
 const Admin = lazy(() => import("./pages/Admin.tsx"));
 const PDV = lazy(() => import("./pages/PDV.tsx"));
@@ -107,6 +109,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/loja/:slug" element={<Store />} />
+              <Route path="/loja/:slug/produto/:productId" element={<Product />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/pdv" element={<PDV />} />
@@ -131,6 +134,7 @@ const App = () => (
           <CartDrawer />
           <BottomNav />
           <NewOrderAlerts />
+          <OrderReviewPrompt />
         </BrowserRouter>
       </CartProvider>
     </TooltipProvider>
