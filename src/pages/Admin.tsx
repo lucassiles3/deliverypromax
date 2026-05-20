@@ -332,6 +332,7 @@ const Admin = () => {
     { id: "marketing", label: "Marketing", icon: Megaphone },
     { id: "financial", label: "Financeiro", icon: Wallet },
     { id: "reports", label: "Relatórios", icon: BarChart3 },
+    { id: "history", label: "Histórico", icon: History },
     { id: "store", label: "Loja", icon: StoreIcon },
     { id: "settings", label: "Operação", icon: SettingsIcon },
     { id: "team", label: "Equipe", icon: UserCog },
