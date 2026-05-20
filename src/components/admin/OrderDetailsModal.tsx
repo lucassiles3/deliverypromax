@@ -177,10 +177,10 @@ export const OrderDetailsModal = ({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            Pedido #{order.id.slice(0, 6).toUpperCase()}
+      <DialogContent className="max-h-[92vh] w-[96vw] max-w-5xl overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="pr-10">
+          <DialogTitle className="flex flex-wrap items-center gap-2 pr-2">
+            <span className="truncate">Pedido #{order.id.slice(0, 6).toUpperCase()}</span>
             <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold">
               {STATUS_LABEL[order.status] ?? order.status}
             </span>
