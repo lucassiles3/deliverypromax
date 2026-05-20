@@ -65,6 +65,7 @@ import { PDVTab } from "@/components/admin/PDVTab";
 import { TablesTab } from "@/components/admin/TablesTab";
 import { CouriersTab } from "@/components/admin/CouriersTab";
 import StockTab from "@/components/admin/StockTab";
+import HistoryTab from "@/components/admin/HistoryTab";
 
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 import { useStoreToggles } from "@/hooks/useStoreToggles";
@@ -72,7 +73,7 @@ import { StoreOpenToggle } from "@/components/admin/StoreOpenToggle";
 import { Printer } from "lucide-react";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "pdv" | "tables" | "products" | "stock" | "customers" | "marketing" | "financial" | "reports" | "store" | "settings" | "team" | "integrations" | "couriers";
+type Tab = "dashboard" | "orders" | "pdv" | "tables" | "products" | "stock" | "customers" | "marketing" | "financial" | "reports" | "history" | "store" | "settings" | "team" | "integrations" | "couriers";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
@@ -145,7 +146,7 @@ const Admin = () => {
   useEffect(() => {
     if (!currentRole) return;
     if (!canAccessSection(currentRole, tab)) {
-      const order: Tab[] = ["dashboard","orders","tables","products","stock","customers","couriers","marketing","financial","reports","store","settings","team","integrations"];
+      const order: Tab[] = ["dashboard","orders","tables","products","stock","customers","couriers","marketing","financial","reports","history","store","settings","team","integrations"];
       const next = order.find((t) => canAccessSection(currentRole, t));
       if (next && next !== tab) setTab(next);
     }
@@ -331,6 +332,7 @@ const Admin = () => {
     { id: "marketing", label: "Marketing", icon: Megaphone },
     { id: "financial", label: "Financeiro", icon: Wallet },
     { id: "reports", label: "Relatórios", icon: BarChart3 },
+    { id: "history", label: "Histórico", icon: History },
     { id: "store", label: "Loja", icon: StoreIcon },
     { id: "settings", label: "Operação", icon: SettingsIcon },
     { id: "team", label: "Equipe", icon: UserCog },
@@ -577,6 +579,7 @@ const Admin = () => {
           {tab === "reports" && storeId && currentStore && canAccessSection(currentRole, "reports") && (
             <ReportsTab storeId={storeId} storeName={currentStore.name} />
           )}
+          {tab === "history" && storeId && canAccessSection(currentRole, "history") && <HistoryTab storeId={storeId} />}
           {tab === "store" && storeId && canAccessSection(currentRole, "store") && <StoreSettingsTab storeId={storeId} />}
           {tab === "settings" && storeId && canAccessSection(currentRole, "settings") && <SettingsTab storeId={storeId} />}
           {tab === "team" && storeId && canAccessSection(currentRole, "team") && <TeamTab storeId={storeId} />}

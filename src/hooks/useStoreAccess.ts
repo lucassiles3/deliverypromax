@@ -13,7 +13,7 @@ export type StoreAccess = {
 };
 
 const SECTION_MATRIX: Record<StaffRole, string[]> = {
-  manager: ["dashboard", "orders", "products", "stock", "customers", "marketing", "reports", "settings", "pdv", "tables", "couriers"],
+  manager: ["dashboard", "orders", "products", "stock", "customers", "marketing", "reports", "history", "settings", "pdv", "tables", "couriers"],
   attendant: ["dashboard", "orders", "customers", "pdv", "tables"],
   kitchen: ["orders", "tables"],
   courier: ["orders"],
