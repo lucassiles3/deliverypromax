@@ -30,6 +30,100 @@ export const matchCategory = (cuisine: string | null | undefined, cat: CategoryD
   return cat.match.some((m) => c.includes(m));
 };
 
+export type SubcategoryDef = { key: string; label: string; emoji: string; match: string[] };
+
+export const SUBCATEGORIES: Record<string, SubcategoryDef[]> = {
+  food: [
+    { key: "burger", label: "Hambúrguer", emoji: "🍔", match: ["hambúrguer", "hamburguer", "burger"] },
+    { key: "pizza", label: "Pizzaria", emoji: "🍕", match: ["pizza"] },
+    { key: "japanese", label: "Japonesa", emoji: "🍣", match: ["japonesa", "sushi"] },
+    { key: "brazilian", label: "Brasileira", emoji: "🍛", match: ["brasileira", "caseira"] },
+    { key: "italian", label: "Italiana", emoji: "🍝", match: ["italiana", "massa"] },
+    { key: "mexican", label: "Mexicana", emoji: "🌮", match: ["mexicana", "taco"] },
+    { key: "arabic", label: "Árabe", emoji: "🥙", match: ["árabe", "arabe", "esfiha"] },
+    { key: "healthy", label: "Saudável", emoji: "🥗", match: ["saudável", "saudavel", "fit", "natural"] },
+    { key: "vegan", label: "Vegana", emoji: "🌱", match: ["vegana", "vegano"] },
+    { key: "seafood", label: "Frutos do mar", emoji: "🦐", match: ["frutos do mar", "peixe", "camarão"] },
+    { key: "bbq", label: "Churrasco", emoji: "🥩", match: ["churrasco", "carne"] },
+    { key: "snack", label: "Lanches", emoji: "🥪", match: ["lanche", "salgado"] },
+    { key: "acai", label: "Açaí", emoji: "🍧", match: ["açaí", "acai"] },
+    { key: "dessert", label: "Sobremesas", emoji: "🍰", match: ["sobremesa", "doceria", "doce"] },
+    { key: "bakery", label: "Padaria", emoji: "🥐", match: ["padaria", "pão", "pao"] },
+    { key: "coffee", label: "Cafeteria", emoji: "☕", match: ["cafeteria", "café", "cafe"] },
+    { key: "juice", label: "Sucos", emoji: "🥤", match: ["suco", "vitamina"] },
+  ],
+  market: [
+    { key: "supermarket", label: "Supermercado", emoji: "🛒", match: ["supermercado", "mercado"] },
+    { key: "hortifruti", label: "Hortifruti", emoji: "🥦", match: ["hortifruti", "verdura", "fruta"] },
+    { key: "convenience", label: "Conveniência", emoji: "🏪", match: ["conveniência", "conveniencia"] },
+    { key: "wholesale", label: "Atacado", emoji: "📦", match: ["atacado"] },
+  ],
+  pharmacy: [
+    { key: "drogaria", label: "Drogaria", emoji: "💊", match: ["drogaria", "farmácia", "farmacia"] },
+    { key: "manipulation", label: "Manipulação", emoji: "🧪", match: ["manipulação", "manipulacao"] },
+    { key: "natural", label: "Produtos naturais", emoji: "🌿", match: ["natural", "fitoterápico"] },
+  ],
+  fashion: [
+    { key: "clothing", label: "Roupas", emoji: "👕", match: ["roupa", "moda"] },
+    { key: "shoes", label: "Calçados", emoji: "👟", match: ["calçado", "calcado", "sapato", "tênis"] },
+    { key: "accessories", label: "Acessórios", emoji: "👜", match: ["acessório", "acessorio", "bolsa"] },
+    { key: "kids", label: "Infantil", emoji: "🧸", match: ["infantil", "criança"] },
+  ],
+  tech: [
+    { key: "computers", label: "Informática", emoji: "💻", match: ["informática", "informatica", "computador"] },
+    { key: "support", label: "Assistência técnica", emoji: "🛠️", match: ["assistência", "assistencia", "conserto"] },
+    { key: "games", label: "Games", emoji: "🎮", match: ["game", "jogo"] },
+  ],
+  auto: [
+    { key: "mechanic", label: "Mecânica", emoji: "🔧", match: ["mecânica", "mecanica", "oficina"] },
+    { key: "parts", label: "Auto peças", emoji: "⚙️", match: ["auto peça", "peças", "pecas"] },
+    { key: "wash", label: "Lava jato", emoji: "🚿", match: ["lava jato", "lava-jato"] },
+    { key: "tire", label: "Borracharia", emoji: "🛞", match: ["borracharia", "pneu"] },
+  ],
+  pet: [
+    { key: "petshop", label: "Pet Shop", emoji: "🐶", match: ["pet shop", "petshop", "pet"] },
+    { key: "food", label: "Ração", emoji: "🦴", match: ["ração", "racao"] },
+    { key: "grooming", label: "Banho e tosa", emoji: "🛁", match: ["banho", "tosa"] },
+    { key: "vet", label: "Veterinário", emoji: "🩺", match: ["veterinário", "veterinario"] },
+  ],
+  beauty: [
+    { key: "salon", label: "Salão", emoji: "💇", match: ["salão", "salao", "cabelo"] },
+    { key: "esthetic", label: "Estética", emoji: "✨", match: ["estética", "estetica"] },
+    { key: "cosmetics", label: "Cosméticos", emoji: "💄", match: ["cosmético", "cosmetico", "maquiagem"] },
+    { key: "barber", label: "Barbearia", emoji: "💈", match: ["barbearia", "barbeiro"] },
+  ],
+  drinks: [
+    { key: "cellar", label: "Adega", emoji: "🍷", match: ["adega", "vinho"] },
+    { key: "beer", label: "Cervejaria", emoji: "🍺", match: ["cerveja"] },
+    { key: "distributor", label: "Distribuidora", emoji: "🍻", match: ["distribuidora", "bebida"] },
+  ],
+  home: [
+    { key: "furniture", label: "Móveis", emoji: "🛋️", match: ["móvel", "movel", "móveis"] },
+    { key: "decor", label: "Decoração", emoji: "🖼️", match: ["decoração", "decoracao"] },
+    { key: "utilities", label: "Utilidades", emoji: "🧰", match: ["utilidade"] },
+    { key: "construction", label: "Construção", emoji: "🧱", match: ["construção", "construcao", "material"] },
+  ],
+  phones: [
+    { key: "smartphone", label: "Celulares", emoji: "📱", match: ["celular", "smartphone", "iphone"] },
+    { key: "accessories", label: "Acessórios", emoji: "🎧", match: ["acessório", "capa", "fone"] },
+    { key: "support", label: "Assistência", emoji: "🔧", match: ["assistência", "assistencia", "conserto"] },
+  ],
+  services: [
+    { key: "delivery", label: "Entrega/Frete", emoji: "🚚", match: ["entrega", "frete", "motoboy"] },
+    { key: "cleaning", label: "Limpeza", emoji: "🧹", match: ["limpeza", "diarista"] },
+    { key: "reform", label: "Reformas", emoji: "🪚", match: ["reforma", "pintor", "pedreiro"] },
+    { key: "other", label: "Outros serviços", emoji: "🛠️", match: ["serviço", "servico"] },
+  ],
+};
+
+export const matchSubcategory = (cuisine: string | null | undefined, sub: SubcategoryDef) => {
+  if (!cuisine) return false;
+  const c = cuisine.toLowerCase();
+  return sub.match.some((m) => c.includes(m));
+};
+
+
+
 export const CategoryGrid = ({
   availableCuisines,
   active,

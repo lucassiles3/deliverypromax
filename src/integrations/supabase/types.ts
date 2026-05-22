@@ -913,6 +913,7 @@ export type Database = {
           logo: string | null
           name: string
           opening_hours: Json | null
+          subcategory_key: string | null
           updated_at: string
         }
         Insert: {
@@ -930,6 +931,7 @@ export type Database = {
           logo?: string | null
           name: string
           opening_hours?: Json | null
+          subcategory_key?: string | null
           updated_at?: string
         }
         Update: {
@@ -947,6 +949,7 @@ export type Database = {
           logo?: string | null
           name?: string
           opening_hours?: Json | null
+          subcategory_key?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CATEGORIES } from "@/components/CategoryGrid";
+import { CATEGORIES, SUBCATEGORIES } from "@/components/CategoryGrid";
 
 export type ExternalListing = {
   id: string;
   name: string;
   logo: string | null;
   category_key: string;
+  subcategory_key: string | null;
   catalog_url: string;
   address: string | null;
   lat: number | null;
@@ -17,8 +18,12 @@ export type ExternalListing = {
   delivery_radius_km: number | null;
 };
 
-const cuisineFromCategory = (key: string): string => {
-  const cat = CATEGORIES.find((c) => c.key === key);
+const cuisineFromListing = (l: ExternalListing): string => {
+  if (l.subcategory_key) {
+    const sub = SUBCATEGORIES[l.category_key]?.find((s) => s.key === l.subcategory_key);
+    if (sub) return sub.label;
+  }
+  const cat = CATEGORIES.find((c) => c.key === l.category_key);
   return cat?.match[0] ?? cat?.label ?? "";
 };
 
@@ -38,7 +43,7 @@ export const useExternalListings = () =>
         slug: `ext_${l.id}`,
         name: l.name,
         tagline: l.address ?? "",
-        cuisine: cuisineFromCategory(l.category_key),
+        cuisine: cuisineFromListing(l),
         rating: 5,
         reviews: 0,
         deliveryTime: l.delivery_time || "—",
@@ -58,6 +63,8 @@ export const useExternalListings = () =>
         // marca como externo
         _external: true,
         _externalUrl: l.catalog_url,
+        _categoryKey: l.category_key,
+        _subcategoryKey: l.subcategory_key,
       }));
     },
   });

@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllExternalListings, type ExternalListing } from "@/hooks/useExternalListings";
-import { CATEGORIES } from "@/components/CategoryGrid";
+import { CATEGORIES, SUBCATEGORIES } from "@/components/CategoryGrid";
 import { LocationPicker } from "@/components/LocationPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,7 @@ type FormState = {
   name: string;
   logo: string;
   category_key: string;
+  subcategory_key: string;
   catalog_url: string;
   address: string;
   lat: number | null;
@@ -50,6 +51,7 @@ const emptyForm: FormState = {
   name: "",
   logo: "🏪",
   category_key: CATEGORIES[0].key,
+  subcategory_key: "",
   catalog_url: "",
   address: "",
   lat: null,
@@ -102,6 +104,7 @@ const AdminListings = () => {
       name: form.name.trim(),
       logo: form.logo.trim() || null,
       category_key: form.category_key,
+      subcategory_key: form.subcategory_key || null,
       catalog_url: form.catalog_url.trim(),
       address: form.address.trim() || null,
       lat: form.lat,
@@ -148,6 +151,7 @@ const AdminListings = () => {
       name: l.name,
       logo: l.logo ?? "🏪",
       category_key: l.category_key,
+      subcategory_key: (l as any).subcategory_key ?? "",
       catalog_url: l.catalog_url,
       address: l.address ?? "",
       lat: l.lat,
@@ -221,7 +225,15 @@ const AdminListings = () => {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">{cat?.label ?? l.category_key}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {cat?.label ?? l.category_key}
+                        {(l as any).subcategory_key && (() => {
+                          const sub = SUBCATEGORIES[l.category_key]?.find(
+                            (s) => s.key === (l as any).subcategory_key,
+                          );
+                          return sub ? ` • ${sub.emoji} ${sub.label}` : null;
+                        })()}
+                      </p>
                       {l.address && (
                         <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
                           <MapPin className="h-3 w-3" /> {l.address}
@@ -374,7 +386,9 @@ const ListingForm = ({
                 <Label className="text-xs">Categoria *</Label>
                 <select
                   value={value.category_key}
-                  onChange={(e) => set("category_key", e.target.value)}
+                  onChange={(e) =>
+                    onChange({ ...value, category_key: e.target.value, subcategory_key: "" })
+                  }
                   className="mt-1 w-full rounded-md border-2 border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none"
                 >
                   {CATEGORIES.map((c) => (
@@ -391,6 +405,32 @@ const ListingForm = ({
                 />
               </div>
             </div>
+            {/* Subcategoria com chips para seleção rápida */}
+            {(SUBCATEGORIES[value.category_key]?.length ?? 0) > 0 && (
+              <div>
+                <Label className="text-xs">Subcategoria</Label>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {SUBCATEGORIES[value.category_key].map((s) => {
+                    const on = value.subcategory_key === s.key;
+                    return (
+                      <button
+                        type="button"
+                        key={s.key}
+                        onClick={() => set("subcategory_key", on ? "" : s.key)}
+                        className={`flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold transition-smooth ${
+                          on
+                            ? "border-transparent gradient-primary text-primary-foreground shadow-glow"
+                            : "border-border bg-card hover:border-primary/40"
+                        }`}
+                      >
+                        <span>{s.emoji}</span>
+                        {s.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <Label className="text-xs">Tempo de entrega</Label>
