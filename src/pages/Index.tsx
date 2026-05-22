@@ -9,7 +9,7 @@ import { StoreRail } from "@/components/StoreRail";
 import { StoreLogoRail } from "@/components/StoreLogoRail";
 import { StoreCard } from "@/components/StoreCard";
 import { ProductRail } from "@/components/ProductRail";
-import { AdBanner } from "@/components/AdBanner";
+import { HomeBannerCarousel } from "@/components/HomeBannerCarousel";
 import { TopVisitedRail } from "@/components/TopVisitedRail";
 import { useStores } from "@/hooks/useStores";
 import { useExternalListings } from "@/hooks/useExternalListings";
@@ -462,11 +462,8 @@ const Index = () => {
             emptyHint="Nenhuma promoção ativa agora — volte mais tarde."
           />
 
-          <AdBanner
-            slotId={import.meta.env.VITE_ADSENSE_SLOT_HOME_TOP}
-            variant="leaderboard"
-            label="Banner home — entre rails"
-          />
+          <HomeBannerCarousel />
+
 
           <ProductRail
             title="✨ Pratos em destaque"
@@ -481,11 +478,8 @@ const Index = () => {
             />
           )}
 
-          <AdBanner
-            slotId={import.meta.env.VITE_ADSENSE_SLOT_HOME_MID}
-            variant="leaderboard"
-            label="Banner home — antes de novidades"
-          />
+
+
 
           <StoreRail title="🆕 Novidades" subtitle="Recém chegadas" stores={newStores} />
 
