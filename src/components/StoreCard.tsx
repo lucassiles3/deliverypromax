@@ -89,6 +89,7 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange }: Prop
           </div>
         )}
       </article>
-    </Link>
+    </Wrapper>
   );
+
 };
