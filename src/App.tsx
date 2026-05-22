@@ -113,6 +113,7 @@ const App = () => (
               <Route path="/loja/:slug/produto/:productId" element={<Product />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/parceiros" element={<AdminListings />} />
               <Route path="/pdv" element={<PDV />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
