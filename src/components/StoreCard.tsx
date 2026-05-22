@@ -14,13 +14,15 @@ type Props = {
   index?: number;
   distanceKm?: number | null;
   inRange?: boolean;
+  isOpen?: boolean;
 };
 
-export const StoreCard = ({ store, index = 0, distanceKm = null, inRange }: Props) => {
+export const StoreCard = ({ store, index = 0, distanceKm = null, inRange, isOpen = true }: Props) => {
   const tagline = (store as any).tagline as string | undefined;
   const externalUrl = (store as any)._externalUrl as string | undefined;
   const isExternal = !!externalUrl;
   const showRangeBadge = typeof inRange === "boolean" && distanceKm !== null && !isExternal;
+  const isClosed = isOpen === false;
 
   const Wrapper: any = isExternal ? "a" : Link;
   const wrapperProps: any = isExternal
@@ -33,16 +35,27 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange }: Prop
       className="group block animate-float-in"
       style={{ animationDelay: `${index * 70}ms` }}
     >
-      <article className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-card transition-smooth hover:-translate-y-1 hover:border-primary/40 hover:shadow-float">
+      <article
+        className={`relative overflow-hidden rounded-2xl border p-4 shadow-card transition-smooth hover:-translate-y-1 hover:border-primary/40 hover:shadow-float ${
+          isClosed
+            ? "border-border/60 bg-muted/40 opacity-70"
+            : "border-border bg-card"
+        }`}
+      >
         {isExternal && (
           <span className="absolute right-3 top-3 z-10 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-foreground">
             Parceiro
           </span>
         )}
+        {isClosed && (
+          <span className="absolute left-3 top-3 z-10 rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+            Fechado
+          </span>
+        )}
         {/* Top row: logo + name */}
         <div className="flex items-start gap-3">
           {isImageUrl(store.logo) ? (
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-card shadow-glow">
+            <div className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border shadow-glow ${isClosed ? "border-border/60 bg-muted" : "border-border bg-card"}`}>
               <LazyImage
                 src={store.logo}
                 alt={store.name}
@@ -51,12 +64,12 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange }: Prop
               />
             </div>
           ) : (
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl gradient-primary text-3xl text-primary-foreground shadow-glow">
+            <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-3xl shadow-glow ${isClosed ? "bg-muted text-muted-foreground" : "gradient-primary text-primary-foreground"}`}>
               {store.logo}
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="truncate font-display text-lg font-bold leading-tight">{store.name}</h3>
+            <h3 className={`truncate font-display text-lg font-bold leading-tight ${isClosed ? "text-muted-foreground" : ""}`}>{store.name}</h3>
             <p className="truncate text-xs text-muted-foreground">{store.cuisine}</p>
             <div className="mt-1 flex items-center gap-1 text-xs font-semibold">
               <Star className="h-3.5 w-3.5 fill-accent text-accent" />
@@ -70,7 +83,7 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange }: Prop
         {tagline && (
           <p className="mt-3 line-clamp-2 text-xs text-foreground/80">✨ {tagline}</p>
         )}
-        {store.promo && (
+        {store.promo && !isClosed && (
           <div className="mt-3 inline-flex items-center gap-1 rounded-full gradient-promo px-3 py-1 text-[11px] font-bold text-primary-foreground shadow-glow">
             🔥 {store.promo}
           </div>
