@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllExternalListings, type ExternalListing } from "@/hooks/useExternalListings";
-import { CATEGORIES } from "@/components/CategoryGrid";
+import { CATEGORIES, SUBCATEGORIES } from "@/components/CategoryGrid";
 import { LocationPicker } from "@/components/LocationPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,7 @@ type FormState = {
   name: string;
   logo: string;
   category_key: string;
+  subcategory_key: string;
   catalog_url: string;
   address: string;
   lat: number | null;
@@ -50,6 +51,7 @@ const emptyForm: FormState = {
   name: "",
   logo: "🏪",
   category_key: CATEGORIES[0].key,
+  subcategory_key: "",
   catalog_url: "",
   address: "",
   lat: null,
@@ -102,6 +104,7 @@ const AdminListings = () => {
       name: form.name.trim(),
       logo: form.logo.trim() || null,
       category_key: form.category_key,
+      subcategory_key: form.subcategory_key || null,
       catalog_url: form.catalog_url.trim(),
       address: form.address.trim() || null,
       lat: form.lat,
@@ -148,6 +151,7 @@ const AdminListings = () => {
       name: l.name,
       logo: l.logo ?? "🏪",
       category_key: l.category_key,
+      subcategory_key: (l as any).subcategory_key ?? "",
       catalog_url: l.catalog_url,
       address: l.address ?? "",
       lat: l.lat,
