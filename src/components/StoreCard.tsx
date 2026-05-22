@@ -2,6 +2,12 @@ import { Link } from "react-router-dom";
 import { Clock, Bike, MapPin, CheckCircle2, AlertCircle, Star } from "lucide-react";
 import type { Store } from "@/data/stores";
 import { formatDistance } from "@/lib/distance";
+import { LazyImage } from "./LazyImage";
+
+function isImageUrl(str: string): boolean {
+  return /^https?:\/\//i.test(str) || /\.(png|jpe?g|webp|svg|gif|bmp)(\?.*)?$/i.test(str);
+}
+
 
 type Props = {
   store: Store;
