@@ -6,7 +6,6 @@ import {
   Store as StoreIcon,
   MapPin,
   Tag,
-  Sparkles,
   CheckCircle2,
   Copy,
   QrCode,
