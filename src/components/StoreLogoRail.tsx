@@ -23,7 +23,7 @@ export const StoreLogoRail = ({ title, subtitle, stores }: Props) => {
         {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </div>
 
-      <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-1">
+      <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-1 pl-[15px]">
         {stores.map((s) => {
           const externalUrl = (s as any)._externalUrl as string | undefined;
           const isExternal = !!externalUrl;
