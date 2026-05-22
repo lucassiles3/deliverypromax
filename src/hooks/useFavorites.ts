@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,10 +11,11 @@ function useFavoritesRealtime(
 ) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const instanceId = useId();
   useEffect(() => {
     if (!user) return;
     const channel = supabase
-      .channel(`rt-${table}-${user.id}`)
+      .channel(`rt-${table}-${user.id}-${instanceId}-${Math.random().toString(36).slice(2, 8)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table, filter: `user_id=eq.${user.id}` },
@@ -26,7 +27,8 @@ function useFavoritesRealtime(
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, qc, table, invalidateKeys.join(",")]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, table]);
 }
 
 export const useFavoriteProducts = () => {
