@@ -205,8 +205,12 @@ const AdminListings = () => {
                   className="rounded-2xl border bg-card p-4 shadow-card transition-smooth hover:shadow-float"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-muted text-2xl">
-                      {l.logo || "🏪"}
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted text-2xl">
+                      {l.logo && /^https?:\/\//i.test(l.logo) ? (
+                        <img src={l.logo} alt={l.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <span>{l.logo || "🏪"}</span>
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
