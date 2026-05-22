@@ -2,6 +2,12 @@ import { Link } from "react-router-dom";
 import { Clock, Bike, MapPin, CheckCircle2, AlertCircle, Star } from "lucide-react";
 import type { Store } from "@/data/stores";
 import { formatDistance } from "@/lib/distance";
+import { LazyImage } from "./LazyImage";
+
+function isImageUrl(str: string): boolean {
+  return /^https?:\/\//i.test(str) || /\.(png|jpe?g|webp|svg|gif|bmp)(\?.*)?$/i.test(str);
+}
+
 
 type Props = {
   store: Store;
@@ -35,9 +41,20 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange }: Prop
         )}
         {/* Top row: logo + name */}
         <div className="flex items-start gap-3">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl gradient-primary text-3xl text-primary-foreground shadow-glow">
-            {store.logo}
-          </div>
+          {isImageUrl(store.logo) ? (
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-card shadow-glow">
+              <LazyImage
+                src={store.logo}
+                alt={store.name}
+                className="h-full w-full object-cover"
+                fallback="/placeholder.svg"
+              />
+            </div>
+          ) : (
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl gradient-primary text-3xl text-primary-foreground shadow-glow">
+              {store.logo}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <h3 className="truncate font-display text-lg font-bold leading-tight">{store.name}</h3>
             <p className="truncate text-xs text-muted-foreground">{store.cuisine}</p>
