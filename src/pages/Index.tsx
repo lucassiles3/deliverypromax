@@ -81,8 +81,13 @@ const Index = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const { data: addresses } = useAddresses();
-  const { data: stores = [], isLoading } = useStores();
-  const { data: featuredProducts = [] } = useFeaturedProducts(stores);
+  const { data: storesData = [], isLoading } = useStores();
+  const { data: externalListings = [] } = useExternalListings();
+  const stores = useMemo(
+    () => [...storesData, ...(externalListings as any[])] as any[],
+    [storesData, externalListings],
+  );
+  const { data: featuredProducts = [] } = useFeaturedProducts(storesData);
 
   const defaultAddr = useMemo(
     () => addresses?.find((a: any) => a.is_default) ?? addresses?.[0] ?? null,
