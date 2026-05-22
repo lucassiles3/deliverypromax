@@ -1,8 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ShoppingBag, MapPin, Sparkles, LogIn, LogOut, Store as StoreIcon, User as UserIcon, Home, Grid3x3, Receipt, Heart } from "lucide-react";
+import { ShoppingBag, MapPin, LogIn, LogOut, Store as StoreIcon, User as UserIcon, Home, Grid3x3, Receipt, Heart } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
-import { useLoyalty, tierOf } from "@/hooks/useLoyalty";
 import { useAuth } from "@/hooks/useAuth";
 import { NotificationBell } from "@/components/NotificationBell";
 
