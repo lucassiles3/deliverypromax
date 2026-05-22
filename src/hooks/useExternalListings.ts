@@ -13,6 +13,8 @@ export type ExternalListing = {
   lng: number | null;
   opening_hours: Record<string, { open?: string; close?: string; closed?: boolean }> | null;
   active: boolean;
+  delivery_time: string | null;
+  delivery_radius_km: number | null;
 };
 
 const cuisineFromCategory = (key: string): string => {
