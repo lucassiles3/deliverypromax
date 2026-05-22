@@ -42,6 +42,8 @@ type FormState = {
   lng: number | null;
   opening_hours: Hours;
   active: boolean;
+  delivery_time: string;
+  delivery_radius_km: number | null;
 };
 
 const emptyForm: FormState = {
@@ -54,6 +56,8 @@ const emptyForm: FormState = {
   lng: null,
   opening_hours: defaultHours,
   active: true,
+  delivery_time: "",
+  delivery_radius_km: null,
 };
 
 const AdminListings = () => {
