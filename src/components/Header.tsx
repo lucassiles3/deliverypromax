@@ -14,9 +14,7 @@ const NAV_ITEMS = [
 
 export const Header = () => {
   const { count, setOpen } = useCart();
-  const loyalty = useLoyalty();
   const { user, signOut, isOwner } = useAuth();
-  const tier = tierOf(loyalty.totalSpent);
   const location = useLocation();
   const navigate = useNavigate();
   const isHome = location.pathname === "/";
