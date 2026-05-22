@@ -391,10 +391,6 @@ const ListingForm = ({
                 />
               </div>
             </div>
-            <div>
-              <Label className="text-xs">Endereço</Label>
-              <Input value={value.address} onChange={(e) => set("address", e.target.value)} />
-            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <Label className="text-xs">Tempo de entrega</Label>
