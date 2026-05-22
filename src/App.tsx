@@ -57,6 +57,7 @@ const Recompensas = lazy(() => import("./pages/Recompensas.tsx"));
 const Master = lazy(() => import("./pages/Master.tsx"));
 const Landing = lazy(() => import("./pages/Landing.tsx"));
 const Cadastro = lazy(() => import("./pages/Cadastro.tsx"));
+const AdminListings = lazy(() => import("./pages/AdminListings.tsx"));
 
 const PageFallback = () => (
   <div className="flex min-h-[60vh] items-center justify-center">
