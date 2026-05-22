@@ -89,28 +89,6 @@ export const Header = () => {
               )}
             </button>
           )}
-            <button
-              onClick={() => navigate(isAdminView ? "/" : "/admin")}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-bounce hover:scale-105 ${
-                isAdminView
-                  ? "bg-primary text-primary-foreground shadow-glow"
-                  : "bg-accent/15 text-accent-foreground hover:bg-accent/25"
-              }`}
-              title={isAdminView ? "Ver como cliente" : "Ver como lojista"}
-            >
-              {isAdminView ? (
-                <>
-                  <UserIcon className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Modo Cliente</span>
-                </>
-              ) : (
-                <>
-                  <StoreIcon className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Modo Lojista</span>
-                </>
-              )}
-            </button>
-          )}
           {user ? (
             <>
               <NotificationBell />
