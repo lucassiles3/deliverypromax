@@ -14,6 +14,7 @@ import {
   LifeBuoy,
   LogOut,
   Shield,
+  Image as ImageIcon,
 } from "lucide-react";
 import MasterDashboard from "@/components/master/MasterDashboard";
 import MasterStores from "@/components/master/MasterStores";
@@ -22,6 +23,8 @@ import MasterOrders from "@/components/master/MasterOrders";
 import MasterUsers from "@/components/master/MasterUsers";
 import MasterLogs from "@/components/master/MasterLogs";
 import MasterSupport from "@/components/master/MasterSupport";
+import MasterBanners from "@/components/master/MasterBanners";
+
 
 type View =
   | "dashboard"
@@ -29,6 +32,7 @@ type View =
   | "subscriptions"
   | "orders"
   | "users"
+  | "banners"
   | "logs"
   | "support";
 
@@ -38,9 +42,11 @@ const NAV: { key: View; label: string; icon: React.ComponentType<{ className?: s
   { key: "subscriptions", label: "Assinaturas", icon: CreditCard },
   { key: "orders", label: "Pedidos", icon: ShoppingBag },
   { key: "users", label: "Usuários", icon: Users },
+  { key: "banners", label: "Banners", icon: ImageIcon },
   { key: "logs", label: "Logs", icon: Activity },
   { key: "support", label: "Suporte", icon: LifeBuoy },
 ];
+
 
 export default function Master() {
   const nav = useNavigate();
@@ -82,10 +88,12 @@ export default function Master() {
       case "subscriptions": return <MasterSubscriptions />;
       case "orders": return <MasterOrders />;
       case "users": return <MasterUsers />;
+      case "banners": return <MasterBanners />;
       case "logs": return <MasterLogs />;
       case "support": return <MasterSupport />;
     }
   }, [view]);
+
 
   if (authState === "loading") {
     return (
