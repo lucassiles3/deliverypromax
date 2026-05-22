@@ -378,7 +378,9 @@ const ListingForm = ({
                 <Label className="text-xs">Categoria *</Label>
                 <select
                   value={value.category_key}
-                  onChange={(e) => set("category_key", e.target.value)}
+                  onChange={(e) =>
+                    onChange({ ...value, category_key: e.target.value, subcategory_key: "" })
+                  }
                   className="mt-1 w-full rounded-md border-2 border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none"
                 >
                   {CATEGORIES.map((c) => (
@@ -395,6 +397,32 @@ const ListingForm = ({
                 />
               </div>
             </div>
+            {/* Subcategoria com chips para seleção rápida */}
+            {(SUBCATEGORIES[value.category_key]?.length ?? 0) > 0 && (
+              <div>
+                <Label className="text-xs">Subcategoria</Label>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {SUBCATEGORIES[value.category_key].map((s) => {
+                    const on = value.subcategory_key === s.key;
+                    return (
+                      <button
+                        type="button"
+                        key={s.key}
+                        onClick={() => set("subcategory_key", on ? "" : s.key)}
+                        className={`flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold transition-smooth ${
+                          on
+                            ? "border-transparent gradient-primary text-primary-foreground shadow-glow"
+                            : "border-border bg-card hover:border-primary/40"
+                        }`}
+                      >
+                        <span>{s.emoji}</span>
+                        {s.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <Label className="text-xs">Tempo de entrega</Label>
