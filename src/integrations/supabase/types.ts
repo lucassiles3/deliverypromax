@@ -897,6 +897,27 @@ export type Database = {
           },
         ]
       }
+      external_listing_visits: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       external_listings: {
         Row: {
           active: boolean
@@ -3859,6 +3880,17 @@ export type Database = {
       run_reactivation_campaign: {
         Args: { _campaign_id: string }
         Returns: number
+      }
+      top_visited_listings: {
+        Args: { _limit?: number }
+        Returns: {
+          catalog_url: string
+          category_key: string
+          id: string
+          logo: string
+          name: string
+          visits: number
+        }[]
       }
     }
     Enums: {
