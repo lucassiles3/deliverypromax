@@ -3,13 +3,14 @@ import { Link, Navigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useFavoriteProducts, useFavoriteStores } from "@/hooks/useFavorites";
+import { useFavoriteProducts, useFavoriteStores, useFavoriteListings } from "@/hooks/useFavorites";
 import { useAuth } from "@/hooks/useAuth";
 
 const Favoritos = () => {
   const { user, loading } = useAuth();
   const { data: products = [], isLoading: lp } = useFavoriteProducts();
   const { data: stores = [], isLoading: ls } = useFavoriteStores();
+  const { data: listings = [], isLoading: ll } = useFavoriteListings();
 
   if (loading) return <div className="min-h-screen" />;
   if (!user) return <Navigate to="/auth" replace />;
@@ -63,9 +64,9 @@ const Favoritos = () => {
           </TabsContent>
 
           <TabsContent value="stores" className="mt-4">
-            {ls ? (
+            {ls || ll ? (
               <Loader2 className="mx-auto my-12 h-6 w-6 animate-spin text-primary" />
-            ) : stores.length === 0 ? (
+            ) : stores.length === 0 && listings.length === 0 ? (
               <EmptyState text="Você ainda não favoritou nenhuma loja." />
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -84,6 +85,31 @@ const Favoritos = () => {
                     </div>
                   </Link>
                 ))}
+                {listings.map((f: any) => {
+                  const l = f.external_listings;
+                  if (!l) return null;
+                  const isUrl = typeof l.logo === "string" && /^https?:\/\//i.test(l.logo);
+                  return (
+                    <a
+                      key={f.id}
+                      href={l.catalog_url}
+                      rel="noopener"
+                      className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-soft hover:shadow-card transition-smooth"
+                    >
+                      <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-muted text-3xl">
+                        {isUrl ? (
+                          <img src={l.logo} alt={l.name} className="h-full w-full object-cover" />
+                        ) : (
+                          l.logo ?? "🏪"
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-display font-semibold truncate">{l.name}</h3>
+                        <p className="text-xs text-muted-foreground truncate">{l.address ?? "Parceiro"}</p>
+                      </div>
+                    </a>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
