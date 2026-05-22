@@ -4,6 +4,8 @@ import {
   useToggleFavoriteProduct,
   useFavoriteStoreIds,
   useToggleFavoriteStore,
+  useFavoriteListingIds,
+  useToggleFavoriteListing,
 } from "@/hooks/useFavorites";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -75,7 +77,43 @@ export const FavoriteStoreButton = ({
       aria-label={isFav ? "Remover loja dos favoritos" : "Favoritar loja"}
       className={`flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur shadow-card transition-bounce hover:scale-110 ${className}`}
     >
-      <Heart className={`h-4 w-4 ${isFav ? "fill-destructive text-destructive" : "text-foreground"}`} strokeWidth={2.5} />
+      <Heart className={`h-4 w-4 transition-all duration-200 ${isFav ? "fill-destructive text-destructive scale-110" : "text-foreground"}`} strokeWidth={2.5} />
+    </button>
+  );
+};
+
+export const FavoriteListingButton = ({
+  listingId,
+  className = "",
+}: {
+  listingId: string;
+  className?: string;
+}) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { data: ids } = useFavoriteListingIds();
+  const toggle = useToggleFavoriteListing();
+  const isFav = !!ids?.has(listingId);
+
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (!user) {
+          toast({ description: "Entre para favoritar lojas" });
+          navigate("/auth");
+          return;
+        }
+        toggle.mutate({ listingId, isFav });
+      }}
+      aria-label={isFav ? "Remover loja dos favoritos" : "Favoritar loja"}
+      className={`flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur shadow-card transition-bounce hover:scale-110 ${className}`}
+    >
+      <Heart
+        className={`h-4 w-4 transition-all duration-200 ${isFav ? "fill-destructive text-destructive scale-110" : "text-foreground"}`}
+        strokeWidth={2.5}
+      />
     </button>
   );
 };

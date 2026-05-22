@@ -978,6 +978,27 @@ export type Database = {
         }
         Relationships: []
       }
+      favorite_external_listings: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       favorite_products: {
         Row: {
           created_at: string

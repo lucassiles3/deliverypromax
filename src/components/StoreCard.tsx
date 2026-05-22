@@ -3,6 +3,7 @@ import { Clock, Bike, MapPin, CheckCircle2, AlertCircle, Star } from "lucide-rea
 import type { Store } from "@/data/stores";
 import { formatDistance } from "@/lib/distance";
 import { LazyImage } from "./LazyImage";
+import { FavoriteStoreButton, FavoriteListingButton } from "./FavoriteButton";
 
 function isImageUrl(str: string): boolean {
   return /^https?:\/\//i.test(str) || /\.(png|jpe?g|webp|svg|gif|bmp)(\?.*)?$/i.test(str);
@@ -42,11 +43,13 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange, isOpen
             : "border-border bg-card"
         }`}
       >
-        {isExternal && (
-          <span className="absolute right-3 top-3 z-10 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-foreground">
-            Parceiro
-          </span>
-        )}
+        <div className="absolute right-3 top-3 z-10">
+          {isExternal ? (
+            <FavoriteListingButton listingId={String(store.id).replace(/^ext_/, "")} />
+          ) : (
+            <FavoriteStoreButton storeId={String(store.id)} />
+          )}
+        </div>
         {isClosed && (
           <span className="absolute left-3 top-3 z-10 rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
             Fechado
