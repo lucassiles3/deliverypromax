@@ -331,6 +331,13 @@ const Index = () => {
         )}
       </section>
 
+      {/* Lojas em destaque — carrossel de logos */}
+      <StoreLogoRail
+        title="⭐ Lojas em destaque"
+        subtitle="As favoritas dos clientes"
+        stores={featuredStores}
+      />
+
       {/* Mais visitadas do mês — carrossel de logos */}
       <TopVisitedRail />
 
