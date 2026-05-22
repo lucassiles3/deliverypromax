@@ -21,7 +21,6 @@ import { LocationPicker } from "@/components/LocationPicker";
 import { useCart } from "@/context/CartContext";
 import { useStoreBySlug, useCoupons } from "@/hooks/useStores";
 import type { Coupon } from "@/data/stores";
-import { useLoyalty, CASHBACK_RATE } from "@/hooks/useLoyalty";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
@@ -39,7 +38,6 @@ const Checkout = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const updateProfile = useUpdateProfile();
-  const loyalty = useLoyalty();
   const { data: store, isLoading } = useStoreBySlug(storeSlug ?? "");
   const { data: coupons = [] } = useCoupons();
 
@@ -63,7 +61,6 @@ const Checkout = () => {
   const [saveContact, setSaveContact] = useState(true);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [useCashback, setUseCashback] = useState(false);
   const [step, setStep] = useState<"form" | "pix" | "done">("form");
   const [submitting, setSubmitting] = useState(false);
   const [paidLinkUrl, setPaidLinkUrl] = useState<string | null>(null);
@@ -250,11 +247,7 @@ const Checkout = () => {
     return appliedCoupon.value;
   }, [appliedCoupon, subtotal, fee, method]);
 
-  const cashbackAvail = Math.min(loyalty.cashback, Math.max(0, subtotal - couponDiscount));
-  const cashbackUsed = useCashback ? cashbackAvail : 0;
-
-  const total = Math.max(0, subtotal + fee - couponDiscount - cashbackUsed);
-  const earned = Math.round(Math.max(0, total) * CASHBACK_RATE * 100) / 100;
+  const total = Math.max(0, subtotal + fee - couponDiscount);
 
   // Verificação de raio de entrega
   const deliveryDistance =
@@ -454,7 +447,6 @@ const Checkout = () => {
     if (fee > 0) lines.push(`Entrega: R$ ${fee.toFixed(2).replace(".", ",")}`);
     if (couponDiscount > 0)
       lines.push(`Cupom (${appliedCoupon?.code}): -R$ ${couponDiscount.toFixed(2).replace(".", ",")}`);
-    if (cashbackUsed > 0) lines.push(`Cashback: -R$ ${cashbackUsed.toFixed(2).replace(".", ",")}`);
     lines.push(`*Total: R$ ${total.toFixed(2).replace(".", ",")}*`);
     lines.push("");
     lines.push(`💳 *Pagamento:* ${paymentLabel[payment]}${
@@ -498,8 +490,6 @@ const Checkout = () => {
           delivery_fee: fee,
           coupon_code: appliedCoupon?.code ?? null,
           coupon_discount: couponDiscount,
-          cashback_used: cashbackUsed,
-          cashback_earned: earned,
           total,
           notes: orderNotes,
           // PIX só fica em "pending_payment" se a loja tiver gateway integrado (MP/Asaas).
