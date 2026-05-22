@@ -491,17 +491,25 @@ const Index = () => {
                 </div>
               </div>
               <div className="flex flex-col gap-3">
-                {(externalListings as any[]).map((s, i) => {
-                  const enrichedItem = enriched.find((e: any) => e.id === s.id) as any;
-                  return (
-                    <StoreCard
-                      key={s.id}
-                      store={s}
-                      index={i}
-                      distanceKm={enrichedItem?._distance ?? null}
-                    />
-                  );
-                })}
+                {(externalListings as any[])
+                  .slice()
+                  .sort((a, b) => {
+                    const aOpen = enriched.find((e: any) => e.id === a.id)?._open ?? true;
+                    const bOpen = enriched.find((e: any) => e.id === b.id)?._open ?? true;
+                    return Number(bOpen) - Number(aOpen);
+                  })
+                  .map((s, i) => {
+                    const enrichedItem = enriched.find((e: any) => e.id === s.id) as any;
+                    return (
+                      <StoreCard
+                        key={s.id}
+                        store={s}
+                        index={i}
+                        distanceKm={enrichedItem?._distance ?? null}
+                        isOpen={enrichedItem?._open ?? true}
+                      />
+                    );
+                  })}
               </div>
             </section>
           )}
