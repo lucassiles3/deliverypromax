@@ -381,21 +381,10 @@ const OrderDetails = () => {
                 <dd>−{brl(Number(order.coupon_discount))}</dd>
               </div>
             )}
-            {Number(order.cashback_used) > 0 && (
-              <div className="flex justify-between text-success">
-                <dt>Cashback usado</dt>
-                <dd>−{brl(Number(order.cashback_used))}</dd>
-              </div>
-            )}
             <div className="mt-2 flex justify-between border-t pt-2 text-base font-bold">
               <dt>Total</dt>
               <dd>{brl(Number(order.total))}</dd>
             </div>
-            {Number(order.cashback_earned) > 0 && (
-              <p className="mt-1 text-xs text-success">
-                ✨ Você ganhou {brl(Number(order.cashback_earned))} de cashback
-              </p>
-            )}
           </dl>
         </section>
 
