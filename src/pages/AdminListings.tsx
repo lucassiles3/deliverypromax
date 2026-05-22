@@ -316,13 +316,33 @@ const ListingForm = ({
           <DialogTitle>{value.id ? "Editar estabelecimento" : "Novo estabelecimento"}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 md:grid-cols-[100px_1fr]">
+        <div className="grid gap-4 md:grid-cols-[120px_1fr]">
           <div>
-            <Label className="text-xs">Logo (emoji ou URL)</Label>
-            <Input value={value.logo} onChange={(e) => set("logo", e.target.value)} placeholder="🏪" />
-            <div className="mt-2 flex h-20 items-center justify-center rounded-xl bg-muted text-4xl">
-              {value.logo || "🏪"}
+            <Label className="text-xs">Logo</Label>
+            <div className="mt-1 flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl border bg-muted text-4xl">
+              {isImageUrl(value.logo) ? (
+                <img src={value.logo} alt="Logo" className="h-full w-full object-cover" />
+              ) : (
+                <span>{value.logo || "🏪"}</span>
+              )}
             </div>
+            <label className="mt-2 block">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0])}
+              />
+              <span className="block cursor-pointer rounded-md border bg-card px-2 py-1.5 text-center text-[11px] font-bold hover:bg-muted">
+                {uploading ? "Enviando..." : "Enviar imagem"}
+              </span>
+            </label>
+            <Input
+              className="mt-1.5 text-xs"
+              value={value.logo}
+              onChange={(e) => set("logo", e.target.value)}
+              placeholder="🏪 ou URL"
+            />
           </div>
           <div className="space-y-3">
             <div>
@@ -355,8 +375,32 @@ const ListingForm = ({
               <Label className="text-xs">Endereço</Label>
               <Input value={value.address} onChange={(e) => set("address", e.target.value)} />
             </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label className="text-xs">Tempo de entrega</Label>
+                <Input
+                  value={value.delivery_time}
+                  onChange={(e) => set("delivery_time", e.target.value)}
+                  placeholder="ex: 30-45 min"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Raio de entrega (km)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step="0.1"
+                  value={value.delivery_radius_km ?? ""}
+                  onChange={(e) =>
+                    set("delivery_radius_km", e.target.value === "" ? null : Number(e.target.value))
+                  }
+                  placeholder="ex: 5"
+                />
+              </div>
+            </div>
           </div>
         </div>
+
 
         <div>
           <Label className="text-xs mb-1 inline-block">Localização no mapa</Label>
