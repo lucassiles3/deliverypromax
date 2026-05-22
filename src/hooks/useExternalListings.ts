@@ -16,6 +16,7 @@ export type ExternalListing = {
   active: boolean;
   delivery_time: string | null;
   delivery_radius_km: number | null;
+  delivery_fee: number | null;
 };
 
 const cuisineFromListing = (l: ExternalListing): string => {
@@ -47,7 +48,7 @@ export const useExternalListings = () =>
         rating: 5,
         reviews: 0,
         deliveryTime: l.delivery_time || "—",
-        deliveryFee: 0,
+        deliveryFee: l.delivery_fee ?? 0,
         freeShippingThreshold: 0,
         minOrder: 0,
         cover: "",

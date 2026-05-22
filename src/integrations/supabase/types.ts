@@ -905,6 +905,7 @@ export type Database = {
           category_key: string
           created_at: string
           created_by: string | null
+          delivery_fee: number | null
           delivery_radius_km: number | null
           delivery_time: string | null
           id: string
@@ -923,6 +924,7 @@ export type Database = {
           category_key: string
           created_at?: string
           created_by?: string | null
+          delivery_fee?: number | null
           delivery_radius_km?: number | null
           delivery_time?: string | null
           id?: string
@@ -941,6 +943,7 @@ export type Database = {
           category_key?: string
           created_at?: string
           created_by?: string | null
+          delivery_fee?: number | null
           delivery_radius_km?: number | null
           delivery_time?: string | null
           id?: string

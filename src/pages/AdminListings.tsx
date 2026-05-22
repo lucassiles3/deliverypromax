@@ -45,6 +45,7 @@ type FormState = {
   active: boolean;
   delivery_time: string;
   delivery_radius_km: number | null;
+  delivery_fee: number | null;
 };
 
 const emptyForm: FormState = {
@@ -60,6 +61,7 @@ const emptyForm: FormState = {
   active: true,
   delivery_time: "",
   delivery_radius_km: null,
+  delivery_fee: null,
 };
 
 const AdminListings = () => {
@@ -113,6 +115,7 @@ const AdminListings = () => {
       active: form.active,
       delivery_time: form.delivery_time.trim() || null,
       delivery_radius_km: form.delivery_radius_km,
+      delivery_fee: form.delivery_fee,
       created_by: user.id,
     };
     const op = form.id
@@ -160,6 +163,7 @@ const AdminListings = () => {
       active: l.active,
       delivery_time: (l as any).delivery_time ?? "",
       delivery_radius_km: (l as any).delivery_radius_km ?? null,
+      delivery_fee: (l as any).delivery_fee ?? null,
     });
   };
 
@@ -431,7 +435,7 @@ const ListingForm = ({
                 </div>
               </div>
             )}
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3">
               <div>
                 <Label className="text-xs">Tempo de entrega</Label>
                 <Input
@@ -452,6 +456,25 @@ const ListingForm = ({
                   }
                   placeholder="ex: 5"
                 />
+              </div>
+              <div>
+                <Label className="text-xs">Frete a partir de (R$)</Label>
+                <div className="relative mt-0">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
+                    a partir de
+                  </span>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.5"
+                    value={value.delivery_fee ?? ""}
+                    onChange={(e) =>
+                      set("delivery_fee", e.target.value === "" ? null : Number(e.target.value))
+                    }
+                    placeholder="0,00"
+                    className="pl-24"
+                  />
+                </div>
               </div>
             </div>
           </div>

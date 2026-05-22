@@ -88,7 +88,16 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange }: Prop
           )}
           <span className="ml-auto flex items-center gap-1 font-bold text-success">
             <Bike className="h-3.5 w-3.5" />
-            {store.deliveryFee === 0 ? "Grátis" : `R$${store.deliveryFee.toFixed(2)}`}
+            {store.deliveryFee === 0 ? (
+              "Grátis"
+            ) : (
+              <>
+                {isExternal && (
+                  <span className="text-[10px] font-semibold text-muted-foreground">a partir de</span>
+                )}
+                R${store.deliveryFee.toFixed(2)}
+              </>
+            )}
           </span>
         </div>
 
