@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES, SUBCATEGORIES } from "@/components/CategoryGrid";
+import { isOpenNow } from "@/lib/openingHours";
 
 export type ExternalListing = {
   id: string;
@@ -54,7 +55,7 @@ export const useExternalListings = () =>
         cover: "",
         logo: l.logo || "🏪",
         city: "",
-        open: true,
+        open: isOpenNow(l.opening_hours as any),
         promo: undefined,
         categories: [],
         products: [],

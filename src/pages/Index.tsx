@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { SmartSearch } from "@/components/SmartSearch";
 import { CategoryGrid, CATEGORIES, matchCategory, SUBCATEGORIES, matchSubcategory } from "@/components/CategoryGrid";
 import { StoreRail } from "@/components/StoreRail";
+import { StoreLogoRail } from "@/components/StoreLogoRail";
 import { StoreCard } from "@/components/StoreCard";
 import { ProductRail } from "@/components/ProductRail";
 import { AdBanner } from "@/components/AdBanner";
@@ -465,7 +466,7 @@ const Index = () => {
             subtitle="Os queridinhos dos clientes"
             products={featuredProducts}
           />
-          <StoreRail
+          <StoreLogoRail
             title="⭐ Lojas em destaque"
             subtitle="As favoritas dos clientes"
             stores={featuredStores}
