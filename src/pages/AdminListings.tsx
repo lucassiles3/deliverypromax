@@ -438,27 +438,38 @@ const ListingForm = ({
             <div className="grid gap-3 sm:grid-cols-3">
               <div>
                 <Label className="text-xs">Tempo de entrega</Label>
-                <Input
+                <select
                   value={value.delivery_time}
                   onChange={(e) => set("delivery_time", e.target.value)}
-                  placeholder="ex: 30-45 min"
-                />
+                  className="mt-1 w-full rounded-md border-2 border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                >
+                  <option value="">Selecione...</option>
+                  {Array.from({ length: 12 }, (_, i) => (i + 1) * 10).map((m) => (
+                    <option key={m} value={`${m} min`}>{`Até ${m} min`}</option>
+                  ))}
+                  {Array.from({ length: 6 }, (_, i) => (i + 1) * 10).map((m) => {
+                    const v = `${m}-${m + 10} min`;
+                    return <option key={v} value={v}>{v}</option>;
+                  })}
+                </select>
               </div>
               <div>
                 <Label className="text-xs">Raio de entrega (km)</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  step="0.1"
+                <select
                   value={value.delivery_radius_km ?? ""}
                   onChange={(e) =>
                     set("delivery_radius_km", e.target.value === "" ? null : Number(e.target.value))
                   }
-                  placeholder="ex: 5"
-                />
+                  className="mt-1 w-full rounded-md border-2 border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                >
+                  <option value="">Selecione...</option>
+                  {[1, 2, 3, 5, 7, 10, 15, 20, 25, 30, 40, 50].map((km) => (
+                    <option key={km} value={km}>{km} km</option>
+                  ))}
+                </select>
               </div>
               <div>
-                <Label className="text-xs">Frete a partir de (R$)</Label>
+                <Label className="text-xs">Frete a partir de (R$) — opcional</Label>
                 <div className="relative mt-0">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
                     a partir de

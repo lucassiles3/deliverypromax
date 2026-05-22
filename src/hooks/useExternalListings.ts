@@ -48,7 +48,7 @@ export const useExternalListings = () =>
         rating: 5,
         reviews: 0,
         deliveryTime: l.delivery_time || "—",
-        deliveryFee: l.delivery_fee ?? 0,
+        deliveryFee: l.delivery_fee ?? null,
         freeShippingThreshold: 0,
         minOrder: 0,
         cover: "",
