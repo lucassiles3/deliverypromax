@@ -42,6 +42,8 @@ type FormState = {
   lng: number | null;
   opening_hours: Hours;
   active: boolean;
+  delivery_time: string;
+  delivery_radius_km: number | null;
 };
 
 const emptyForm: FormState = {
@@ -54,6 +56,8 @@ const emptyForm: FormState = {
   lng: null,
   opening_hours: defaultHours,
   active: true,
+  delivery_time: "",
+  delivery_radius_km: null,
 };
 
 const AdminListings = () => {
@@ -104,6 +108,8 @@ const AdminListings = () => {
       lng: form.lng,
       opening_hours: form.opening_hours,
       active: form.active,
+      delivery_time: form.delivery_time.trim() || null,
+      delivery_radius_km: form.delivery_radius_km,
       created_by: user.id,
     };
     const op = form.id
@@ -148,6 +154,8 @@ const AdminListings = () => {
       lng: l.lng,
       opening_hours: { ...defaultHours, ...((l.opening_hours as Hours) ?? {}) },
       active: l.active,
+      delivery_time: (l as any).delivery_time ?? "",
+      delivery_radius_km: (l as any).delivery_radius_km ?? null,
     });
   };
 
@@ -197,8 +205,12 @@ const AdminListings = () => {
                   className="rounded-2xl border bg-card p-4 shadow-card transition-smooth hover:shadow-float"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-muted text-2xl">
-                      {l.logo || "🏪"}
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted text-2xl">
+                      {l.logo && /^https?:\/\//i.test(l.logo) ? (
+                        <img src={l.logo} alt={l.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <span>{l.logo || "🏪"}</span>
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
@@ -269,6 +281,30 @@ const ListingForm = ({
   onSave: () => void;
 }) => {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => onChange({ ...value, [k]: v });
+  const [uploading, setUploading] = useState(false);
+
+  const handleLogoUpload = async (file: File) => {
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Logo deve ter no máximo 2MB");
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop() || "png";
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("listing-logos").upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type,
+    });
+    setUploading(false);
+    if (error) return toast.error(error.message);
+    const { data } = supabase.storage.from("listing-logos").getPublicUrl(path);
+    set("logo", data.publicUrl);
+    toast.success("Logo enviada");
+  };
+
+  const isImageUrl = (s: string) => /^https?:\/\//i.test(s);
 
   const applyToAllDays = () => {
     const ref = value.opening_hours.mon;
@@ -284,13 +320,33 @@ const ListingForm = ({
           <DialogTitle>{value.id ? "Editar estabelecimento" : "Novo estabelecimento"}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 md:grid-cols-[100px_1fr]">
+        <div className="grid gap-4 md:grid-cols-[120px_1fr]">
           <div>
-            <Label className="text-xs">Logo (emoji ou URL)</Label>
-            <Input value={value.logo} onChange={(e) => set("logo", e.target.value)} placeholder="🏪" />
-            <div className="mt-2 flex h-20 items-center justify-center rounded-xl bg-muted text-4xl">
-              {value.logo || "🏪"}
+            <Label className="text-xs">Logo</Label>
+            <div className="mt-1 flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl border bg-muted text-4xl">
+              {isImageUrl(value.logo) ? (
+                <img src={value.logo} alt="Logo" className="h-full w-full object-cover" />
+              ) : (
+                <span>{value.logo || "🏪"}</span>
+              )}
             </div>
+            <label className="mt-2 block">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0])}
+              />
+              <span className="block cursor-pointer rounded-md border bg-card px-2 py-1.5 text-center text-[11px] font-bold hover:bg-muted">
+                {uploading ? "Enviando..." : "Enviar imagem"}
+              </span>
+            </label>
+            <Input
+              className="mt-1.5 text-xs"
+              value={value.logo}
+              onChange={(e) => set("logo", e.target.value)}
+              placeholder="🏪 ou URL"
+            />
           </div>
           <div className="space-y-3">
             <div>
@@ -323,8 +379,32 @@ const ListingForm = ({
               <Label className="text-xs">Endereço</Label>
               <Input value={value.address} onChange={(e) => set("address", e.target.value)} />
             </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label className="text-xs">Tempo de entrega</Label>
+                <Input
+                  value={value.delivery_time}
+                  onChange={(e) => set("delivery_time", e.target.value)}
+                  placeholder="ex: 30-45 min"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Raio de entrega (km)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step="0.1"
+                  value={value.delivery_radius_km ?? ""}
+                  onChange={(e) =>
+                    set("delivery_radius_km", e.target.value === "" ? null : Number(e.target.value))
+                  }
+                  placeholder="ex: 5"
+                />
+              </div>
+            </div>
           </div>
         </div>
+
 
         <div>
           <Label className="text-xs mb-1 inline-block">Localização no mapa</Label>

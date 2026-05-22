@@ -13,6 +13,8 @@ export type ExternalListing = {
   lng: number | null;
   opening_hours: Record<string, { open?: string; close?: string; closed?: boolean }> | null;
   active: boolean;
+  delivery_time: string | null;
+  delivery_radius_km: number | null;
 };
 
 const cuisineFromCategory = (key: string): string => {
@@ -39,7 +41,7 @@ export const useExternalListings = () =>
         cuisine: cuisineFromCategory(l.category_key),
         rating: 5,
         reviews: 0,
-        deliveryTime: "—",
+        deliveryTime: l.delivery_time || "—",
         deliveryFee: 0,
         freeShippingThreshold: 0,
         minOrder: 0,
@@ -52,7 +54,7 @@ export const useExternalListings = () =>
         products: [],
         lat: l.lat ?? undefined,
         lng: l.lng ?? undefined,
-        deliveryRadiusKm: undefined,
+        deliveryRadiusKm: l.delivery_radius_km ?? undefined,
         // marca como externo
         _external: true,
         _externalUrl: l.catalog_url,

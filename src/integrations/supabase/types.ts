@@ -905,6 +905,8 @@ export type Database = {
           category_key: string
           created_at: string
           created_by: string | null
+          delivery_radius_km: number | null
+          delivery_time: string | null
           id: string
           lat: number | null
           lng: number | null
@@ -920,6 +922,8 @@ export type Database = {
           category_key: string
           created_at?: string
           created_by?: string | null
+          delivery_radius_km?: number | null
+          delivery_time?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
@@ -935,6 +939,8 @@ export type Database = {
           category_key?: string
           created_at?: string
           created_by?: string | null
+          delivery_radius_km?: number | null
+          delivery_time?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
