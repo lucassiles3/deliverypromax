@@ -473,11 +473,6 @@ const Index = () => {
             subtitle="Os queridinhos dos clientes"
             products={featuredProducts}
           />
-          <StoreLogoRail
-            title="⭐ Lojas em destaque"
-            subtitle="As favoritas dos clientes"
-            stores={featuredStores}
-          />
           {nearbyStores.length > 0 && (
             <StoreRail
               title="📍 Próximas de você"
