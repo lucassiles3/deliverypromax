@@ -45,6 +45,7 @@ type FormState = {
   active: boolean;
   delivery_time: string;
   delivery_radius_km: number | null;
+  delivery_fee: number | null;
 };
 
 const emptyForm: FormState = {
@@ -60,6 +61,7 @@ const emptyForm: FormState = {
   active: true,
   delivery_time: "",
   delivery_radius_km: null,
+  delivery_fee: null,
 };
 
 const AdminListings = () => {
