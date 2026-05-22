@@ -115,6 +115,7 @@ const AdminListings = () => {
       active: form.active,
       delivery_time: form.delivery_time.trim() || null,
       delivery_radius_km: form.delivery_radius_km,
+      delivery_fee: form.delivery_fee,
       created_by: user.id,
     };
     const op = form.id
