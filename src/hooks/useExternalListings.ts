@@ -41,7 +41,7 @@ export const useExternalListings = () =>
         cuisine: cuisineFromCategory(l.category_key),
         rating: 5,
         reviews: 0,
-        deliveryTime: "—",
+        deliveryTime: l.delivery_time || "—",
         deliveryFee: 0,
         freeShippingThreshold: 0,
         minOrder: 0,
@@ -54,7 +54,7 @@ export const useExternalListings = () =>
         products: [],
         lat: l.lat ?? undefined,
         lng: l.lng ?? undefined,
-        deliveryRadiusKm: undefined,
+        deliveryRadiusKm: l.delivery_radius_km ?? undefined,
         // marca como externo
         _external: true,
         _externalUrl: l.catalog_url,
