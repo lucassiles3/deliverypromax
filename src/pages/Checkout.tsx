@@ -142,7 +142,7 @@ const Checkout = () => {
   }, [enabledMethods, creditLinkEnabled, payment]);
 
   useEffect(() => {
-    document.title = "Checkout • FoodFlash";
+    document.title = "Checkout • Itchat Brasil";
   }, []);
 
   // Pré-preenche nome/telefone: perfil do usuário > último contato salvo
@@ -588,7 +588,7 @@ const Checkout = () => {
     () =>
       `00020126360014BR.GOV.BCB.PIX0114+5511999999999520400005303986540${total
         .toFixed(2)
-        .padStart(6, "0")}5802BR5913FoodFlash6009Sao Paulo62070503***6304ABCD`,
+        .padStart(6, "0")}5802BR5913Itchat Brasil6009Sao Paulo62070503***6304ABCD`,
     [total],
   );
 

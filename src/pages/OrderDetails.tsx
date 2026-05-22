@@ -74,7 +74,7 @@ const OrderDetails = () => {
   const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
-    document.title = "Detalhes do pedido • FoodFlash";
+    document.title = "Detalhes do pedido • Itchat Brasil";
   }, []);
 
   const { data: order, isLoading } = useQuery({

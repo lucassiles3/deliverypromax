@@ -14,7 +14,7 @@ const ResetPassword = () => {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    document.title = "Redefinir senha • FoodFlash";
+    document.title = "Redefinir senha • Itchat Brasil";
     // Supabase recovery: session is established automatically from URL hash
     const { data: sub } = supabase.auth.onAuthStateChange((evt) => {
       if (evt === "PASSWORD_RECOVERY" || evt === "SIGNED_IN") setReady(true);

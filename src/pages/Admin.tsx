@@ -192,7 +192,7 @@ const Admin = () => {
   );
 
   useEffect(() => {
-    const base = "Painel Admin • FoodFlash";
+    const base = "Painel Admin • Itchat Brasil";
     document.title = pendingCount > 0 ? `(${pendingCount}) ${base}` : base;
   }, [pendingCount]);
 
