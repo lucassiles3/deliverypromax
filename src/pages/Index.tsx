@@ -9,6 +9,7 @@ import { StoreRail } from "@/components/StoreRail";
 import { StoreCard } from "@/components/StoreCard";
 import { ProductRail } from "@/components/ProductRail";
 import { AdBanner } from "@/components/AdBanner";
+import { TopVisitedRail } from "@/components/TopVisitedRail";
 import { useStores } from "@/hooks/useStores";
 import { useExternalListings } from "@/hooks/useExternalListings";
 import { useAuth } from "@/hooks/useAuth";
@@ -328,6 +329,9 @@ const Index = () => {
           </div>
         )}
       </section>
+
+      {/* Mais visitadas do mês — carrossel de logos */}
+      <TopVisitedRail />
 
       {/* Filtros */}
       <section className="container pb-3">
