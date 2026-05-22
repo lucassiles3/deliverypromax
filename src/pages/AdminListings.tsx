@@ -435,7 +435,7 @@ const ListingForm = ({
                 </div>
               </div>
             )}
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3">
               <div>
                 <Label className="text-xs">Tempo de entrega</Label>
                 <Input
@@ -456,6 +456,25 @@ const ListingForm = ({
                   }
                   placeholder="ex: 5"
                 />
+              </div>
+              <div>
+                <Label className="text-xs">Frete a partir de (R$)</Label>
+                <div className="relative mt-0">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
+                    a partir de
+                  </span>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.5"
+                    value={value.delivery_fee ?? ""}
+                    onChange={(e) =>
+                      set("delivery_fee", e.target.value === "" ? null : Number(e.target.value))
+                    }
+                    placeholder="0,00"
+                    className="pl-24"
+                  />
+                </div>
               </div>
             </div>
           </div>
