@@ -115,7 +115,7 @@ const Auth = () => {
       subtitle:
         account === "owner"
           ? "Entre para gerenciar pedidos da sua loja"
-          : "Entre para acessar pedidos e cashback",
+          : "Entre para acessar seus pedidos",
       cta: "Entrar",
     },
     signup: {
@@ -123,7 +123,7 @@ const Auth = () => {
       subtitle:
         account === "owner"
           ? "Cadastre-se grátis e comece a vender hoje"
-          : "Cadastre-se em 30 segundos e ganhe cashback",
+          : "Cadastre-se em 30 segundos e comece a comprar",
       cta: account === "owner" ? "Criar conta de lojista" : "Criar minha conta",
     },
     forgot: {
@@ -283,7 +283,7 @@ const Auth = () => {
               <Sparkles className="mr-1 inline h-3.5 w-3.5" />
               {account === "owner"
                 ? "0% de mensalidade • Receba pedidos no WhatsApp"
-                : "Ganhe 5% de cashback em todos os pedidos"}
+                : "Compre com segurança e praticidade"}
             </div>
           )}
 

@@ -949,10 +949,10 @@ const Checkout = () => {
                 )}
               </section>
 
-              {/* Coupon + cashback */}
+              {/* Coupon */}
               <section className="rounded-2xl bg-card p-5 shadow-soft">
                 <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold">
-                  <Tag className="h-5 w-5 text-primary" /> Cupom & Cashback
+                  <Tag className="h-5 w-5 text-primary" /> Cupom
                 </h2>
                 <div className="flex gap-2">
                   <input

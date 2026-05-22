@@ -522,7 +522,7 @@ const Index = () => {
                 Crie sua conta para recomendações personalizadas
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Cashback, favoritos e ofertas só pra você.
+                Favoritos e ofertas só pra você.
               </p>
               <Link
                 to="/auth"
