@@ -10,6 +10,7 @@ import { StoreCard } from "@/components/StoreCard";
 import { ProductRail } from "@/components/ProductRail";
 import { AdBanner } from "@/components/AdBanner";
 import { useStores } from "@/hooks/useStores";
+import { useExternalListings } from "@/hooks/useExternalListings";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useAddresses } from "@/hooks/useAddresses";
