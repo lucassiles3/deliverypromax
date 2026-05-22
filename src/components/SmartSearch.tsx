@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Store as StoreIcon, Package, Tag, Loader2, X } from "lucide-react";
+import { Search, Store as StoreIcon, Package, Tag, Loader2, X, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAsset } from "@/lib/assetMap";
 import { brl } from "@/lib/format";
@@ -13,6 +13,13 @@ type ProductHit = {
   image_url: string | null;
   store: { slug: string; name: string } | null;
 };
+type PartnerHit = {
+  id: string;
+  name: string;
+  logo: string | null;
+  catalog_url: string;
+  category_key: string;
+};
 
 export const SmartSearch = ({
   onCategoryPick,
@@ -24,6 +31,7 @@ export const SmartSearch = ({
   const [loading, setLoading] = useState(false);
   const [stores, setStores] = useState<StoreHit[]>([]);
   const [products, setProducts] = useState<ProductHit[]>([]);
+  const [partners, setPartners] = useState<PartnerHit[]>([]);
   const [cuisines, setCuisines] = useState<string[]>([]);
   const wrapRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -43,13 +51,14 @@ export const SmartSearch = ({
     if (term.length < 2) {
       setStores([]);
       setProducts([]);
+      setPartners([]);
       setCuisines([]);
       return;
     }
     setLoading(true);
     const t = setTimeout(async () => {
       const like = `%${term}%`;
-      const [{ data: ss }, { data: pp }] = await Promise.all([
+      const [{ data: ss }, { data: pp }, { data: ext }] = await Promise.all([
         supabase
           .from("stores")
           .select("id, slug, name, cuisine, logo")
@@ -61,10 +70,17 @@ export const SmartSearch = ({
           .ilike("name", like)
           .eq("active", true)
           .limit(6),
+        supabase
+          .from("external_listings")
+          .select("id, name, logo, catalog_url, category_key")
+          .ilike("name", like)
+          .eq("active", true)
+          .limit(5),
       ]);
       const sList = (ss ?? []) as StoreHit[];
       setStores(sList);
       setProducts((pp ?? []) as unknown as ProductHit[]);
+      setPartners((ext ?? []) as unknown as PartnerHit[]);
       const uniqCui = Array.from(
         new Set(sList.map((s) => s.cuisine).filter((c): c is string => !!c)),
       ).slice(0, 4);
@@ -74,13 +90,16 @@ export const SmartSearch = ({
     return () => clearTimeout(t);
   }, [q]);
 
-  const hasResults = stores.length + products.length + cuisines.length > 0;
+  const hasResults = stores.length + products.length + cuisines.length + partners.length > 0;
   const showDropdown = open && q.trim().length >= 2;
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (stores[0]) {
       navigate(`/loja/${stores[0].slug}`);
+      setOpen(false);
+    } else if (partners[0]) {
+      window.location.href = partners[0].catalog_url;
       setOpen(false);
     }
   };
@@ -169,6 +188,33 @@ export const SmartSearch = ({
                     )}
                   </div>
                 </Link>
+              ))}
+            </Section>
+          )}
+
+          {partners.length > 0 && (
+            <Section icon={<ExternalLink className="h-3.5 w-3.5" />} title="Parceiros locais">
+              {partners.map((p) => (
+                <a
+                  key={p.id}
+                  href={p.catalog_url}
+                  rel="noopener"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-muted"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-muted text-lg">
+                    {p.logo ? (
+                      <img src={p.logo} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
+                    ) : (
+                      "🤝"
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{p.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">Parceiro externo</p>
+                  </div>
+                  <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                </a>
               ))}
             </Section>
           )}
