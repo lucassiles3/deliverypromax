@@ -1,7 +1,33 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+
+/** Subscribe to realtime changes on a favorites table for the current user. */
+function useFavoritesRealtime(
+  table: "favorite_stores" | "favorite_external_listings" | "favorite_products",
+  invalidateKeys: string[],
+) {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`rt-${table}-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table, filter: `user_id=eq.${user.id}` },
+        () => {
+          invalidateKeys.forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, qc, table, invalidateKeys.join(",")]);
+}
 
 export const useFavoriteProducts = () => {
   const { user } = useAuth();
