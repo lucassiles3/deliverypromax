@@ -303,6 +303,7 @@ const Admin = () => {
   if (authLoading) return <div className="min-h-screen" />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!storesLoading && stores.length === 0) {
+    const isListingsManager = (user?.email ?? "").toLowerCase() === "suporteitchat@gmail.com";
     return (
       <div className="min-h-screen bg-muted/40 p-6">
         <div className="container mx-auto max-w-md rounded-2xl bg-card p-8 text-center shadow-soft">
@@ -310,11 +311,22 @@ const Admin = () => {
           <p className="mt-2 text-sm text-muted-foreground">
             Sua conta ainda não é dona de nenhuma loja. Fale com o administrador.
           </p>
-          <Link to="/" className="mt-4 inline-block text-sm font-bold text-primary">← Voltar</Link>
+          {isListingsManager && (
+            <Link
+              to="/admin/parceiros"
+              className="mt-4 inline-block rounded-xl gradient-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-glow"
+            >
+              Gerenciar estabelecimentos parceiros
+            </Link>
+          )}
+          <div className="mt-3">
+            <Link to="/" className="text-sm font-bold text-primary">← Voltar</Link>
+          </div>
         </div>
       </div>
     );
   }
+
 
   const currentStore = stores.find((s) => s.id === storeId);
 

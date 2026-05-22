@@ -10,6 +10,7 @@ import { StoreCard } from "@/components/StoreCard";
 import { ProductRail } from "@/components/ProductRail";
 import { AdBanner } from "@/components/AdBanner";
 import { useStores } from "@/hooks/useStores";
+import { useExternalListings } from "@/hooks/useExternalListings";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useAddresses } from "@/hooks/useAddresses";
@@ -80,8 +81,13 @@ const Index = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const { data: addresses } = useAddresses();
-  const { data: stores = [], isLoading } = useStores();
-  const { data: featuredProducts = [] } = useFeaturedProducts(stores);
+  const { data: storesData = [], isLoading } = useStores();
+  const { data: externalListings = [] } = useExternalListings();
+  const stores = useMemo(
+    () => [...storesData, ...(externalListings as any[])] as any[],
+    [storesData, externalListings],
+  );
+  const { data: featuredProducts = [] } = useFeaturedProducts(storesData);
 
   const defaultAddr = useMemo(
     () => addresses?.find((a: any) => a.is_default) ?? addresses?.[0] ?? null,

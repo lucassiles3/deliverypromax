@@ -897,6 +897,54 @@ export type Database = {
           },
         ]
       }
+      external_listings: {
+        Row: {
+          active: boolean
+          address: string | null
+          catalog_url: string
+          category_key: string
+          created_at: string
+          created_by: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          logo: string | null
+          name: string
+          opening_hours: Json | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          catalog_url: string
+          category_key: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          logo?: string | null
+          name: string
+          opening_hours?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          catalog_url?: string
+          category_key?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          logo?: string | null
+          name?: string
+          opening_hours?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorite_products: {
         Row: {
           created_at: string
@@ -3761,6 +3809,7 @@ export type Database = {
         Args: { _store_id: string; _user_id: string }
         Returns: boolean
       }
+      is_listings_manager: { Args: { _uid: string }; Returns: boolean }
       is_store_owner: {
         Args: { _store_id: string; _user_id: string }
         Returns: boolean

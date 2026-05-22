@@ -12,15 +12,27 @@ type Props = {
 
 export const StoreCard = ({ store, index = 0, distanceKm = null, inRange }: Props) => {
   const tagline = (store as any).tagline as string | undefined;
-  const showRangeBadge = typeof inRange === "boolean" && distanceKm !== null;
+  const externalUrl = (store as any)._externalUrl as string | undefined;
+  const isExternal = !!externalUrl;
+  const showRangeBadge = typeof inRange === "boolean" && distanceKm !== null && !isExternal;
+
+  const Wrapper: any = isExternal ? "a" : Link;
+  const wrapperProps: any = isExternal
+    ? { href: externalUrl, rel: "noopener" }
+    : { to: `/loja/${store.slug}` };
 
   return (
-    <Link
-      to={`/loja/${store.slug}`}
+    <Wrapper
+      {...wrapperProps}
       className="group block animate-float-in"
       style={{ animationDelay: `${index * 70}ms` }}
     >
       <article className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-card transition-smooth hover:-translate-y-1 hover:border-primary/40 hover:shadow-float">
+        {isExternal && (
+          <span className="absolute right-3 top-3 z-10 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-foreground">
+            Parceiro
+          </span>
+        )}
         {/* Top row: logo + name */}
         <div className="flex items-start gap-3">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl gradient-primary text-3xl text-primary-foreground shadow-glow">
@@ -77,6 +89,7 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange }: Prop
           </div>
         )}
       </article>
-    </Link>
+    </Wrapper>
   );
+
 };

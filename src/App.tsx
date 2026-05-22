@@ -57,6 +57,7 @@ const Recompensas = lazy(() => import("./pages/Recompensas.tsx"));
 const Master = lazy(() => import("./pages/Master.tsx"));
 const Landing = lazy(() => import("./pages/Landing.tsx"));
 const Cadastro = lazy(() => import("./pages/Cadastro.tsx"));
+const AdminListings = lazy(() => import("./pages/AdminListings.tsx"));
 
 const PageFallback = () => (
   <div className="flex min-h-[60vh] items-center justify-center">
@@ -112,6 +113,7 @@ const App = () => (
               <Route path="/loja/:slug/produto/:productId" element={<Product />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/parceiros" element={<AdminListings />} />
               <Route path="/pdv" element={<PDV />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
