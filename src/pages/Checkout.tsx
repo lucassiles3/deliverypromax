@@ -512,11 +512,6 @@ const Checkout = () => {
       const { error: itemsErr } = await supabase.from("order_items").insert(itemsPayload);
       if (itemsErr) throw itemsErr;
 
-      const { error: loyaltyErr } = await supabase.rpc("apply_order_loyalty", {
-        _order_total: total,
-        _cashback_used: cashbackUsed,
-      });
-      if (loyaltyErr) throw loyaltyErr;
 
       // Salva contato para próximos pedidos
       if (saveContact) {
@@ -558,7 +553,7 @@ const Checkout = () => {
       }
 
       setStep("done");
-      toast.success(`Pedido confirmado! Você ganhou R$ ${earned.toFixed(2).replace(".", ",")} de cashback 🎉`);
+      toast.success("Pedido confirmado! 🎉");
       // Não redireciona automaticamente quando há link de pagamento, para o cliente poder reabrir
       if (!paymentLink) {
         setTimeout(() => {
@@ -991,24 +986,6 @@ const Checkout = () => {
                   </div>
                 )}
 
-                {loyalty.cashback > 0 && (
-                  <label className="mt-4 flex cursor-pointer items-center justify-between rounded-xl border-2 border-dashed border-success/40 bg-success/5 p-3">
-                    <div>
-                      <p className="flex items-center gap-1.5 font-bold text-success">
-                        <Sparkles className="h-4 w-4" /> Usar meu cashback
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Saldo disponível: R$ {loyalty.cashback.toFixed(2).replace(".", ",")}
-                      </p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={useCashback}
-                      onChange={(e) => setUseCashback(e.target.checked)}
-                      className="h-5 w-5 accent-success"
-                    />
-                  </label>
-                )}
               </section>
             </div>
 
@@ -1030,7 +1007,6 @@ const Checkout = () => {
                   <Row label="Subtotal" value={subtotal} />
                   <Row label={method === "pickup" ? "Entrega (retirada)" : "Entrega"} value={fee} highlight={fee === 0} />
                   {couponDiscount > 0 && <Row label="Cupom" value={-couponDiscount} highlight />}
-                  {cashbackUsed > 0 && <Row label="Cashback" value={-cashbackUsed} highlight />}
                 </div>
                 <div className="flex justify-between border-t pt-3 font-display text-xl font-bold">
                   <span>Total</span>
@@ -1039,11 +1015,6 @@ const Checkout = () => {
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                   Pagamento: <strong className="text-foreground">{paymentLabel[payment]}</strong>
                 </p>
-                {earned > 0 && (
-                  <p className="mt-1 text-center text-xs font-semibold text-success">
-                    Você vai ganhar R$ {earned.toFixed(2).replace(".", ",")} de cashback ✨
-                  </p>
-                )}
                 {outOfDeliveryRange && (
                   <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs">
                     <p className="font-bold text-destructive">Fora da área de entrega</p>
