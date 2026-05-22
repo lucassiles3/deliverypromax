@@ -225,7 +225,15 @@ const AdminListings = () => {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">{cat?.label ?? l.category_key}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {cat?.label ?? l.category_key}
+                        {(l as any).subcategory_key && (() => {
+                          const sub = SUBCATEGORIES[l.category_key]?.find(
+                            (s) => s.key === (l as any).subcategory_key,
+                          );
+                          return sub ? ` • ${sub.emoji} ${sub.label}` : null;
+                        })()}
+                      </p>
                       {l.address && (
                         <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
                           <MapPin className="h-3 w-3" /> {l.address}
