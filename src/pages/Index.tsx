@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { resolveAsset } from "@/lib/assetMap";
 import { Header } from "@/components/Header";
 import { SmartSearch } from "@/components/SmartSearch";
-import { CategoryGrid, CATEGORIES, matchCategory } from "@/components/CategoryGrid";
+import { CategoryGrid, CATEGORIES, matchCategory, SUBCATEGORIES, matchSubcategory } from "@/components/CategoryGrid";
 import { StoreRail } from "@/components/StoreRail";
 import { StoreCard } from "@/components/StoreCard";
 import { ProductRail } from "@/components/ProductRail";
@@ -100,7 +100,15 @@ const Index = () => {
   const { coords, requesting, denied, requestGps } = useUserLocation(addrCoords);
 
   const [activeCat, setActiveCat] = useState<string | null>(null);
+  const [activeSub, setActiveSub] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(new Set());
+
+  // ao trocar categoria, limpa a subcategoria
+  const pickCategory = (k: string | null) => {
+    setActiveCat(k);
+    setActiveSub(null);
+  };
+  const availableSubs = activeCat ? SUBCATEGORIES[activeCat] ?? [] : [];
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -173,9 +181,20 @@ const Index = () => {
     let list = showOutOfRange ? enriched : inRangeStores;
     if (activeCat) {
       const cat = CATEGORIES.find((c) => c.key === activeCat);
-      if (cat) list = list.filter((s) => matchCategory(s.cuisine, cat));
+      if (cat) {
+        list = list.filter((s: any) =>
+          s._categoryKey === activeCat || matchCategory(s.cuisine, cat),
+        );
+      }
     }
-    // filtro "Aberto agora" removido — clientes podem comprar a qualquer hora
+    if (activeCat && activeSub) {
+      const sub = SUBCATEGORIES[activeCat]?.find((x) => x.key === activeSub);
+      if (sub) {
+        list = list.filter((s: any) =>
+          s._subcategoryKey === activeSub || matchSubcategory(s.cuisine, sub),
+        );
+      }
+    }
     if (activeFilters.has("promo")) list = list.filter((s) => !!s.promo);
     if (activeFilters.has("rated")) list = list.filter((s) => s.rating >= 4.5);
     if (activeFilters.has("fast"))
@@ -184,7 +203,7 @@ const Index = () => {
         return m ? Number(m[1]) <= 30 : false;
       });
     return list;
-  }, [enriched, inRangeStores, showOutOfRange, activeCat, activeFilters]);
+  }, [enriched, inRangeStores, showOutOfRange, activeCat, activeSub, activeFilters]);
 
   // Rails — sempre baseadas em lojas dentro do raio
   const railBase = showOutOfRange ? enriched : inRangeStores;
@@ -273,8 +292,41 @@ const Index = () => {
         <CategoryGrid
           availableCuisines={availableCuisines}
           active={activeCat}
-          onPick={setActiveCat}
+          onPick={pickCategory}
         />
+
+        {/* Subcategorias da categoria escolhida */}
+        {activeCat && availableSubs.length > 0 && (
+          <div className="scrollbar-hide -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
+            <button
+              onClick={() => setActiveSub(null)}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-smooth ${
+                !activeSub
+                  ? "bg-foreground text-background"
+                  : "border border-border bg-card hover:border-primary/30"
+              }`}
+            >
+              Todos
+            </button>
+            {availableSubs.map((s) => {
+              const on = activeSub === s.key;
+              return (
+                <button
+                  key={s.key}
+                  onClick={() => setActiveSub(on ? null : s.key)}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-smooth ${
+                    on
+                      ? "gradient-primary text-primary-foreground shadow-glow"
+                      : "border border-border bg-card hover:border-primary/30"
+                  }`}
+                >
+                  <span>{s.emoji}</span>
+                  {s.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* Filtros */}
@@ -301,10 +353,11 @@ const Index = () => {
               </button>
             );
           })}
-          {(activeCat || activeFilters.size > 0) && (
+          {(activeCat || activeSub || activeFilters.size > 0) && (
             <button
               onClick={() => {
                 setActiveCat(null);
+                setActiveSub(null);
                 setActiveFilters(new Set());
               }}
               className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
