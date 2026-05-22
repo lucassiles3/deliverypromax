@@ -482,6 +482,22 @@ const Index = () => {
 
           <StoreRail title="🆕 Novidades" subtitle="Recém chegadas" stores={newStores} />
 
+          {externalListings.length > 0 && (
+            <section className="mb-8">
+              <div className="mb-3 flex items-end justify-between">
+                <div>
+                  <h2 className="font-display text-xl font-bold md:text-2xl">🤝 Parceiros locais</h2>
+                  <p className="text-xs text-muted-foreground">Toque para abrir o catálogo</p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-3">
+                {(externalListings as any[]).map((s, i) => (
+                  <StoreCard key={s.id} store={s} index={i} />
+                ))}
+              </div>
+            </section>
+          )}
+
           {!user && (
             <div className="mt-6 rounded-2xl border border-dashed bg-card p-6 text-center">
               <Heart className="mx-auto mb-2 h-8 w-8 text-primary" />
