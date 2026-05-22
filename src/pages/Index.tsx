@@ -491,9 +491,17 @@ const Index = () => {
                 </div>
               </div>
               <div className="flex flex-col gap-3">
-                {(externalListings as any[]).map((s, i) => (
-                  <StoreCard key={s.id} store={s} index={i} />
-                ))}
+                {(externalListings as any[]).map((s, i) => {
+                  const enrichedItem = enriched.find((e: any) => e.id === s.id) as any;
+                  return (
+                    <StoreCard
+                      key={s.id}
+                      store={s}
+                      index={i}
+                      distanceKm={enrichedItem?._distance ?? null}
+                    />
+                  );
+                })}
               </div>
             </section>
           )}
