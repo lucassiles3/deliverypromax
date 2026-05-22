@@ -163,6 +163,7 @@ const AdminListings = () => {
       active: l.active,
       delivery_time: (l as any).delivery_time ?? "",
       delivery_radius_km: (l as any).delivery_radius_km ?? null,
+      delivery_fee: (l as any).delivery_fee ?? null,
     });
   };
 
