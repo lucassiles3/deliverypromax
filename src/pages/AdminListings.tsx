@@ -108,6 +108,8 @@ const AdminListings = () => {
       lng: form.lng,
       opening_hours: form.opening_hours,
       active: form.active,
+      delivery_time: form.delivery_time.trim() || null,
+      delivery_radius_km: form.delivery_radius_km,
       created_by: user.id,
     };
     const op = form.id
