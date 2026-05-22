@@ -30,10 +30,7 @@ export const Header = () => {
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/85 backdrop-blur-xl">
       <div className="container flex h-16 items-center gap-4">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary text-primary-foreground shadow-glow">
-            <span className="text-lg font-bold">F</span>
-          </div>
-          <span className="hidden font-display text-xl font-bold sm:inline">Itchat Brasil</span>
+          <span className="font-display text-xl font-bold sm:inline">Itchat Brasil</span>
         </Link>
 
         {!hideNav && (

@@ -216,13 +216,13 @@ const WebhooksSection = ({ storeId }: { storeId: string }) => {
       <div className="rounded-2xl border bg-card p-5">
         <h3 className="font-display text-lg font-bold">Cadastrar webhook</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Receba POST nessa URL quando pedidos forem criados, mudarem status ou forem cancelados. Assinatura HMAC SHA-256 no header <code>X-FoodFlash-Signature</code>.
+          Receba POST nessa URL quando pedidos forem criados, mudarem status ou forem cancelados. Assinatura HMAC SHA-256 no header <code>X-Itchat-Signature</code>.
         </p>
         <div className="mt-3 flex gap-2">
           <input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://meusistema.com/webhooks/foodflash"
+            placeholder="https://meusistema.com/webhooks/itchat"
             className="flex-1 rounded-xl border-2 border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
           />
           <Button onClick={create}>
@@ -372,7 +372,7 @@ const DocsSection = () => {
       <div className="rounded-2xl border bg-card p-5">
         <h3 className="font-display text-lg font-bold">Webhooks</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Eventos enviados via POST JSON. Headers: <code>X-FoodFlash-Event</code>, <code>X-FoodFlash-Signature</code> (HMAC SHA-256 com seu secret).
+          Eventos enviados via POST JSON. Headers: <code>X-Itchat-Event</code>, <code>X-Itchat-Signature</code> (HMAC SHA-256 com seu secret).
         </p>
         <div className="mt-3 grid gap-2 sm:grid-cols-3">
           {["order.created", "order.status_changed", "order.cancelled"].map((e) => (

@@ -26,7 +26,7 @@ const Auth = () => {
 
   useEffect(() => {
     document.title =
-      mode === "signup" ? "Cadastre-se • FoodFlash" : mode === "forgot" ? "Recuperar senha • FoodFlash" : "Entrar • FoodFlash";
+      mode === "signup" ? "Cadastre-se • Itchat Brasil" : mode === "forgot" ? "Recuperar senha • Itchat Brasil" : "Entrar • Itchat Brasil";
   }, [mode]);
 
   // Promote to store_owner when "Sou lojista" is selected, then redirect.

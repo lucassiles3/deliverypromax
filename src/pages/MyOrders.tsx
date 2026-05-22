@@ -59,7 +59,7 @@ const MyOrders = () => {
   }, [user, qc]);
 
   useEffect(() => {
-    document.title = "Meus pedidos • FoodFlash";
+    document.title = "Meus pedidos • Itchat Brasil";
   }, []);
 
   if (loading) return <div className="min-h-screen" />;

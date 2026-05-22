@@ -25,7 +25,7 @@ const Product = () => {
   const groups = product?.addonGroups ?? [];
 
   useEffect(() => {
-    document.title = product ? `${product.name} • ${store?.name ?? "FoodFlash"}` : "Produto";
+    document.title = product ? `${product.name} • ${store?.name ?? "Itchat Brasil"}` : "Produto";
     window.scrollTo({ top: 0 });
   }, [product, store]);
 

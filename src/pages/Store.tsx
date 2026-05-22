@@ -37,7 +37,7 @@ const Store = () => {
   const outOfRange = distance !== null && radius !== null && distance > radius;
 
   useEffect(() => {
-    document.title = store ? `${store.name} • FoodFlash` : "FoodFlash";
+    document.title = store ? `${store.name} • Itchat Brasil` : "Itchat Brasil";
     if (store && !activeCat) setActiveCat(store.categories[0] ?? "");
   }, [store, activeCat]);
 
