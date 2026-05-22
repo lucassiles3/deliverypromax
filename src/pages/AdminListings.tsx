@@ -282,6 +282,7 @@ const ListingForm = ({
 }) => {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => onChange({ ...value, [k]: v });
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   const handleLogoUpload = async (file: File) => {
     if (!file) return;
@@ -320,26 +321,41 @@ const ListingForm = ({
           <DialogTitle>{value.id ? "Editar estabelecimento" : "Novo estabelecimento"}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 md:grid-cols-[120px_1fr]">
+        <div className="grid gap-4 md:grid-cols-[160px_1fr]">
           <div>
             <Label className="text-xs">Logo</Label>
-            <div className="mt-1 flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl border bg-muted text-4xl">
-              {isImageUrl(value.logo) ? (
-                <img src={value.logo} alt="Logo" className="h-full w-full object-cover" />
-              ) : (
-                <span>{value.logo || "🏪"}</span>
-              )}
-            </div>
-            <label className="mt-2 block">
+            <label
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                const file = e.dataTransfer.files?.[0];
+                if (file) handleLogoUpload(file);
+              }}
+              className={`mt-1 flex h-36 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed bg-muted text-center text-4xl transition-colors ${
+                dragOver ? "border-primary bg-primary/10" : "border-border hover:border-primary/60"
+              }`}
+            >
               <input
                 type="file"
                 accept="image/*"
                 className="hidden"
                 onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0])}
               />
-              <span className="block cursor-pointer rounded-md border bg-card px-2 py-1.5 text-center text-[11px] font-bold hover:bg-muted">
-                {uploading ? "Enviando..." : "Enviar imagem"}
-              </span>
+              {isImageUrl(value.logo) ? (
+                <img src={value.logo} alt="Logo" className="h-full w-full object-cover" />
+              ) : (
+                <>
+                  <span>{value.logo || "🏪"}</span>
+                  <span className="mt-1 px-2 text-[10px] font-semibold text-muted-foreground">
+                    {uploading ? "Enviando..." : "Arraste ou clique"}
+                  </span>
+                </>
+              )}
             </label>
             <Input
               className="mt-1.5 text-xs"
@@ -374,10 +390,6 @@ const ListingForm = ({
                   placeholder="https://..."
                 />
               </div>
-            </div>
-            <div>
-              <Label className="text-xs">Endereço</Label>
-              <Input value={value.address} onChange={(e) => set("address", e.target.value)} />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
