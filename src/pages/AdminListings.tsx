@@ -154,6 +154,8 @@ const AdminListings = () => {
       lng: l.lng,
       opening_hours: { ...defaultHours, ...((l.opening_hours as Hours) ?? {}) },
       active: l.active,
+      delivery_time: (l as any).delivery_time ?? "",
+      delivery_radius_km: (l as any).delivery_radius_km ?? null,
     });
   };
 
