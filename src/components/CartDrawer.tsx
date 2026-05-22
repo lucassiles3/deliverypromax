@@ -157,7 +157,7 @@ export const CartDrawer = () => {
                 </Link>
               </Button>
               <p className="mt-2 text-center text-xs text-muted-foreground">
-                Cupons, cashback e Pix na próxima etapa
+                Cupons e Pix na próxima etapa
               </p>
             </div>
           </>

@@ -147,7 +147,7 @@ export const CustomerProfileDrawer = ({
               <Stat icon={ShoppingBag} label="Pedidos" value={String(valid.length)} />
               <Stat icon={TrendingUp} label="Gasto total" value={fmt(total)} />
               <Stat icon={Star} label="Ticket médio" value={fmt(avg)} />
-              <Stat icon={Award} label="Pontos" value={String(data?.points ?? 0)} hint={`Cashback ${fmt(data?.cashback ?? 0)}`} />
+              <Stat icon={Award} label="Pontos" value={String(data?.points ?? 0)} />
             </div>
 
             {/* Addresses */}

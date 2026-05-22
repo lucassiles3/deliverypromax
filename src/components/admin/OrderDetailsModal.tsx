@@ -420,9 +420,6 @@ export const OrderDetailsModal = ({
                   positive
                 />
               )}
-              {Number(order.cashback_used) > 0 && (
-                <Row label="Cashback" value={-Number(order.cashback_used)} positive />
-              )}
               <div className="flex justify-between border-t pt-1 text-base font-bold">
                 <span>Total</span>
                 <span>R$ {Number(order.total).toFixed(2).replace(".", ",")}</span>

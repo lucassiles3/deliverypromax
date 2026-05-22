@@ -1,8 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ShoppingBag, MapPin, Sparkles, LogIn, LogOut, Store as StoreIcon, User as UserIcon, Home, Grid3x3, Receipt, Heart } from "lucide-react";
+import { ShoppingBag, MapPin, LogIn, LogOut, Store as StoreIcon, User as UserIcon, Home, Grid3x3, Receipt, Heart } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
-import { useLoyalty, tierOf } from "@/hooks/useLoyalty";
 import { useAuth } from "@/hooks/useAuth";
 import { NotificationBell } from "@/components/NotificationBell";
 
@@ -15,9 +14,7 @@ const NAV_ITEMS = [
 
 export const Header = () => {
   const { count, setOpen } = useCart();
-  const loyalty = useLoyalty();
   const { user, signOut, isOwner } = useAuth();
-  const tier = tierOf(loyalty.totalSpent);
   const location = useLocation();
   const navigate = useNavigate();
   const isHome = location.pathname === "/";
@@ -66,18 +63,6 @@ export const Header = () => {
         )}
 
         <div className="flex flex-1 items-center justify-end gap-2">
-          {loyalty.cashback > 0 && (
-            <div className="hidden items-center gap-1.5 rounded-full bg-success/10 px-3 py-1.5 text-xs font-bold text-success sm:flex">
-              <Sparkles className="h-3.5 w-3.5" />
-              R$ {loyalty.cashback.toFixed(2).replace(".", ",")}
-            </div>
-          )}
-          {loyalty.totalSpent > 0 && (
-            <div className="hidden items-center gap-1 rounded-full bg-accent/15 px-3 py-1.5 text-xs font-bold text-accent-foreground md:flex">
-              <span>{tier.emoji}</span>
-              {tier.name}
-            </div>
-          )}
           {isOwner && (
             <button
               onClick={() => navigate(isAdminView ? "/" : "/admin")}

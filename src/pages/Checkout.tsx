@@ -6,7 +6,6 @@ import {
   Store as StoreIcon,
   MapPin,
   Tag,
-  Sparkles,
   CheckCircle2,
   Copy,
   QrCode,
@@ -22,7 +21,6 @@ import { LocationPicker } from "@/components/LocationPicker";
 import { useCart } from "@/context/CartContext";
 import { useStoreBySlug, useCoupons } from "@/hooks/useStores";
 import type { Coupon } from "@/data/stores";
-import { useLoyalty, CASHBACK_RATE } from "@/hooks/useLoyalty";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
@@ -40,7 +38,6 @@ const Checkout = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const updateProfile = useUpdateProfile();
-  const loyalty = useLoyalty();
   const { data: store, isLoading } = useStoreBySlug(storeSlug ?? "");
   const { data: coupons = [] } = useCoupons();
 
@@ -64,7 +61,6 @@ const Checkout = () => {
   const [saveContact, setSaveContact] = useState(true);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [useCashback, setUseCashback] = useState(false);
   const [step, setStep] = useState<"form" | "pix" | "done">("form");
   const [submitting, setSubmitting] = useState(false);
   const [paidLinkUrl, setPaidLinkUrl] = useState<string | null>(null);
@@ -251,11 +247,7 @@ const Checkout = () => {
     return appliedCoupon.value;
   }, [appliedCoupon, subtotal, fee, method]);
 
-  const cashbackAvail = Math.min(loyalty.cashback, Math.max(0, subtotal - couponDiscount));
-  const cashbackUsed = useCashback ? cashbackAvail : 0;
-
-  const total = Math.max(0, subtotal + fee - couponDiscount - cashbackUsed);
-  const earned = Math.round(Math.max(0, total) * CASHBACK_RATE * 100) / 100;
+  const total = Math.max(0, subtotal + fee - couponDiscount);
 
   // Verificação de raio de entrega
   const deliveryDistance =
@@ -455,7 +447,6 @@ const Checkout = () => {
     if (fee > 0) lines.push(`Entrega: R$ ${fee.toFixed(2).replace(".", ",")}`);
     if (couponDiscount > 0)
       lines.push(`Cupom (${appliedCoupon?.code}): -R$ ${couponDiscount.toFixed(2).replace(".", ",")}`);
-    if (cashbackUsed > 0) lines.push(`Cashback: -R$ ${cashbackUsed.toFixed(2).replace(".", ",")}`);
     lines.push(`*Total: R$ ${total.toFixed(2).replace(".", ",")}*`);
     lines.push("");
     lines.push(`💳 *Pagamento:* ${paymentLabel[payment]}${
@@ -499,8 +490,6 @@ const Checkout = () => {
           delivery_fee: fee,
           coupon_code: appliedCoupon?.code ?? null,
           coupon_discount: couponDiscount,
-          cashback_used: cashbackUsed,
-          cashback_earned: earned,
           total,
           notes: orderNotes,
           // PIX só fica em "pending_payment" se a loja tiver gateway integrado (MP/Asaas).
@@ -523,11 +512,6 @@ const Checkout = () => {
       const { error: itemsErr } = await supabase.from("order_items").insert(itemsPayload);
       if (itemsErr) throw itemsErr;
 
-      const { error: loyaltyErr } = await supabase.rpc("apply_order_loyalty", {
-        _order_total: total,
-        _cashback_used: cashbackUsed,
-      });
-      if (loyaltyErr) throw loyaltyErr;
 
       // Salva contato para próximos pedidos
       if (saveContact) {
@@ -569,7 +553,7 @@ const Checkout = () => {
       }
 
       setStep("done");
-      toast.success(`Pedido confirmado! Você ganhou R$ ${earned.toFixed(2).replace(".", ",")} de cashback 🎉`);
+      toast.success("Pedido confirmado! 🎉");
       // Não redireciona automaticamente quando há link de pagamento, para o cliente poder reabrir
       if (!paymentLink) {
         setTimeout(() => {
@@ -965,10 +949,10 @@ const Checkout = () => {
                 )}
               </section>
 
-              {/* Coupon + cashback */}
+              {/* Coupon */}
               <section className="rounded-2xl bg-card p-5 shadow-soft">
                 <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold">
-                  <Tag className="h-5 w-5 text-primary" /> Cupom & Cashback
+                  <Tag className="h-5 w-5 text-primary" /> Cupom
                 </h2>
                 <div className="flex gap-2">
                   <input
@@ -1002,24 +986,6 @@ const Checkout = () => {
                   </div>
                 )}
 
-                {loyalty.cashback > 0 && (
-                  <label className="mt-4 flex cursor-pointer items-center justify-between rounded-xl border-2 border-dashed border-success/40 bg-success/5 p-3">
-                    <div>
-                      <p className="flex items-center gap-1.5 font-bold text-success">
-                        <Sparkles className="h-4 w-4" /> Usar meu cashback
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Saldo disponível: R$ {loyalty.cashback.toFixed(2).replace(".", ",")}
-                      </p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={useCashback}
-                      onChange={(e) => setUseCashback(e.target.checked)}
-                      className="h-5 w-5 accent-success"
-                    />
-                  </label>
-                )}
               </section>
             </div>
 
@@ -1041,7 +1007,6 @@ const Checkout = () => {
                   <Row label="Subtotal" value={subtotal} />
                   <Row label={method === "pickup" ? "Entrega (retirada)" : "Entrega"} value={fee} highlight={fee === 0} />
                   {couponDiscount > 0 && <Row label="Cupom" value={-couponDiscount} highlight />}
-                  {cashbackUsed > 0 && <Row label="Cashback" value={-cashbackUsed} highlight />}
                 </div>
                 <div className="flex justify-between border-t pt-3 font-display text-xl font-bold">
                   <span>Total</span>
@@ -1050,11 +1015,6 @@ const Checkout = () => {
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                   Pagamento: <strong className="text-foreground">{paymentLabel[payment]}</strong>
                 </p>
-                {earned > 0 && (
-                  <p className="mt-1 text-center text-xs font-semibold text-success">
-                    Você vai ganhar R$ {earned.toFixed(2).replace(".", ",")} de cashback ✨
-                  </p>
-                )}
                 {outOfDeliveryRange && (
                   <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs">
                     <p className="font-bold text-destructive">Fora da área de entrega</p>
