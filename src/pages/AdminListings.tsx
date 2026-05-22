@@ -277,6 +277,30 @@ const ListingForm = ({
   onSave: () => void;
 }) => {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => onChange({ ...value, [k]: v });
+  const [uploading, setUploading] = useState(false);
+
+  const handleLogoUpload = async (file: File) => {
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Logo deve ter no máximo 2MB");
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop() || "png";
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("listing-logos").upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type,
+    });
+    setUploading(false);
+    if (error) return toast.error(error.message);
+    const { data } = supabase.storage.from("listing-logos").getPublicUrl(path);
+    set("logo", data.publicUrl);
+    toast.success("Logo enviada");
+  };
+
+  const isImageUrl = (s: string) => /^https?:\/\//i.test(s);
 
   const applyToAllDays = () => {
     const ref = value.opening_hours.mon;
