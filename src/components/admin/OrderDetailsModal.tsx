@@ -299,6 +299,19 @@ export const OrderDetailsModal = ({
                 <h5 className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase text-primary">
                   📦 Retirada por app de logística
                 </h5>
+                {(order as any).pickup_code && (
+                  <div className="mb-2 flex items-center justify-between rounded-md bg-background px-3 py-2">
+                    <span className="text-[11px] uppercase text-muted-foreground">Código de retirada</span>
+                    <span className="font-mono text-lg font-bold tracking-widest text-primary">
+                      #{(order as any).pickup_code}
+                    </span>
+                  </div>
+                )}
+                {(order as any).pickup_handler_name && (
+                  <p className="text-xs text-muted-foreground">
+                    Expedidor: <strong className="text-foreground">{(order as any).pickup_handler_name}</strong>
+                  </p>
+                )}
                 {(order as any).courier_tracking_url ? (
                   <>
                     {(order as any).courier_tracking_provider && (
@@ -323,6 +336,15 @@ export const OrderDetailsModal = ({
                 ) : (
                   <p className="text-xs text-muted-foreground">
                     Aguardando o cliente chamar e colar o link do entregador (após status “Pronto”).
+                  </p>
+                )}
+                {(order as any).pickup_confirmed_at && (
+                  <p className="mt-2 text-[11px] text-success">
+                    ✓ Entrega confirmada ao motorista em{" "}
+                    {new Date((order as any).pickup_confirmed_at).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </p>
                 )}
               </div>
