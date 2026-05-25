@@ -852,6 +852,44 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
               onCheckedChange={(v) => setForm({ ...form, logistics_pickup_enabled: v })}
             />
           </div>
+
+          {form.logistics_pickup_enabled && (
+            <div className="mt-3 space-y-2 border-t border-primary/10 pt-3">
+              <ToggleRow
+                label="Liberar retirada somente quando o pedido estiver pronto"
+                hint="Cliente só vê os botões de chamar Uber/99 após o status virar 'Pronto'."
+                checked={!!form.logistics_pickup_release_when_ready}
+                onChange={(v) => setForm({ ...form, logistics_pickup_release_when_ready: v })}
+              />
+              <ToggleRow
+                label="Enviar notificação automática ao cliente"
+                hint="Avisa o cliente assim que o pedido ficar pronto para retirada."
+                checked={!!form.logistics_pickup_notify_customer}
+                onChange={(v) => setForm({ ...form, logistics_pickup_notify_customer: v })}
+              />
+              <ToggleRow
+                label="Exigir código de retirada"
+                hint="Gera um código de 4 dígitos que o motorista deve informar no balcão."
+                checked={!!form.logistics_pickup_require_code}
+                onChange={(v) => setForm({ ...form, logistics_pickup_require_code: v })}
+              />
+              <ToggleRow
+                label="Solicitar confirmação da loja antes da entrega"
+                hint="A loja precisa confirmar a entrega ao motorista antes de o pedido sair."
+                checked={!!form.logistics_pickup_require_confirm}
+                onChange={(v) => setForm({ ...form, logistics_pickup_require_confirm: v })}
+              />
+              <Field label="Instruções personalizadas para o cliente (opcional)">
+                <textarea
+                  rows={3}
+                  placeholder="Ex.: Retirada no balcão de entregas dos fundos. Motorista deve informar o nome do cliente."
+                  value={form.logistics_pickup_instructions ?? ""}
+                  onChange={(e) => setForm({ ...form, logistics_pickup_instructions: e.target.value })}
+                  className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
+                />
+              </Field>
+            </div>
+          )}
         </div>
       </Card>
 
