@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Clock, Bike, MapPin, CheckCircle2, AlertCircle, Star } from "lucide-react";
+import { Clock, AlertCircle, Star } from "lucide-react";
 import type { Store } from "@/data/stores";
 import { formatDistance } from "@/lib/distance";
 import { LazyImage } from "./LazyImage";
