@@ -17,30 +17,22 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useUserLocation } from "@/hooks/useUserLocation";
-import heroBasket from "@/assets/hero-basket.png";
-import promoBasket from "@/assets/promo-basket.png";
-import { NotificationBell } from "@/components/NotificationBell";
-import { useCart } from "@/context/CartContext";
 
 import { distanceKm, formatDistance } from "@/lib/distance";
 import {
   Loader2,
   MapPin,
-  ChevronDown,
-  ShoppingBag,
-  ArrowRight,
+  Crosshair,
   Sparkles,
   Flame,
   Star,
   Compass,
-  Crosshair,
+  Zap,
   Heart,
   Filter,
 } from "lucide-react";
-
 import { Link } from "react-router-dom";
 import type { Store, Product } from "@/data/stores";
-
 
 const useFeaturedProducts = (stores: Store[]) =>
   useQuery({
@@ -89,8 +81,6 @@ const FILTERS: { key: FilterKey; label: string; icon: React.ComponentType<{ clas
 
 const Index = () => {
   const { user } = useAuth();
-  const { count, setOpen } = useCart();
-
   const { data: profile } = useProfile();
   const { data: addresses } = useAddresses();
   const { data: storesData = [], isLoading } = useStores();
@@ -239,130 +229,83 @@ const Index = () => {
     });
   };
 
-  const cityShort = defaultAddr?.city
-    ? `${defaultAddr.city}${defaultAddr.state ? `, ${defaultAddr.state}` : ""}`
-    : coords?.source === "gps"
-      ? "Localização atual"
-      : "Selecione um endereço";
-
   return (
-    <div className="min-h-screen pb-28 md:pb-0">
-      <div className="purple-hero pb-6">
-      {/* Header — título do app + sino + carrinho */}
-      <header className="relative z-30 pt-4">
-        <div className="container flex items-center justify-between">
-          <h1 className="font-display text-xl font-extrabold tracking-tight text-foreground">
-            Itchat Brasil
-          </h1>
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25 backdrop-blur [&_button]:!h-10 [&_button]:!w-10 [&_button]:!rounded-full [&_button]:!text-foreground [&_button:hover]:!bg-transparent">
-              <NotificationBell />
-            </div>
-            <button
-              onClick={() => setOpen(true)}
-              aria-label="Carrinho"
-              className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25 backdrop-blur transition-bounce hover:scale-105"
-            >
-              <ShoppingBag className="h-4.5 w-4.5 text-foreground" />
-              {count > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
-                  {count}
+    <div className="min-h-screen bg-background pb-24 md:pb-0">
+      <Header />
+
+      {/* Hero personalizado */}
+      <section className="border-b border-border/40 bg-gradient-to-b from-muted/40 to-transparent">
+        <div className="container py-6 md:py-8">
+          <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h1 className="font-display text-2xl font-bold md:text-3xl">
+                {greeting}{firstName ? `, ${firstName}` : ""} 👋
+              </h1>
+              <button
+                onClick={() => (user ? window.location.assign("/enderecos") : window.location.assign("/auth"))}
+                className="mt-1 inline-flex items-center gap-1.5 text-left text-sm text-muted-foreground hover:text-foreground"
+              >
+                <MapPin className="h-4 w-4 text-primary" />
+                <span className="font-medium">{addressLabel}</span>
+                <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                  Trocar
                 </span>
+              </button>
+            </div>
+
+            <button
+              onClick={requestGps}
+              disabled={requesting}
+              className="hidden items-center gap-2 self-start rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold transition-smooth hover:border-primary/30 md:inline-flex"
+              title="Usar localização atual"
+            >
+              {requesting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Crosshair className="h-3.5 w-3.5 text-primary" />
               )}
+              {coords?.source === "gps" ? "GPS ativo" : "Usar GPS"}
             </button>
           </div>
+
+          <SmartSearch onCategoryPick={(c) => {
+            // map cuisine string to category key if any matches
+            const lc = c.toLowerCase();
+            const cat = CATEGORIES.find((cc) => cc.match.some((m) => lc.includes(m)));
+            setActiveCat(cat?.key ?? null);
+          }} />
+
+          {denied && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Sem acesso ao GPS — usando endereço cadastrado para distâncias.
+            </p>
+          )}
         </div>
-      </header>
-
-      {/* Hero — saudação + avatar */}
-      <section className="container pt-5">
-        <div className="flex items-center justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <p className="text-base font-medium text-foreground/85">{greeting},</p>
-            <h2 className="mt-0.5 flex items-center gap-2 font-display text-3xl font-extrabold leading-tight text-foreground">
-              <span className="truncate">{firstName ?? "Bem-vindo"}</span>
-              <span className="text-2xl">👋</span>
-            </h2>
-          </div>
-          <button
-            onClick={() => (user ? window.location.assign("/conta") : window.location.assign("/auth"))}
-            aria-label="Minha conta"
-            className="h-16 w-16 shrink-0 overflow-hidden rounded-full bg-white/20 ring-2 ring-white/40 backdrop-blur"
-          >
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-2xl text-foreground">
-                {(firstName ?? "?").charAt(0).toUpperCase()}
-              </div>
-            )}
-          </button>
-        </div>
-
-        {/* Pill de endereço */}
-        <button
-          onClick={() => (user ? window.location.assign("/enderecos") : window.location.assign("/auth"))}
-          className="mt-5 flex w-full items-center justify-between gap-3 rounded-2xl bg-white/15 px-4 py-3 text-left ring-1 ring-white/25 backdrop-blur transition-bounce hover:bg-white/20"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 ring-1 ring-white/30">
-              <MapPin className="h-4 w-4 text-foreground" />
-            </div>
-            <div className="leading-tight">
-              <p className="text-[11px] font-medium text-foreground/70">Entregar em</p>
-              <p className="text-sm font-bold text-foreground">{cityShort}</p>
-            </div>
-          </div>
-          <ArrowRight className="h-4 w-4 text-foreground/80" />
-        </button>
-
-        {/* Search com botão circular roxo */}
-        <div className="mt-4 flex items-center gap-2">
-          <div className="flex-1 [&_form]:!rounded-full [&_form]:!bg-white [&_form]:!py-1.5 [&_form]:!ring-0 [&_form]:!shadow-[0_8px_22px_-10px_rgba(60,40,120,0.45)] [&_input]:!text-sm">
-            <SmartSearch onCategoryPick={(c) => {
-              const lc = c.toLowerCase();
-              const cat = CATEGORIES.find((cc) => cc.match.some((m) => lc.includes(m)));
-              setActiveCat(cat?.key ?? null);
-            }} />
-          </div>
-          <button
-            onClick={requestGps}
-            disabled={requesting}
-            aria-label="Buscar / Usar GPS"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[hsl(265_85%_70%)] to-[hsl(250_75%_52%)] ring-2 ring-white/30 shadow-[0_10px_24px_-8px_rgba(60,40,120,0.6)] transition-bounce hover:scale-105"
-          >
-            {requesting ? (
-              <Loader2 className="h-5 w-5 animate-spin text-white" />
-            ) : (
-              <Crosshair className="h-5 w-5 text-white" />
-            )}
-          </button>
-        </div>
-
-        {denied && (
-          <p className="mt-2 text-xs text-foreground/70">
-            Sem acesso ao GPS — usando endereço cadastrado.
-          </p>
-        )}
       </section>
 
       {/* Categorias */}
-      <section className="container pt-6">
+      <section className="container py-6">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold md:text-xl">Categorias</h2>
+          <Link to="/categorias" className="text-xs font-semibold text-primary hover:underline">
+            Ver todas
+          </Link>
+        </div>
         <CategoryGrid
           availableCuisines={availableCuisines}
           active={activeCat}
           onPick={pickCategory}
         />
 
-        {/* Subcategorias */}
+        {/* Subcategorias da categoria escolhida */}
         {activeCat && availableSubs.length > 0 && (
-          <div className="scrollbar-hide -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1">
+          <div className="scrollbar-hide -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
             <button
               onClick={() => setActiveSub(null)}
-              className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold transition-smooth ${
+              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-smooth ${
                 !activeSub
-                  ? "bg-gradient-to-br from-[hsl(265_85%_70%)] to-[hsl(250_75%_52%)] text-white shadow-[0_6px_16px_-6px_rgba(60,40,120,0.6)]"
-                  : "bg-white text-card-foreground shadow-soft"
+                  ? "bg-foreground text-background"
+                  : "border border-border bg-card hover:border-primary/30"
               }`}
             >
               Todos
@@ -373,10 +316,10 @@ const Index = () => {
                 <button
                   key={s.key}
                   onClick={() => setActiveSub(on ? null : s.key)}
-                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-smooth ${
+                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-smooth ${
                     on
-                      ? "bg-gradient-to-br from-[hsl(265_85%_70%)] to-[hsl(250_75%_52%)] text-white shadow-[0_6px_16px_-6px_rgba(60,40,120,0.6)]"
-                      : "bg-white text-card-foreground shadow-soft"
+                      ? "gradient-primary text-primary-foreground shadow-glow"
+                      : "border border-border bg-card hover:border-primary/30"
                   }`}
                 >
                   <span>{s.emoji}</span>
@@ -387,19 +330,60 @@ const Index = () => {
           </div>
         )}
       </section>
-      </div>
-      {/* /purple-hero */}
 
 
+
+
+      {/* Mais visitadas do mês — carrossel de logos */}
+      <TopVisitedRail />
+
+      {/* Filtros */}
+      <section className="container pb-3">
+        <div className="scrollbar-hide -mx-4 flex items-center gap-2 overflow-x-auto px-4">
+          <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-muted-foreground">
+            <Filter className="h-3.5 w-3.5" /> Filtros:
+          </span>
+          {FILTERS.map((f) => {
+            const Icon = f.icon;
+            const on = activeFilters.has(f.key);
+            return (
+              <button
+                key={f.key}
+                onClick={() => toggleFilter(f.key)}
+                className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-smooth ${
+                  on
+                    ? "border-transparent bg-foreground text-background"
+                    : "border-border bg-card hover:border-primary/30"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {f.label}
+              </button>
+            );
+          })}
+          {(activeCat || activeSub || activeFilters.size > 0) && (
+            <button
+              onClick={() => {
+                setActiveCat(null);
+                setActiveSub(null);
+                setActiveFilters(new Set());
+              }}
+              className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
+            >
+              Limpar
+            </button>
+          )}
+        </div>
+      </section>
 
       {/* Aviso de raio de entrega */}
       {coords && outOfRangeCount > 0 && (
-        <section className="container pt-4">
-          <div className="flex flex-wrap items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs ring-1 ring-white/20 backdrop-blur">
-            <MapPin className="h-3.5 w-3.5 text-foreground" />
-            <span className="text-foreground/90">
-              <strong>{outOfRangeCount}</strong>{" "}
-              {outOfRangeCount === 1 ? "loja não atende" : "lojas não atendem"} seu endereço.
+        <section className="container pb-3">
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5 text-primary" />
+              <strong className="text-foreground">{outOfRangeCount}</strong>{" "}
+              {outOfRangeCount === 1 ? "loja não atende" : "lojas não atendem"} seu endereço e foram ocultadas.
             </span>
           </div>
         </section>
@@ -461,64 +445,7 @@ const Index = () => {
       ) : (
         // Modo descoberta: rails
         <div className="container pb-12 pt-2">
-          {/* Banner promo — cesta rosa */}
-          <div className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-[hsl(260_70%_60%)] via-[hsl(255_65%_55%)] to-[hsl(250_60%_48%)] p-5 shadow-float ring-1 ring-white/15">
-            <div className="relative z-10 flex items-center justify-between gap-4">
-              <div className="max-w-[60%]">
-                <h3 className="font-display text-2xl font-extrabold leading-tight text-white md:text-3xl">
-                  Ofertas que<br />cabem no <span className="text-[hsl(195_100%_75%)]">bolso</span>
-                </h3>
-                <p className="mt-2 text-sm text-white/85">
-                  Descontos exclusivos só para você!
-                </p>
-                <Link
-                  to="/categorias"
-                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-bold text-white ring-1 ring-white/25 backdrop-blur transition-bounce hover:scale-105 hover:bg-white/25"
-                >
-                  Ver ofertas <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-              <img
-                src={promoBasket}
-                alt=""
-                width={200}
-                height={200}
-                loading="lazy"
-                className="h-32 w-32 shrink-0 object-contain drop-shadow-2xl md:h-40 md:w-40"
-              />
-            </div>
-            <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-white/5 blur-2xl" />
-          </div>
-
-          {/* Lojas perto de você */}
-          {(nearbyStores.length > 0 || featuredStores.length > 0) && (
-            <section className="mb-6">
-              <div className="mb-3 flex items-end justify-between">
-                <h2 className="font-display text-lg font-extrabold text-foreground">
-                  Lojas perto de você
-                </h2>
-                <Link to="/categorias" className="text-xs font-bold text-foreground/90 hover:underline">
-                  Ver todas
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {(nearbyStores.length > 0 ? nearbyStores : featuredStores).slice(0, 4).map((s, i) => (
-                  <StoreCard
-                    key={s.id}
-                    store={s}
-                    index={i}
-                    distanceKm={s._distance}
-                    inRange={coords ? s._inRange : undefined}
-                    isOpen={s._open}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
           <HomeBannerCarousel />
-
-
 
           {externalListings.length > 0 && (
             <section className="mb-8">

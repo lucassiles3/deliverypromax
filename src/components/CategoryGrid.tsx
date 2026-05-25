@@ -5,26 +5,24 @@ export type CategoryDef = {
   key: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  emoji: string; // 3D-style emoji used in claymorphism cards
-  color: string; // tailwind classes for bg + text (used in legacy desktop grid)
+  color: string; // tailwind classes for bg + text
   match: string[]; // cuisine matches (lowercased)
 };
 
 export const CATEGORIES: CategoryDef[] = [
-  { key: "food", label: "Alimentação", icon: UtensilsCrossed, emoji: "🥕", color: "bg-primary/10 text-primary", match: ["hambúrguer", "hamburguer", "pizzaria", "pizza", "japonesa", "comida", "lanche", "açaí", "sobremesas", "doceria", "padaria", "restaurante"] },
-  { key: "market", label: "Mercado", icon: ShoppingCart, emoji: "🛒", color: "bg-success/10 text-success", match: ["mercado", "supermercado", "hortifruti"] },
-  { key: "pharmacy", label: "Farmácia", icon: Pill, emoji: "💊", color: "bg-secondary/10 text-secondary", match: ["farmácia", "farmacia", "drogaria"] },
-  { key: "fashion", label: "Moda", icon: Shirt, emoji: "👕", color: "bg-accent/15 text-accent-foreground", match: ["moda", "roupa", "calçado"] },
-  { key: "tech", label: "Informática", icon: Laptop, emoji: "💻", color: "bg-primary/10 text-primary", match: ["informática", "informatica", "tecnologia"] },
-  { key: "auto", label: "Mecânica", icon: Wrench, emoji: "🔧", color: "bg-muted text-foreground", match: ["mecânica", "mecanica", "oficina", "auto"] },
-  { key: "pet", label: "Pet Shop", icon: Dog, emoji: "🐾", color: "bg-accent/15 text-accent-foreground", match: ["pet"] },
-  { key: "beauty", label: "Beleza", icon: Sparkles, emoji: "💄", color: "bg-secondary/10 text-secondary", match: ["beleza", "salão", "salao", "estética", "estetica", "cosmético", "cosmetico"] },
-  { key: "drinks", label: "Bebidas", icon: Beer, emoji: "🍺", color: "bg-accent/15 text-accent-foreground", match: ["bebida", "adega", "cerveja"] },
-  { key: "home", label: "Casa", icon: Home, emoji: "🛋️", color: "bg-success/10 text-success", match: ["casa", "utilidade", "decoração", "decoracao"] },
-  { key: "phones", label: "Celulares", icon: Smartphone, emoji: "📱", color: "bg-primary/10 text-primary", match: ["celular", "smartphone", "iphone"] },
-  { key: "services", label: "Serviços", icon: Truck, emoji: "🚚", color: "bg-muted text-foreground", match: ["serviço", "servico"] },
+  { key: "food", label: "Alimentação", icon: UtensilsCrossed, color: "bg-primary/10 text-primary", match: ["hambúrguer", "hamburguer", "pizzaria", "pizza", "japonesa", "comida", "lanche", "açaí", "sobremesas", "doceria", "padaria", "restaurante"] },
+  { key: "market", label: "Mercado", icon: ShoppingCart, color: "bg-success/10 text-success", match: ["mercado", "supermercado", "hortifruti"] },
+  { key: "pharmacy", label: "Farmácia", icon: Pill, color: "bg-secondary/10 text-secondary", match: ["farmácia", "farmacia", "drogaria"] },
+  { key: "fashion", label: "Moda", icon: Shirt, color: "bg-accent/15 text-accent-foreground", match: ["moda", "roupa", "calçado"] },
+  { key: "tech", label: "Informática", icon: Laptop, color: "bg-primary/10 text-primary", match: ["informática", "informatica", "tecnologia"] },
+  { key: "auto", label: "Mecânica", icon: Wrench, color: "bg-muted text-foreground", match: ["mecânica", "mecanica", "oficina", "auto"] },
+  { key: "pet", label: "Pet Shop", icon: Dog, color: "bg-accent/15 text-accent-foreground", match: ["pet"] },
+  { key: "beauty", label: "Beleza", icon: Sparkles, color: "bg-secondary/10 text-secondary", match: ["beleza", "salão", "salao", "estética", "estetica", "cosmético", "cosmetico"] },
+  { key: "drinks", label: "Bebidas", icon: Beer, color: "bg-accent/15 text-accent-foreground", match: ["bebida", "adega", "cerveja"] },
+  { key: "home", label: "Casa", icon: Home, color: "bg-success/10 text-success", match: ["casa", "utilidade", "decoração", "decoracao"] },
+  { key: "phones", label: "Celulares", icon: Smartphone, color: "bg-primary/10 text-primary", match: ["celular", "smartphone", "iphone"] },
+  { key: "services", label: "Serviços", icon: Truck, color: "bg-muted text-foreground", match: ["serviço", "servico"] },
 ];
-
 
 export const matchCategory = (cuisine: string | null | undefined, cat: CategoryDef) => {
   if (!cuisine) return false;
@@ -126,18 +124,6 @@ export const matchSubcategory = (cuisine: string | null | undefined, sub: Subcat
 
 
 
-// Ordem e rótulos exibidos na home (idêntico ao mockup)
-const HOME_ORDER: { key: string; label?: string; emoji?: string }[] = [
-  { key: "market", label: "Mercado" },
-  { key: "pharmacy", label: "Farmácia" },
-  { key: "fashion", label: "Moda" },
-  { key: "pet", label: "Pet Shop" },
-  { key: "food", label: "Alimentação", emoji: "🍔" },
-  { key: "drinks", label: "Bebidas" },
-  { key: "tech", label: "Eletrônicos", emoji: "📺" },
-  { key: "home", label: "Casa e Decoração", emoji: "🛋️" },
-];
-
 export const CategoryGrid = ({
   availableCuisines,
   active,
@@ -153,42 +139,58 @@ export const CategoryGrid = ({
   const isAvailable = (cat: CategoryDef) =>
     cuisinesLower.some((c) => cat.match.some((m) => c.includes(m)));
 
-  const homeCats = HOME_ORDER.map((o) => {
-    const base = CATEGORIES.find((c) => c.key === o.key);
-    if (!base) return null;
-    return { ...base, label: o.label ?? base.label, emoji: o.emoji ?? base.emoji };
-  }).filter(Boolean) as CategoryDef[];
-
   const renderCategory = (cat: CategoryDef) => {
     const available = isAvailable(cat);
+    const Icon = cat.icon;
     const selected = active === cat.key;
     return (
       <button
         key={cat.key}
         onClick={() => available && onPick(selected ? null : cat.key)}
         disabled={!available}
-        className={`group flex flex-col items-center gap-1.5 text-center transition-bounce ${
-          !available ? "cursor-not-allowed opacity-60" : "hover:-translate-y-0.5"
-        }`}
+        className={`group flex shrink-0 flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition-smooth sm:shrink ${
+          selected
+            ? "border-primary bg-primary/5 shadow-soft"
+            : "border-border bg-card hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-soft"
+        } ${!available ? "cursor-not-allowed opacity-40" : ""}`}
       >
         <div
-          className={`flex aspect-square w-full items-center justify-center rounded-2xl bg-white text-[34px] shadow-[0_8px_20px_-8px_rgba(60,40,120,0.45)] transition-bounce ${
-            selected ? "ring-2 ring-accent scale-[1.03]" : "group-hover:scale-[1.03]"
+          className={`flex h-11 w-11 items-center justify-center rounded-xl transition-bounce ${cat.color} ${
+            selected ? "scale-110" : "group-hover:scale-110"
           }`}
         >
-          <span className="drop-shadow-sm">{cat.emoji}</span>
+          <Icon className="h-5 w-5" />
         </div>
-        <span className="px-0.5 text-[12px] font-semibold leading-tight text-foreground">
-          {cat.label}
-        </span>
+        <span className="text-[11px] font-semibold leading-tight">{cat.label}</span>
+        {!available && <span className="text-[9px] text-muted-foreground">Em breve</span>}
       </button>
     );
   };
 
+  const seeAllBtn = (
+    <button
+      onClick={() => navigate("/categorias")}
+      className="flex shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-dashed border-border bg-card/50 p-3 text-center transition-smooth hover:-translate-y-0.5 hover:border-primary/30 sm:shrink"
+    >
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+        ➕
+      </div>
+      <span className="text-[11px] font-semibold leading-tight">Ver todas</span>
+    </button>
+  );
+
   return (
-    <div className="grid grid-cols-4 gap-3">
-      {homeCats.map(renderCategory)}
-    </div>
+    <>
+      {/* Mobile: scroll horizontal */}
+      <div className="scrollbar-hide -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:hidden">
+        {CATEGORIES.map(renderCategory)}
+        {seeAllBtn}
+      </div>
+      {/* Tablet/Desktop: grid */}
+      <div className="hidden gap-3 sm:grid sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12">
+        {CATEGORIES.map(renderCategory)}
+        {seeAllBtn}
+      </div>
+    </>
   );
 };
-

@@ -66,20 +66,19 @@ const MyOrders = () => {
   if (!user) return <Navigate to="/auth" replace />;
 
   return (
-    <div className="min-h-screen pb-24">
-      <header className="sticky top-0 z-40 border-b border-white/15 bg-white/10 backdrop-blur-xl">
+    <div className="min-h-screen bg-muted/40 pb-20">
+      <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-xl">
         <div className="container flex h-16 items-center gap-3">
           <Link
             to="/"
-            className="flex items-center gap-1 text-sm font-medium text-foreground/80 hover:text-foreground"
+            className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Voltar
           </Link>
-          <span className="text-foreground/30">|</span>
-          <h1 className="font-display text-xl font-bold text-foreground">Meus pedidos</h1>
+          <span className="text-border">|</span>
+          <h1 className="font-display text-xl font-bold">Meus pedidos</h1>
         </div>
       </header>
-
 
       <div className="container max-w-3xl py-6">
         <AdBanner
