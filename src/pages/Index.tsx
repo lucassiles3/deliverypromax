@@ -498,7 +498,37 @@ const Index = () => {
       ) : (
         // Modo descoberta: rails
         <div className="container pb-12 pt-2">
+          {/* Banner promo — cesta rosa */}
+          <div className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-[hsl(260_70%_60%)] via-[hsl(255_65%_55%)] to-[hsl(250_60%_48%)] p-5 shadow-float ring-1 ring-white/15">
+            <div className="relative z-10 flex items-center justify-between gap-4">
+              <div className="max-w-[60%]">
+                <h3 className="font-display text-2xl font-extrabold leading-tight text-white md:text-3xl">
+                  Ofertas que<br />cabem no <span className="text-[hsl(195_100%_75%)]">bolso</span>
+                </h3>
+                <p className="mt-2 text-sm text-white/85">
+                  Descontos exclusivos só para você!
+                </p>
+                <Link
+                  to="/categorias"
+                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-bold text-white ring-1 ring-white/25 backdrop-blur transition-bounce hover:scale-105 hover:bg-white/25"
+                >
+                  Ver ofertas <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+              <img
+                src={promoBasket}
+                alt=""
+                width={200}
+                height={200}
+                loading="lazy"
+                className="h-32 w-32 shrink-0 object-contain drop-shadow-2xl md:h-40 md:w-40"
+              />
+            </div>
+            <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-white/5 blur-2xl" />
+          </div>
+
           <HomeBannerCarousel />
+
 
           {externalListings.length > 0 && (
             <section className="mb-8">
