@@ -89,6 +89,8 @@ const FILTERS: { key: FilterKey; label: string; icon: React.ComponentType<{ clas
 
 const Index = () => {
   const { user } = useAuth();
+  const { count, setOpen } = useCart();
+
   const { data: profile } = useProfile();
   const { data: addresses } = useAddresses();
   const { data: storesData = [], isLoading } = useStores();
