@@ -239,17 +239,22 @@ const Auth = () => {
               />
             </Field>
             {mode !== "forgot" && (
-              <Field icon={Lock}>
-                <input
-                  required
-                  type="password"
-                  placeholder="Senha (mín. 6 caracteres)"
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-transparent outline-none"
-                />
-              </Field>
+              <>
+                <Field icon={Lock}>
+                  <input
+                    required
+                    type="password"
+                    placeholder="Senha (mín. 6 caracteres)"
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-transparent outline-none"
+                  />
+                </Field>
+                {mode === "signup" && (
+                  <PasswordStrength password={password} />
+                )}
+              </>
             )}
 
             {mode === "signin" && (
