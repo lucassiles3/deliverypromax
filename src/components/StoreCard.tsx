@@ -43,7 +43,7 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange, isOpen
             : "border-border bg-card"
         }`}
       >
-        <div className="absolute right-3 top-3 z-10">
+        <div className="absolute right-3 top-5 z-10">
           {isExternal ? (
             <FavoriteListingButton listingId={String(store.id).replace(/^ext_/, "")} />
           ) : (
