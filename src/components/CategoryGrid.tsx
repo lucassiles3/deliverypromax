@@ -126,6 +126,18 @@ export const matchSubcategory = (cuisine: string | null | undefined, sub: Subcat
 
 
 
+// Ordem e rótulos exibidos na home (idêntico ao mockup)
+const HOME_ORDER: { key: string; label?: string; emoji?: string }[] = [
+  { key: "market", label: "Mercado" },
+  { key: "pharmacy", label: "Farmácia" },
+  { key: "fashion", label: "Moda" },
+  { key: "pet", label: "Pet Shop" },
+  { key: "food", label: "Alimentação", emoji: "🍔" },
+  { key: "drinks", label: "Bebidas" },
+  { key: "tech", label: "Eletrônicos", emoji: "📺" },
+  { key: "home", label: "Casa e Decoração", emoji: "🛋️" },
+];
+
 export const CategoryGrid = ({
   availableCuisines,
   active,
@@ -141,6 +153,12 @@ export const CategoryGrid = ({
   const isAvailable = (cat: CategoryDef) =>
     cuisinesLower.some((c) => cat.match.some((m) => c.includes(m)));
 
+  const homeCats = HOME_ORDER.map((o) => {
+    const base = CATEGORIES.find((c) => c.key === o.key);
+    if (!base) return null;
+    return { ...base, label: o.label ?? base.label, emoji: o.emoji ?? base.emoji };
+  }).filter(Boolean) as CategoryDef[];
+
   const renderCategory = (cat: CategoryDef) => {
     const available = isAvailable(cat);
     const selected = active === cat.key;
@@ -149,51 +167,27 @@ export const CategoryGrid = ({
         key={cat.key}
         onClick={() => available && onPick(selected ? null : cat.key)}
         disabled={!available}
-        className={`group flex shrink-0 flex-col items-center gap-1.5 text-center transition-bounce sm:shrink ${
-          !available ? "cursor-not-allowed opacity-50" : "hover:-translate-y-0.5"
+        className={`group flex flex-col items-center gap-1.5 text-center transition-bounce ${
+          !available ? "cursor-not-allowed opacity-60" : "hover:-translate-y-0.5"
         }`}
       >
         <div
-          className={`flex h-16 w-16 items-center justify-center rounded-2xl text-3xl shadow-card transition-bounce ${
-            selected
-              ? "bg-primary/30 ring-2 ring-primary scale-105"
-              : "bg-white/95 group-hover:scale-105"
+          className={`flex aspect-square w-full items-center justify-center rounded-2xl bg-white text-[34px] shadow-[0_8px_20px_-8px_rgba(60,40,120,0.45)] transition-bounce ${
+            selected ? "ring-2 ring-accent scale-[1.03]" : "group-hover:scale-[1.03]"
           }`}
-          style={{ filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.15))" }}
         >
           <span className="drop-shadow-sm">{cat.emoji}</span>
         </div>
-        <span className="text-[12px] font-semibold leading-tight text-foreground">
+        <span className="px-0.5 text-[12px] font-semibold leading-tight text-foreground">
           {cat.label}
         </span>
       </button>
     );
   };
 
-  const seeAllBtn = (
-    <button
-      onClick={() => navigate("/categorias")}
-      className="flex shrink-0 flex-col items-center gap-1.5 text-center transition-bounce hover:-translate-y-0.5 sm:shrink"
-    >
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 text-2xl text-foreground shadow-card ring-1 ring-white/30 backdrop-blur">
-        ➕
-      </div>
-      <span className="text-[12px] font-semibold leading-tight text-foreground">Ver todas</span>
-    </button>
-  );
-
   return (
-    <div className="rounded-3xl bg-white/10 p-4 ring-1 ring-white/15 backdrop-blur-md">
-      {/* Mobile: scroll horizontal */}
-      <div className="scrollbar-hide -mx-1 flex gap-3 overflow-x-auto px-1 pb-1 sm:hidden">
-        {CATEGORIES.slice(0, 5).map(renderCategory)}
-        {seeAllBtn}
-      </div>
-      {/* Tablet/Desktop: grid */}
-      <div className="hidden gap-3 sm:grid sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12">
-        {CATEGORIES.map(renderCategory)}
-        {seeAllBtn}
-      </div>
+    <div className="grid grid-cols-4 gap-3">
+      {homeCats.map(renderCategory)}
     </div>
   );
 };
