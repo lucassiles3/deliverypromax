@@ -72,6 +72,18 @@ const PushBridge = () => {
   return null;
 };
 
+// Aplica o tema roxo do cliente em todas as rotas, exceto admin/PDV/master/entregador
+const CLIENT_THEME_EXCLUDE = ["/admin", "/pdv", "/master", "/entregador"];
+const ClientThemeBridge = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const isClient = !CLIENT_THEME_EXCLUDE.some((p) => pathname.startsWith(p));
+    document.documentElement.classList.toggle("client-theme", isClient);
+  }, [pathname]);
+  return null;
+};
+
+
 /**
  * Carrega o script do Google AdSense uma única vez se VITE_ADSENSE_CLIENT estiver definido.
  * Sem a env var, nada é injetado (banners caem em modo placeholder).
