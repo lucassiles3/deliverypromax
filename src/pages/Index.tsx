@@ -17,22 +17,27 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useUserLocation } from "@/hooks/useUserLocation";
+import heroBasket from "@/assets/hero-basket.png";
+import promoBasket from "@/assets/promo-basket.png";
+import { NotificationBell } from "@/components/NotificationBell";
+import { useCart } from "@/context/CartContext";
 
 import { distanceKm, formatDistance } from "@/lib/distance";
 import {
   Loader2,
   MapPin,
-  Crosshair,
+  ChevronDown,
+  ShoppingBag,
+  ArrowRight,
   Sparkles,
   Flame,
   Star,
   Compass,
-  Zap,
-  Heart,
   Filter,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Store, Product } from "@/data/stores";
+
 
 const useFeaturedProducts = (stores: Store[]) =>
   useQuery({
