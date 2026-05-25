@@ -100,20 +100,18 @@
     @apply border-border;
   }
 
-  /* Client (customer) interface — purple identity with white cards */
+  /* Client (customer) interface — fundo branco + topo roxo */
   .client-theme {
-    /* Fundo roxo + texto branco no nível "tela" (hero, header) */
-    --background: 250 65% 58%;
-    --foreground: 0 0% 100%;
+    /* Fundo da página fica BRANCO, com texto escuro para contraste */
+    --background: 0 0% 100%;
+    --foreground: 250 35% 18%;
 
-    /* Cards brancos com texto escuro (igual ao mockup) */
     --card: 0 0% 100%;
     --card-foreground: 250 35% 18%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 250 35% 18%;
 
-    /* Primary roxo para botões dentro dos cards */
     --primary: 258 75% 62%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 260 100% 88%;
@@ -121,7 +119,6 @@
     --secondary: 250 45% 38%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Muted = cinza muito claro com tom lilás (usado dentro de cards brancos) */
     --muted: 250 35% 96%;
     --muted-foreground: 250 12% 45%;
 
@@ -142,27 +139,32 @@
     --gradient-warm: linear-gradient(180deg, hsl(255 70% 62%) 0%, hsl(250 60% 50%) 100%);
     --gradient-promo: linear-gradient(135deg, hsl(42 96% 60%), hsl(260 100% 78%));
 
-    --shadow-card: 0 8px 28px -10px hsl(250 70% 15% / 0.35);
-    --shadow-soft: 0 4px 16px -4px hsl(250 70% 15% / 0.22);
+    --shadow-card: 0 8px 28px -10px hsl(250 70% 15% / 0.25);
+    --shadow-soft: 0 4px 16px -4px hsl(250 70% 15% / 0.18);
     --shadow-glow: 0 8px 32px -8px hsl(260 100% 78% / 0.6);
-    --shadow-float: 0 14px 44px -12px hsl(250 70% 12% / 0.5);
+    --shadow-float: 0 14px 44px -12px hsl(250 70% 12% / 0.4);
 
-    background: linear-gradient(180deg, hsl(258 72% 64%) 0%, hsl(250 65% 50%) 100%);
-    background-attachment: fixed;
+    background: hsl(var(--background));
     color: hsl(var(--foreground));
   }
 
   .client-theme body {
-    background: transparent;
+    background: hsl(var(--background));
     color: hsl(var(--foreground));
   }
 
-  /* Inputs dentro de cards brancos devem ter texto escuro */
-  .client-theme .bg-card input,
-  .client-theme .bg-card textarea,
-  .client-theme .bg-card select {
-    color: hsl(var(--card-foreground));
+  /* Painel roxo do topo (header + hero + categorias) */
+  .client-theme .purple-hero {
+    background: linear-gradient(180deg, hsl(258 72% 64%) 0%, hsl(250 65% 50%) 100%);
+    color: hsl(0 0% 100%);
+    border-bottom-left-radius: 40px;
+    border-bottom-right-radius: 40px;
+    box-shadow: 0 20px 40px -20px hsl(250 70% 30% / 0.45);
   }
+  /* Dentro do painel roxo, qualquer texto que use text-foreground vira branco */
+  .client-theme .purple-hero .text-foreground { color: hsl(0 0% 100%) !important; }
+  .client-theme .purple-hero [class*="text-foreground/"] { color: hsl(0 0% 100% / 0.85) !important; }
+
 
 
   body {
