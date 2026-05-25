@@ -51,9 +51,24 @@ export const useAuth = (): AuthState & {
     setState((s) => ({ ...s, roles: (data?.map((r) => r.role) as Role[]) ?? [], loading: false }));
   };
 
+  const translateError = (msg?: string): string | null => {
+    if (!msg) return null;
+    const m = msg.toLowerCase();
+    if (m.includes("invalid login") || m.includes("invalid credentials")) return "Email ou senha incorretos";
+    if (m.includes("email not confirmed")) return "Confirme seu email antes de entrar";
+    if (m.includes("user already registered") || m.includes("already been registered")) return "Este email já está cadastrado";
+    if (m.includes("password should be at least")) return "A senha deve ter no mínimo 6 caracteres";
+    if (m.includes("weak") || m.includes("pwned") || m.includes("known to be")) return "Senha muito fraca. Escolha outra mais forte";
+    if (m.includes("rate limit") || m.includes("too many")) return "Muitas tentativas. Aguarde alguns minutos";
+    if (m.includes("invalid email")) return "Email inválido";
+    if (m.includes("network")) return "Erro de conexão. Verifique sua internet";
+    if (m.includes("signup") && m.includes("disabled")) return "Cadastros estão temporariamente desativados";
+    return msg;
+  };
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    return { error: translateError(error?.message) };
   };
 
   const signUp = async (email: string, password: string, displayName?: string, phone?: string) => {
@@ -68,7 +83,7 @@ export const useAuth = (): AuthState & {
         data: Object.keys(meta).length ? meta : undefined,
       },
     });
-    return { error: error?.message ?? null };
+    return { error: translateError(error?.message) };
   };
 
   const signOut = async () => {
