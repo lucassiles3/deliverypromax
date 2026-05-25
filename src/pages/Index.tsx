@@ -161,7 +161,7 @@ const Index = () => {
     });
   }, [stores, coords]);
 
-  const [showOutOfRange, setShowOutOfRange] = useState(false);
+  const showOutOfRange = false;
 
   // Lojas no raio (sempre aplicado quando temos coords) — base para tudo
   const inRangeStores = useMemo(
