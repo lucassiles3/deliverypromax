@@ -119,7 +119,9 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <PushBridge />
+          <ClientThemeBridge />
           <AdSenseLoader />
+
           <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/" element={<Index />} />
