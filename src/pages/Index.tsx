@@ -387,6 +387,10 @@ const Index = () => {
           </div>
         )}
       </section>
+      </div>
+      {/* /purple-hero */}
+
+
 
       {/* Aviso de raio de entrega */}
       {coords && outOfRangeCount > 0 && (
