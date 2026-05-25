@@ -5,24 +5,26 @@ export type CategoryDef = {
   key: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  color: string; // tailwind classes for bg + text
+  emoji: string; // 3D-style emoji used in claymorphism cards
+  color: string; // tailwind classes for bg + text (used in legacy desktop grid)
   match: string[]; // cuisine matches (lowercased)
 };
 
 export const CATEGORIES: CategoryDef[] = [
-  { key: "food", label: "Alimentação", icon: UtensilsCrossed, color: "bg-primary/10 text-primary", match: ["hambúrguer", "hamburguer", "pizzaria", "pizza", "japonesa", "comida", "lanche", "açaí", "sobremesas", "doceria", "padaria", "restaurante"] },
-  { key: "market", label: "Mercado", icon: ShoppingCart, color: "bg-success/10 text-success", match: ["mercado", "supermercado", "hortifruti"] },
-  { key: "pharmacy", label: "Farmácia", icon: Pill, color: "bg-secondary/10 text-secondary", match: ["farmácia", "farmacia", "drogaria"] },
-  { key: "fashion", label: "Moda", icon: Shirt, color: "bg-accent/15 text-accent-foreground", match: ["moda", "roupa", "calçado"] },
-  { key: "tech", label: "Informática", icon: Laptop, color: "bg-primary/10 text-primary", match: ["informática", "informatica", "tecnologia"] },
-  { key: "auto", label: "Mecânica", icon: Wrench, color: "bg-muted text-foreground", match: ["mecânica", "mecanica", "oficina", "auto"] },
-  { key: "pet", label: "Pet Shop", icon: Dog, color: "bg-accent/15 text-accent-foreground", match: ["pet"] },
-  { key: "beauty", label: "Beleza", icon: Sparkles, color: "bg-secondary/10 text-secondary", match: ["beleza", "salão", "salao", "estética", "estetica", "cosmético", "cosmetico"] },
-  { key: "drinks", label: "Bebidas", icon: Beer, color: "bg-accent/15 text-accent-foreground", match: ["bebida", "adega", "cerveja"] },
-  { key: "home", label: "Casa", icon: Home, color: "bg-success/10 text-success", match: ["casa", "utilidade", "decoração", "decoracao"] },
-  { key: "phones", label: "Celulares", icon: Smartphone, color: "bg-primary/10 text-primary", match: ["celular", "smartphone", "iphone"] },
-  { key: "services", label: "Serviços", icon: Truck, color: "bg-muted text-foreground", match: ["serviço", "servico"] },
+  { key: "food", label: "Alimentação", icon: UtensilsCrossed, emoji: "🥕", color: "bg-primary/10 text-primary", match: ["hambúrguer", "hamburguer", "pizzaria", "pizza", "japonesa", "comida", "lanche", "açaí", "sobremesas", "doceria", "padaria", "restaurante"] },
+  { key: "market", label: "Mercado", icon: ShoppingCart, emoji: "🛒", color: "bg-success/10 text-success", match: ["mercado", "supermercado", "hortifruti"] },
+  { key: "pharmacy", label: "Farmácia", icon: Pill, emoji: "💊", color: "bg-secondary/10 text-secondary", match: ["farmácia", "farmacia", "drogaria"] },
+  { key: "fashion", label: "Moda", icon: Shirt, emoji: "👕", color: "bg-accent/15 text-accent-foreground", match: ["moda", "roupa", "calçado"] },
+  { key: "tech", label: "Informática", icon: Laptop, emoji: "💻", color: "bg-primary/10 text-primary", match: ["informática", "informatica", "tecnologia"] },
+  { key: "auto", label: "Mecânica", icon: Wrench, emoji: "🔧", color: "bg-muted text-foreground", match: ["mecânica", "mecanica", "oficina", "auto"] },
+  { key: "pet", label: "Pet Shop", icon: Dog, emoji: "🐾", color: "bg-accent/15 text-accent-foreground", match: ["pet"] },
+  { key: "beauty", label: "Beleza", icon: Sparkles, emoji: "💄", color: "bg-secondary/10 text-secondary", match: ["beleza", "salão", "salao", "estética", "estetica", "cosmético", "cosmetico"] },
+  { key: "drinks", label: "Bebidas", icon: Beer, emoji: "🍺", color: "bg-accent/15 text-accent-foreground", match: ["bebida", "adega", "cerveja"] },
+  { key: "home", label: "Casa", icon: Home, emoji: "🛋️", color: "bg-success/10 text-success", match: ["casa", "utilidade", "decoração", "decoracao"] },
+  { key: "phones", label: "Celulares", icon: Smartphone, emoji: "📱", color: "bg-primary/10 text-primary", match: ["celular", "smartphone", "iphone"] },
+  { key: "services", label: "Serviços", icon: Truck, emoji: "🚚", color: "bg-muted text-foreground", match: ["serviço", "servico"] },
 ];
+
 
 export const matchCategory = (cuisine: string | null | undefined, cat: CategoryDef) => {
   if (!cuisine) return false;
