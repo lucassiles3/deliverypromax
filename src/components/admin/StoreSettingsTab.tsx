@@ -1088,6 +1088,26 @@ const Field = ({
   </div>
 );
 
+const ToggleRow = ({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) => (
+  <div className="flex items-start justify-between gap-3 rounded-lg bg-background/60 p-2">
+    <div className="min-w-0 flex-1">
+      <p className="text-xs font-bold">{label}</p>
+      {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
+    </div>
+    <Switch checked={checked} onCheckedChange={onChange} />
+  </div>
+);
+
 const ImageDropper = ({
   label,
   value,
