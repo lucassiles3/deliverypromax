@@ -317,7 +317,7 @@ const Index = () => {
 
         {/* Search com botão circular roxo */}
         <div className="mt-4 flex items-center gap-2">
-          <div className="flex-1 [&_input]:!rounded-full [&_input]:!border-0 [&_input]:!bg-white [&_input]:!py-3.5 [&_input]:!pl-12 [&_input]:!pr-4 [&_input]:!text-sm [&_input]:!text-card-foreground [&_input]:!shadow-[0_8px_22px_-10px_rgba(60,40,120,0.4)] [&_input::placeholder]:!text-muted-foreground">
+          <div className="flex-1 [&_form]:!rounded-full [&_form]:!bg-white [&_form]:!py-1.5 [&_form]:!ring-0 [&_form]:!shadow-[0_8px_22px_-10px_rgba(60,40,120,0.45)] [&_input]:!text-sm">
             <SmartSearch onCategoryPick={(c) => {
               const lc = c.toLowerCase();
               const cat = CATEGORIES.find((cc) => cc.match.some((m) => lc.includes(m)));
