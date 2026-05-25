@@ -247,6 +247,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen pb-28 md:pb-0">
+      <div className="purple-hero pb-6">
       {/* Header — título do app + sino + carrinho */}
       <header className="relative z-30 pt-4">
         <div className="container flex items-center justify-between">
