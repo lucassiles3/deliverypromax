@@ -62,13 +62,15 @@ export const SmartSearch = ({
         supabase
           .from("stores")
           .select("id, slug, name, cuisine, logo")
+          .not("owner_id", "is", null)
           .or(`name.ilike.${like},cuisine.ilike.${like}`)
           .limit(5),
         supabase
           .from("products")
-          .select("id, name, price, image_url, store:stores!inner(slug, name)")
+          .select("id, name, price, image_url, store:stores!inner(slug, name, owner_id)")
           .ilike("name", like)
           .eq("active", true)
+          .not("store.owner_id", "is", null)
           .limit(6),
         supabase
           .from("external_listings")
