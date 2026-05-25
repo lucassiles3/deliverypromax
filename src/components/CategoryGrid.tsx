@@ -5,24 +5,26 @@ export type CategoryDef = {
   key: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  color: string; // tailwind classes for bg + text
+  emoji: string; // 3D-style emoji used in claymorphism cards
+  color: string; // tailwind classes for bg + text (used in legacy desktop grid)
   match: string[]; // cuisine matches (lowercased)
 };
 
 export const CATEGORIES: CategoryDef[] = [
-  { key: "food", label: "Alimentação", icon: UtensilsCrossed, color: "bg-primary/10 text-primary", match: ["hambúrguer", "hamburguer", "pizzaria", "pizza", "japonesa", "comida", "lanche", "açaí", "sobremesas", "doceria", "padaria", "restaurante"] },
-  { key: "market", label: "Mercado", icon: ShoppingCart, color: "bg-success/10 text-success", match: ["mercado", "supermercado", "hortifruti"] },
-  { key: "pharmacy", label: "Farmácia", icon: Pill, color: "bg-secondary/10 text-secondary", match: ["farmácia", "farmacia", "drogaria"] },
-  { key: "fashion", label: "Moda", icon: Shirt, color: "bg-accent/15 text-accent-foreground", match: ["moda", "roupa", "calçado"] },
-  { key: "tech", label: "Informática", icon: Laptop, color: "bg-primary/10 text-primary", match: ["informática", "informatica", "tecnologia"] },
-  { key: "auto", label: "Mecânica", icon: Wrench, color: "bg-muted text-foreground", match: ["mecânica", "mecanica", "oficina", "auto"] },
-  { key: "pet", label: "Pet Shop", icon: Dog, color: "bg-accent/15 text-accent-foreground", match: ["pet"] },
-  { key: "beauty", label: "Beleza", icon: Sparkles, color: "bg-secondary/10 text-secondary", match: ["beleza", "salão", "salao", "estética", "estetica", "cosmético", "cosmetico"] },
-  { key: "drinks", label: "Bebidas", icon: Beer, color: "bg-accent/15 text-accent-foreground", match: ["bebida", "adega", "cerveja"] },
-  { key: "home", label: "Casa", icon: Home, color: "bg-success/10 text-success", match: ["casa", "utilidade", "decoração", "decoracao"] },
-  { key: "phones", label: "Celulares", icon: Smartphone, color: "bg-primary/10 text-primary", match: ["celular", "smartphone", "iphone"] },
-  { key: "services", label: "Serviços", icon: Truck, color: "bg-muted text-foreground", match: ["serviço", "servico"] },
+  { key: "food", label: "Alimentação", icon: UtensilsCrossed, emoji: "🥕", color: "bg-primary/10 text-primary", match: ["hambúrguer", "hamburguer", "pizzaria", "pizza", "japonesa", "comida", "lanche", "açaí", "sobremesas", "doceria", "padaria", "restaurante"] },
+  { key: "market", label: "Mercado", icon: ShoppingCart, emoji: "🛒", color: "bg-success/10 text-success", match: ["mercado", "supermercado", "hortifruti"] },
+  { key: "pharmacy", label: "Farmácia", icon: Pill, emoji: "💊", color: "bg-secondary/10 text-secondary", match: ["farmácia", "farmacia", "drogaria"] },
+  { key: "fashion", label: "Moda", icon: Shirt, emoji: "👕", color: "bg-accent/15 text-accent-foreground", match: ["moda", "roupa", "calçado"] },
+  { key: "tech", label: "Informática", icon: Laptop, emoji: "💻", color: "bg-primary/10 text-primary", match: ["informática", "informatica", "tecnologia"] },
+  { key: "auto", label: "Mecânica", icon: Wrench, emoji: "🔧", color: "bg-muted text-foreground", match: ["mecânica", "mecanica", "oficina", "auto"] },
+  { key: "pet", label: "Pet Shop", icon: Dog, emoji: "🐾", color: "bg-accent/15 text-accent-foreground", match: ["pet"] },
+  { key: "beauty", label: "Beleza", icon: Sparkles, emoji: "💄", color: "bg-secondary/10 text-secondary", match: ["beleza", "salão", "salao", "estética", "estetica", "cosmético", "cosmetico"] },
+  { key: "drinks", label: "Bebidas", icon: Beer, emoji: "🍺", color: "bg-accent/15 text-accent-foreground", match: ["bebida", "adega", "cerveja"] },
+  { key: "home", label: "Casa", icon: Home, emoji: "🛋️", color: "bg-success/10 text-success", match: ["casa", "utilidade", "decoração", "decoracao"] },
+  { key: "phones", label: "Celulares", icon: Smartphone, emoji: "📱", color: "bg-primary/10 text-primary", match: ["celular", "smartphone", "iphone"] },
+  { key: "services", label: "Serviços", icon: Truck, emoji: "🚚", color: "bg-muted text-foreground", match: ["serviço", "servico"] },
 ];
+
 
 export const matchCategory = (cuisine: string | null | undefined, cat: CategoryDef) => {
   if (!cuisine) return false;
@@ -141,28 +143,29 @@ export const CategoryGrid = ({
 
   const renderCategory = (cat: CategoryDef) => {
     const available = isAvailable(cat);
-    const Icon = cat.icon;
     const selected = active === cat.key;
     return (
       <button
         key={cat.key}
         onClick={() => available && onPick(selected ? null : cat.key)}
         disabled={!available}
-        className={`group flex shrink-0 flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition-smooth sm:shrink ${
-          selected
-            ? "border-primary bg-primary/5 shadow-soft"
-            : "border-border bg-card hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-soft"
-        } ${!available ? "cursor-not-allowed opacity-40" : ""}`}
+        className={`group flex shrink-0 flex-col items-center gap-1.5 text-center transition-bounce sm:shrink ${
+          !available ? "cursor-not-allowed opacity-50" : "hover:-translate-y-0.5"
+        }`}
       >
         <div
-          className={`flex h-11 w-11 items-center justify-center rounded-xl transition-bounce ${cat.color} ${
-            selected ? "scale-110" : "group-hover:scale-110"
+          className={`flex h-16 w-16 items-center justify-center rounded-2xl text-3xl shadow-card transition-bounce ${
+            selected
+              ? "bg-primary/30 ring-2 ring-primary scale-105"
+              : "bg-white/95 group-hover:scale-105"
           }`}
+          style={{ filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.15))" }}
         >
-          <Icon className="h-5 w-5" />
+          <span className="drop-shadow-sm">{cat.emoji}</span>
         </div>
-        <span className="text-[11px] font-semibold leading-tight">{cat.label}</span>
-        {!available && <span className="text-[9px] text-muted-foreground">Em breve</span>}
+        <span className="text-[12px] font-semibold leading-tight text-foreground">
+          {cat.label}
+        </span>
       </button>
     );
   };
@@ -170,20 +173,20 @@ export const CategoryGrid = ({
   const seeAllBtn = (
     <button
       onClick={() => navigate("/categorias")}
-      className="flex shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-dashed border-border bg-card/50 p-3 text-center transition-smooth hover:-translate-y-0.5 hover:border-primary/30 sm:shrink"
+      className="flex shrink-0 flex-col items-center gap-1.5 text-center transition-bounce hover:-translate-y-0.5 sm:shrink"
     >
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 text-2xl text-foreground shadow-card ring-1 ring-white/30 backdrop-blur">
         ➕
       </div>
-      <span className="text-[11px] font-semibold leading-tight">Ver todas</span>
+      <span className="text-[12px] font-semibold leading-tight text-foreground">Ver todas</span>
     </button>
   );
 
   return (
-    <>
+    <div className="rounded-3xl bg-white/10 p-4 ring-1 ring-white/15 backdrop-blur-md">
       {/* Mobile: scroll horizontal */}
-      <div className="scrollbar-hide -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:hidden">
-        {CATEGORIES.map(renderCategory)}
+      <div className="scrollbar-hide -mx-1 flex gap-3 overflow-x-auto px-1 pb-1 sm:hidden">
+        {CATEGORIES.slice(0, 5).map(renderCategory)}
         {seeAllBtn}
       </div>
       {/* Tablet/Desktop: grid */}
@@ -191,6 +194,7 @@ export const CategoryGrid = ({
         {CATEGORIES.map(renderCategory)}
         {seeAllBtn}
       </div>
-    </>
+    </div>
   );
 };
+

@@ -17,22 +17,30 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useUserLocation } from "@/hooks/useUserLocation";
+import heroBasket from "@/assets/hero-basket.png";
+import promoBasket from "@/assets/promo-basket.png";
+import { NotificationBell } from "@/components/NotificationBell";
+import { useCart } from "@/context/CartContext";
 
 import { distanceKm, formatDistance } from "@/lib/distance";
 import {
   Loader2,
   MapPin,
-  Crosshair,
+  ChevronDown,
+  ShoppingBag,
+  ArrowRight,
   Sparkles,
   Flame,
   Star,
   Compass,
-  Zap,
+  Crosshair,
   Heart,
   Filter,
 } from "lucide-react";
+
 import { Link } from "react-router-dom";
 import type { Store, Product } from "@/data/stores";
+
 
 const useFeaturedProducts = (stores: Store[]) =>
   useQuery({
@@ -81,6 +89,8 @@ const FILTERS: { key: FilterKey; label: string; icon: React.ComponentType<{ clas
 
 const Index = () => {
   const { user } = useAuth();
+  const { count, setOpen } = useCart();
+
   const { data: profile } = useProfile();
   const { data: addresses } = useAddresses();
   const { data: storesData = [], isLoading } = useStores();
@@ -229,59 +239,102 @@ const Index = () => {
     });
   };
 
+  const cityShort = defaultAddr?.city
+    ? `${defaultAddr.city}${defaultAddr.state ? `, ${defaultAddr.state}` : ""}`
+    : coords?.source === "gps"
+      ? "Localização atual"
+      : "Selecione um endereço";
+
   return (
-    <div className="min-h-screen bg-background pb-24 md:pb-0">
-      <Header />
-
-      {/* Hero personalizado */}
-      <section className="border-b border-border/40 bg-gradient-to-b from-muted/40 to-transparent">
-        <div className="container py-6 md:py-8">
-          <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h1 className="font-display text-2xl font-bold md:text-3xl">
-                {greeting}{firstName ? `, ${firstName}` : ""} 👋
-              </h1>
-              <button
-                onClick={() => (user ? window.location.assign("/enderecos") : window.location.assign("/auth"))}
-                className="mt-1 inline-flex items-center gap-1.5 text-left text-sm text-muted-foreground hover:text-foreground"
-              >
-                <MapPin className="h-4 w-4 text-primary" />
-                <span className="font-medium">{addressLabel}</span>
-                <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                  Trocar
-                </span>
-              </button>
+    <div className="min-h-screen pb-28 md:pb-0">
+      {/* Header customizado tipo app mobile */}
+      <header className="relative z-30 pt-4">
+        <div className="container flex items-center justify-between">
+          <button
+            onClick={() => (user ? window.location.assign("/enderecos") : window.location.assign("/auth"))}
+            className="flex items-center gap-2 text-left"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/20 backdrop-blur">
+              <MapPin className="h-4 w-4 text-foreground" />
             </div>
+            <div className="leading-tight">
+              <p className="text-[11px] font-medium text-foreground/70">Entrega em</p>
+              <p className="flex items-center gap-1 text-sm font-bold text-foreground">
+                {cityShort} <ChevronDown className="h-3.5 w-3.5" />
+              </p>
+            </div>
+          </button>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <button
+              onClick={() => setOpen(true)}
+              aria-label="Carrinho"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/20 backdrop-blur transition-bounce hover:scale-105"
+            >
+              <ShoppingBag className="h-4 w-4 text-foreground" />
+              {count > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
+                  {count}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+      </header>
 
+      {/* Hero — greeting + 3D basket */}
+      <section className="relative">
+        <div className="container py-6">
+          <div className="relative flex items-center justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <p className="text-xl font-medium text-foreground/80">{greeting},</p>
+              <h1 className="flex items-center gap-2 font-display text-4xl font-extrabold leading-tight text-foreground md:text-5xl">
+                <span className="truncate">{firstName ?? "Bem-vindo"}</span>
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-xl ring-1 ring-white/20 backdrop-blur">
+                  👋
+                </span>
+              </h1>
+            </div>
+            <img
+              src={heroBasket}
+              alt=""
+              width={160}
+              height={160}
+              className="h-28 w-28 shrink-0 object-contain drop-shadow-2xl md:h-36 md:w-36"
+            />
+          </div>
+
+          {/* Search com botão de filtro */}
+          <div className="mt-5 flex items-center gap-3">
+            <div className="flex-1">
+              <SmartSearch onCategoryPick={(c) => {
+                const lc = c.toLowerCase();
+                const cat = CATEGORIES.find((cc) => cc.match.some((m) => lc.includes(m)));
+                setActiveCat(cat?.key ?? null);
+              }} />
+            </div>
             <button
               onClick={requestGps}
               disabled={requesting}
-              className="hidden items-center gap-2 self-start rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold transition-smooth hover:border-primary/30 md:inline-flex"
-              title="Usar localização atual"
+              aria-label="Filtros / Usar GPS"
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25 backdrop-blur transition-bounce hover:scale-105"
             >
               {requesting ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin text-foreground" />
               ) : (
-                <Crosshair className="h-3.5 w-3.5 text-primary" />
+                <Filter className="h-5 w-5 text-foreground" />
               )}
-              {coords?.source === "gps" ? "GPS ativo" : "Usar GPS"}
             </button>
           </div>
 
-          <SmartSearch onCategoryPick={(c) => {
-            // map cuisine string to category key if any matches
-            const lc = c.toLowerCase();
-            const cat = CATEGORIES.find((cc) => cc.match.some((m) => lc.includes(m)));
-            setActiveCat(cat?.key ?? null);
-          }} />
-
           {denied && (
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="mt-2 text-xs text-foreground/70">
               Sem acesso ao GPS — usando endereço cadastrado para distâncias.
             </p>
           )}
         </div>
       </section>
+
 
       {/* Categorias */}
       <section className="container py-6">
@@ -445,7 +498,37 @@ const Index = () => {
       ) : (
         // Modo descoberta: rails
         <div className="container pb-12 pt-2">
+          {/* Banner promo — cesta rosa */}
+          <div className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-[hsl(260_70%_60%)] via-[hsl(255_65%_55%)] to-[hsl(250_60%_48%)] p-5 shadow-float ring-1 ring-white/15">
+            <div className="relative z-10 flex items-center justify-between gap-4">
+              <div className="max-w-[60%]">
+                <h3 className="font-display text-2xl font-extrabold leading-tight text-white md:text-3xl">
+                  Ofertas que<br />cabem no <span className="text-[hsl(195_100%_75%)]">bolso</span>
+                </h3>
+                <p className="mt-2 text-sm text-white/85">
+                  Descontos exclusivos só para você!
+                </p>
+                <Link
+                  to="/categorias"
+                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-bold text-white ring-1 ring-white/25 backdrop-blur transition-bounce hover:scale-105 hover:bg-white/25"
+                >
+                  Ver ofertas <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+              <img
+                src={promoBasket}
+                alt=""
+                width={200}
+                height={200}
+                loading="lazy"
+                className="h-32 w-32 shrink-0 object-contain drop-shadow-2xl md:h-40 md:w-40"
+              />
+            </div>
+            <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-white/5 blur-2xl" />
+          </div>
+
           <HomeBannerCarousel />
+
 
           {externalListings.length > 0 && (
             <section className="mb-8">
