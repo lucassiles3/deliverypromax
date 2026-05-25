@@ -33,8 +33,11 @@ import {
   Flame,
   Star,
   Compass,
+  Crosshair,
+  Heart,
   Filter,
 } from "lucide-react";
+
 import { Link } from "react-router-dom";
 import type { Store, Product } from "@/data/stores";
 
