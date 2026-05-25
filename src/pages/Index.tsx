@@ -485,7 +485,34 @@ const Index = () => {
             <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-white/5 blur-2xl" />
           </div>
 
+          {/* Lojas perto de você */}
+          {(nearbyStores.length > 0 || featuredStores.length > 0) && (
+            <section className="mb-6">
+              <div className="mb-3 flex items-end justify-between">
+                <h2 className="font-display text-lg font-extrabold text-foreground">
+                  Lojas perto de você
+                </h2>
+                <Link to="/categorias" className="text-xs font-bold text-foreground/90 hover:underline">
+                  Ver todas
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {(nearbyStores.length > 0 ? nearbyStores : featuredStores).slice(0, 4).map((s, i) => (
+                  <StoreCard
+                    key={s.id}
+                    store={s}
+                    index={i}
+                    distanceKm={s._distance}
+                    inRange={coords ? s._inRange : undefined}
+                    isOpen={s._open}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
           <HomeBannerCarousel />
+
 
 
           {externalListings.length > 0 && (
