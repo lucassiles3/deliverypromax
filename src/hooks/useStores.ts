@@ -58,7 +58,12 @@ export const useStores = () =>
   useQuery({
     queryKey: ["stores"],
     queryFn: async (): Promise<Store[]> => {
-      const { data, error } = await supabase.from("stores").select("*").order("name");
+      // Oculta lojas demo/seed (sem dono atribuído) de todas as listagens públicas.
+      const { data, error } = await supabase
+        .from("stores")
+        .select("*")
+        .not("owner_id", "is", null)
+        .order("name");
       if (error) throw error;
       return (data as unknown as DbStore[]).map((s) => mapStore(s));
     },
