@@ -1534,6 +1534,10 @@ export type Database = {
           method: Database["public"]["Enums"]["delivery_method"]
           notes: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
+          pickup_code: string | null
+          pickup_confirmed_at: string | null
+          pickup_handler_name: string | null
+          pickup_handler_user_id: string | null
           source: string
           status: Database["public"]["Enums"]["order_status"]
           store_id: string
@@ -1568,6 +1572,10 @@ export type Database = {
           method?: Database["public"]["Enums"]["delivery_method"]
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          pickup_code?: string | null
+          pickup_confirmed_at?: string | null
+          pickup_handler_name?: string | null
+          pickup_handler_user_id?: string | null
           source?: string
           status?: Database["public"]["Enums"]["order_status"]
           store_id: string
@@ -1602,6 +1610,10 @@ export type Database = {
           method?: Database["public"]["Enums"]["delivery_method"]
           notes?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          pickup_code?: string | null
+          pickup_confirmed_at?: string | null
+          pickup_handler_name?: string | null
+          pickup_handler_user_id?: string | null
           source?: string
           status?: Database["public"]["Enums"]["order_status"]
           store_id?: string
@@ -2906,6 +2918,11 @@ export type Database = {
           lifecycle_status: Database["public"]["Enums"]["store_lifecycle"]
           lng: number | null
           logistics_pickup_enabled: boolean
+          logistics_pickup_instructions: string | null
+          logistics_pickup_notify_customer: boolean
+          logistics_pickup_release_when_ready: boolean
+          logistics_pickup_require_code: boolean
+          logistics_pickup_require_confirm: boolean
           logo: string | null
           marketplace_fee_percent: number
           max_orders_per_hour: number | null
@@ -2976,6 +2993,11 @@ export type Database = {
           lifecycle_status?: Database["public"]["Enums"]["store_lifecycle"]
           lng?: number | null
           logistics_pickup_enabled?: boolean
+          logistics_pickup_instructions?: string | null
+          logistics_pickup_notify_customer?: boolean
+          logistics_pickup_release_when_ready?: boolean
+          logistics_pickup_require_code?: boolean
+          logistics_pickup_require_confirm?: boolean
           logo?: string | null
           marketplace_fee_percent?: number
           max_orders_per_hour?: number | null
@@ -3046,6 +3068,11 @@ export type Database = {
           lifecycle_status?: Database["public"]["Enums"]["store_lifecycle"]
           lng?: number | null
           logistics_pickup_enabled?: boolean
+          logistics_pickup_instructions?: string | null
+          logistics_pickup_notify_customer?: boolean
+          logistics_pickup_release_when_ready?: boolean
+          logistics_pickup_require_code?: boolean
+          logistics_pickup_require_confirm?: boolean
           logo?: string | null
           marketplace_fee_percent?: number
           max_orders_per_hour?: number | null
