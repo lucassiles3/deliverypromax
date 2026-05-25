@@ -335,6 +335,57 @@ const Field = ({ icon: Icon, children }: { icon: typeof Mail; children: React.Re
   </label>
 );
 
+const PasswordStrength = ({ password }: { password: string }) => {
+  const rules = [
+    { label: "Mínimo de 6 caracteres", test: password.length >= 6 },
+    { label: "Uma letra maiúscula", test: /[A-Z]/.test(password) },
+    { label: "Uma letra minúscula", test: /[a-z]/.test(password) },
+    { label: "Um número", test: /\d/.test(password) },
+    { label: "Um caractere especial (!@#$...)", test: /[^A-Za-z0-9]/.test(password) },
+  ];
+  const score = rules.filter((r) => r.test).length;
+  const pct = (score / rules.length) * 100;
+  const levels = [
+    { label: "Muito fraca", color: "bg-destructive" },
+    { label: "Fraca", color: "bg-destructive" },
+    { label: "Razoável", color: "bg-yellow-500" },
+    { label: "Boa", color: "bg-yellow-400" },
+    { label: "Forte", color: "bg-green-500" },
+    { label: "Excelente", color: "bg-green-600" },
+  ];
+  const level = levels[score];
+
+  if (!password) return null;
+
+  return (
+    <div className="space-y-2 px-1">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className={`h-full transition-all duration-300 ${level.color}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">Força da senha</span>
+        <span className="font-semibold">{level.label}</span>
+      </div>
+      <ul className="space-y-1 text-xs">
+        {rules.map((r) => (
+          <li
+            key={r.label}
+            className={`flex items-center gap-2 ${r.test ? "text-green-600" : "text-muted-foreground"}`}
+          >
+            <span className={`flex h-3.5 w-3.5 items-center justify-center rounded-full text-[10px] ${r.test ? "bg-green-600 text-white" : "border border-muted-foreground/40"}`}>
+              {r.test ? "✓" : ""}
+            </span>
+            {r.label}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 const GoogleIcon = () => (
   <svg className="h-5 w-5" viewBox="0 0 24 24">
     <path
