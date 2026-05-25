@@ -43,7 +43,7 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange, isOpen
             : "border-border bg-card"
         }`}
       >
-        <div className="absolute right-3 top-5 z-10">
+        <div className="absolute right-3 top-1/2 z-10 -translate-y-1/2">
           {isExternal ? (
             <FavoriteListingButton listingId={String(store.id).replace(/^ext_/, "")} />
           ) : (
@@ -74,11 +74,6 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange, isOpen
           <div className="min-w-0 flex-1">
             <h3 className={`truncate font-display text-lg font-bold leading-tight ${isClosed ? "text-muted-foreground" : ""}`}>{store.name}</h3>
             <p className="truncate text-xs text-muted-foreground">{store.cuisine}</p>
-            <div className="mt-1 flex items-center gap-1 text-xs font-semibold">
-              <Star className="h-3.5 w-3.5 fill-accent text-accent" />
-              {store.rating}
-              <span className="font-normal text-muted-foreground">({store.reviews})</span>
-            </div>
           </div>
         </div>
 
