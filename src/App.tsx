@@ -21,8 +21,10 @@ if (typeof window !== "undefined") {
   });
 }
 
+import { useEffect } from "react";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -70,6 +72,18 @@ const PushBridge = () => {
   return null;
 };
 
+// Aplica o tema roxo do cliente em todas as rotas, exceto admin/PDV/master/entregador
+const CLIENT_THEME_EXCLUDE = ["/admin", "/pdv", "/master", "/entregador"];
+const ClientThemeBridge = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const isClient = !CLIENT_THEME_EXCLUDE.some((p) => pathname.startsWith(p));
+    document.documentElement.classList.toggle("client-theme", isClient);
+  }, [pathname]);
+  return null;
+};
+
+
 /**
  * Carrega o script do Google AdSense uma única vez se VITE_ADSENSE_CLIENT estiver definido.
  * Sem a env var, nada é injetado (banners caem em modo placeholder).
@@ -105,7 +119,9 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <PushBridge />
+          <ClientThemeBridge />
           <AdSenseLoader />
+
           <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/" element={<Index />} />
