@@ -451,33 +451,7 @@ const Index = () => {
       ) : (
         // Modo descoberta: rails
         <div className="container pb-12 pt-2">
-          <StoreRail
-            title="🔥 Promoções perto de você"
-            subtitle="Descontos imperdíveis"
-            stores={promoStores}
-            emptyHint="Nenhuma promoção ativa agora — volte mais tarde."
-          />
-
           <HomeBannerCarousel />
-
-
-          <ProductRail
-            title="✨ Pratos em destaque"
-            subtitle="Os queridinhos dos clientes"
-            products={featuredProducts}
-          />
-          {nearbyStores.length > 0 && (
-            <StoreRail
-              title="📍 Próximas de você"
-              subtitle={coords?.source === "gps" ? "Baseado no seu GPS" : "Baseado no seu endereço"}
-              stores={nearbyStores}
-            />
-          )}
-
-
-
-
-          <StoreRail title="🆕 Novidades" subtitle="Recém chegadas" stores={newStores} />
 
           {externalListings.length > 0 && (
             <section className="mb-8">
