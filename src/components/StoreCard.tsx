@@ -37,28 +37,42 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange, isOpen
       style={{ animationDelay: `${index * 70}ms` }}
     >
       <article
-        className={`relative overflow-hidden rounded-2xl border p-4 shadow-card transition-smooth hover:-translate-y-1 hover:border-primary/40 hover:shadow-float ${
+        className={`relative overflow-hidden rounded-3xl p-4 shadow-card ring-1 backdrop-blur-md transition-bounce hover:-translate-y-1 hover:shadow-float ${
           isClosed
-            ? "border-border/60 bg-muted/40 opacity-70"
-            : "border-border bg-card"
+            ? "bg-white/5 opacity-70 ring-white/10"
+            : "bg-white/10 ring-white/15 hover:bg-white/15"
         }`}
       >
-        <div className="absolute right-3 top-1/2 z-10 -translate-y-1/2">
+        {/* Badges top-left */}
+        <div className="absolute left-3 top-3 z-10 flex items-center gap-1.5">
+          {isClosed ? (
+            <span className="rounded-full bg-foreground/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-foreground backdrop-blur">
+              Fechado
+            </span>
+          ) : store.deliveryFee === 0 ? (
+            <span className="rounded-full bg-[hsl(195_100%_85%)] px-2.5 py-1 text-[10px] font-bold text-[hsl(220_70%_25%)]">
+              Entrega grátis
+            </span>
+          ) : store.promo ? (
+            <span className="rounded-full bg-accent/90 px-2.5 py-1 text-[10px] font-bold text-accent-foreground">
+              {typeof store.promo === "string" ? store.promo : "Em promoção"}
+            </span>
+          ) : null}
+        </div>
+
+        {/* Heart top-right */}
+        <div className="absolute right-3 top-3 z-10">
           {isExternal ? (
             <FavoriteListingButton listingId={String(store.id).replace(/^ext_/, "")} />
           ) : (
             <FavoriteStoreButton storeId={String(store.id)} />
           )}
         </div>
-        {isClosed && (
-          <span className="absolute left-3 top-3 z-10 rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-            Fechado
-          </span>
-        )}
-        {/* Top row: logo + name */}
-        <div className="flex items-start gap-3">
+
+        {/* Logo grande + nome */}
+        <div className="mt-8 flex items-start gap-3">
           {isImageUrl(store.logo) ? (
-            <div className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border shadow-glow ${isClosed ? "border-border/60 bg-muted" : "border-border bg-card"}`}>
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg">
               <LazyImage
                 src={store.logo}
                 alt={store.name}
@@ -67,64 +81,42 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange, isOpen
               />
             </div>
           ) : (
-            <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-3xl shadow-glow ${isClosed ? "bg-muted text-muted-foreground" : "gradient-primary text-primary-foreground"}`}>
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-2xl shadow-lg">
               {store.logo}
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className={`truncate font-display text-lg font-bold leading-tight ${isClosed ? "text-muted-foreground" : ""}`}>{store.name}</h3>
-            <p className="truncate text-xs text-muted-foreground">{store.cuisine}</p>
-          </div>
-        </div>
-
-        {/* Tagline / promo */}
-        {tagline && (
-          <p className="mt-3 line-clamp-2 text-xs text-foreground/80">✨ {tagline}</p>
-        )}
-        {store.promo && !isClosed && (
-          <div className="mt-3 inline-flex items-center gap-1 rounded-full gradient-promo px-3 py-1 text-[11px] font-bold text-primary-foreground shadow-glow">
-            🔥 {store.promo}
-          </div>
-        )}
-
-        {/* Bottom row: meta */}
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border pt-3 text-xs">
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Clock className="h-3.5 w-3.5" /> {store.deliveryTime}
-          </div>
-          {distanceKm !== null && (
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5" /> {formatDistance(distanceKm)}
+            <h3 className="truncate font-display text-base font-bold leading-tight text-foreground">
+              {store.name}
+            </h3>
+            <p className="truncate text-xs text-foreground/70">{store.cuisine}</p>
+            <div className="mt-1 flex items-center gap-1 text-xs">
+              <Star className="h-3 w-3 fill-accent text-accent" />
+              <span className="font-semibold text-foreground">{Number(store.rating ?? 5).toFixed(1)}</span>
+              <span className="text-foreground/60">({store.reviews ?? 0})</span>
             </div>
-          )}
-          {(!isExternal || (store.deliveryFee !== null && store.deliveryFee !== undefined)) && (
-            <span className="ml-auto flex items-center gap-1 font-bold text-success">
-              <Bike className="h-3.5 w-3.5" />
-              {store.deliveryFee === 0 ? (
-                "Grátis"
-              ) : (
-                <>
-                  {isExternal && (
-                    <span className="text-[10px] font-semibold text-muted-foreground">a partir de</span>
-                  )}
-                  R${Number(store.deliveryFee).toFixed(2)}
-                </>
-              )}
-            </span>
-          )}
+          </div>
         </div>
 
-        {showRangeBadge && (
+        {/* Bottom row: tempo + frete */}
+        <div className="mt-3 flex items-center gap-2 text-xs">
+          <span className="flex items-center gap-1 text-[hsl(155_70%_75%)]">
+            <Clock className="h-3.5 w-3.5" />
+            <span className="font-semibold">{store.deliveryTime}</span>
+          </span>
+          <span className="text-foreground/40">•</span>
+          <span className="font-semibold text-foreground/80">
+            {store.deliveryFee === 0
+              ? "R$ 0,00"
+              : `R$ ${Number(store.deliveryFee).toFixed(2).replace(".", ",")}`}
+          </span>
+        </div>
+
+        {showRangeBadge && !inRange && (
           <div className="mt-2">
-            {inRange ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-success">
-                <CheckCircle2 className="h-3 w-3" /> Entrega no raio
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-destructive">
-                <AlertCircle className="h-3 w-3" /> Fora do raio
-              </span>
-            )}
+            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-foreground">
+              <AlertCircle className="h-3 w-3" /> Fora do raio
+            </span>
           </div>
         )}
       </article>
@@ -132,3 +124,4 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange, isOpen
   );
 
 };
+
