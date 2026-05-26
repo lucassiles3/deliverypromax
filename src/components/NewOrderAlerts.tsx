@@ -88,6 +88,11 @@ export const NewOrderAlerts = () => {
     [soundMap],
   );
 
+  // keep ref in sync so interval always reads latest
+  useEffect(() => {
+    shouldPlaySoundRef.current = shouldPlaySound;
+  }, [shouldPlaySound]);
+
   const playDing = useCallback(() => {
     try {
       const Ctx = window.AudioContext || (window as any).webkitAudioContext;
