@@ -315,16 +315,21 @@ const Admin = () => {
     return <CreateStoreOnboarding userId={user.id} userEmail={user.email ?? ""} />;
   }
 
-  const currentStore = stores.find((s) => s.id === storeId);
-
-  // Gate de assinatura: bloqueia o painel apenas para o DONO quando o período acabou
-  if (storeId && currentRole === "owner") {
+  // Bloqueia o painel para o dono quando o trial acabou e ainda não pagou
+  if (
+    storeId &&
+    currentRole === "owner" &&
+    subState &&
+    subState.state === "expired" &&
+    !bypassPaywall
+  ) {
     return (
-      <SubscriptionGate storeId={storeId}>
-        <AdminContent />
-      </SubscriptionGate>
+      <SubscriptionPaywall storeId={storeId} onActive={() => setBypassPaywall(true)} />
     );
   }
+
+  const currentStore = stores.find((s) => s.id === storeId);
+
 
   const sections: { id: Tab; label: string; icon: typeof Clock }[] = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
