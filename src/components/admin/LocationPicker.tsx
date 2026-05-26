@@ -119,8 +119,8 @@ export const LocationPicker = ({ value, onChange }: Props) => {
     );
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = async (e?: React.SyntheticEvent) => {
+    if (e) e.preventDefault();
     if (!search.trim() || searching) return;
     setSearching(true);
     const res = await searchPlace(search.trim());
@@ -136,18 +136,25 @@ export const LocationPicker = ({ value, onChange }: Props) => {
 
   return (
     <div className="space-y-2">
-      <form onSubmit={handleSearch} className="flex gap-2">
+      <div className="flex gap-2">
         <div className="flex-1 flex items-center rounded-xl border-2 border-border bg-background overflow-hidden focus-within:border-primary">
           <Search className="ml-3 h-4 w-4 text-muted-foreground" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSearch();
+              }
+            }}
             placeholder="Buscar endereço, bairro ou cidade…"
             className="flex-1 bg-transparent px-3 py-3 text-sm outline-none"
           />
         </div>
         <button
-          type="submit"
+          type="button"
+          onClick={() => handleSearch()}
           disabled={searching}
           className="rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground disabled:opacity-50"
         >
@@ -161,7 +168,7 @@ export const LocationPicker = ({ value, onChange }: Props) => {
         >
           <LocateFixed className="h-4 w-4" />
         </button>
-      </form>
+      </div>
 
       <div className="relative overflow-hidden rounded-xl border-2 border-border" style={{ height: 320 }}>
         <MapContainer
