@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
       customerId = customer.id;
     }
 
-    // 2) Garante subscription mensal PIX no Asaas
+    // 2) Garante subscription mensal no Asaas (PIX ou Cartão)
     let subscriptionId = sub?.gateway_subscription_id as string | null;
     if (!subscriptionId) {
       const nextDue = new Date(Date.now() + 24 * 3600_000).toISOString().slice(0, 10);
@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
         method: "POST",
         body: JSON.stringify({
           customer: customerId,
-          billingType: "PIX",
+          billingType,
           cycle: "MONTHLY",
           value: PRO_PRICE,
           nextDueDate: nextDue,
@@ -132,6 +132,12 @@ Deno.serve(async (req) => {
         }),
       });
       subscriptionId = subResp.id;
+    } else {
+      // Atualiza método de cobrança se mudou
+      await asaas(`/subscriptions/${subscriptionId}`, {
+        method: "POST",
+        body: JSON.stringify({ billingType }),
+      }).catch(() => null);
     }
 
     // 3) Persiste assinatura
