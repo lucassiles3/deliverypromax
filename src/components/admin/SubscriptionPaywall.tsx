@@ -48,17 +48,38 @@ export const SubscriptionPaywall = ({ storeId, onActive }: PaywallProps) => {
   const startSubscription = async () => {
     setCreating(true);
     try {
-      const payload: any = { store_id: storeId };
-      if (needsCpf) payload.cpfCnpj = cpf;
-      const { data, error } = await supabase.functions.invoke("subscription-create", { body: payload });
-      if (error) throw error;
-      if ((data as any)?.error === "cpfCnpj required" || (data as any)?.code === "need_cpf_cnpj") {
-        setNeedsCpf(true);
-        toast.info("Informe seu CPF ou CNPJ para gerar a cobrança.");
+      const cleanCpf = cpf.replace(/\D/g, "");
+      if (needsCpf && cleanCpf.length < 11) {
+        toast.error("Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido.");
         return;
       }
-      const p = (data as any)?.data?.pix;
-      const invoiceUrl = (data as any)?.data?.invoice_url;
+      const payload: any = { store_id: storeId };
+      if (needsCpf && cleanCpf) payload.cpfCnpj = cleanCpf;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/subscription-create`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        if (json?.code === "need_cpf_cnpj" || /cpfcnpj/i.test(json?.error ?? "")) {
+          setNeedsCpf(true);
+          toast.info("Informe seu CPF ou CNPJ para gerar a cobrança.");
+          return;
+        }
+        throw new Error(json?.error || `Erro ${res.status}`);
+      }
+
+      const p = json?.data?.pix;
+      const invoiceUrl = json?.data?.invoice_url;
       if (p?.encodedImage) {
         setPix({ encodedImage: p.encodedImage, payload: p.payload, invoiceUrl });
       } else if (invoiceUrl) {
@@ -66,12 +87,7 @@ export const SubscriptionPaywall = ({ storeId, onActive }: PaywallProps) => {
       }
       qc.invalidateQueries({ queryKey: ["subscription-state", storeId] });
     } catch (e: any) {
-      if (typeof e?.message === "string" && e.message.toLowerCase().includes("cpfcnpj")) {
-        setNeedsCpf(true);
-        toast.info("Informe seu CPF ou CNPJ para gerar a cobrança.");
-      } else {
-        toast.error(e?.message || "Não foi possível iniciar a assinatura");
-      }
+      toast.error(e?.message || "Não foi possível iniciar a assinatura");
     } finally {
       setCreating(false);
     }
