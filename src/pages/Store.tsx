@@ -36,18 +36,17 @@ const Store = () => {
   const radius = store?.deliveryRadiusKm ?? null;
   const outOfRange = distance !== null && radius !== null && distance > radius;
 
-  useEffect(() => {
-    document.title = store ? `${store.name} • Itchat Brasil` : "Itchat Brasil";
-    if (store && !activeCat) setActiveCat(categoryList[0] ?? "");
-  }, [store, activeCat, categoryList]);
-
   const categoryList = useMemo(() => {
     if (!store) return [] as string[];
     const fromStore = store.categories ?? [];
     if (fromStore.length > 0) return fromStore;
-    // fallback: deriva categorias dos próprios produtos
     return Array.from(new Set(store.products.map((p) => p.category).filter(Boolean)));
   }, [store]);
+
+  useEffect(() => {
+    document.title = store ? `${store.name} • Itchat Brasil` : "Itchat Brasil";
+    if (store && !activeCat) setActiveCat(categoryList[0] ?? "");
+  }, [store, activeCat, categoryList]);
 
   const grouped = useMemo(() => {
     if (!store) return {};
