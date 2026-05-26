@@ -233,7 +233,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24 md:pb-0">
+      <LocationGate
+        hasCoords={!!coords}
+        requesting={requesting}
+        onUseGps={requestGps}
+        onManual={setManual}
+      />
       <Header />
+
 
       {/* Hero personalizado */}
       <section className="border-b border-border/40 bg-gradient-to-b from-muted/40 to-transparent">
