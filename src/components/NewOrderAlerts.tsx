@@ -183,7 +183,7 @@ export const NewOrderAlerts = () => {
     }
     if (loopRef.current) return;
     loopRef.current = window.setInterval(() => {
-      const anyWithSound = alerts.some((a) => shouldPlaySound(a.storeId));
+      const anyWithSound = alerts.some((a) => shouldPlaySoundRef.current(a.storeId));
       if (anyWithSound) playDing();
     }, 8000);
     return () => {
