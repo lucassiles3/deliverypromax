@@ -45,12 +45,13 @@ export const SubscriptionPaywall = ({ storeId, onActive }: PaywallProps) => {
     refetchInterval: 15000,
   });
 
+  // Libera apenas quando o estado MUDA para ativo (ex.: após pagar o PIX).
+  const [wasActive] = useState<boolean>(() => state?.active === true);
   useEffect(() => {
-    if (state?.active && (state.state === "active" || state.state === "cancelled_active")) {
-      // Não auto-libera; permite ver tela de gestão. Mas se for renovação após pagar PIX, libera.
-      if (!pix) onActive();
+    if (!wasActive && state?.active && pix) {
+      onActive();
     }
-  }, [state, onActive, pix]);
+  }, [state, onActive, pix, wasActive]);
 
   const callFn = async (fn: string, body: any) => {
     const { data: { session } } = await supabase.auth.getSession();
