@@ -17,6 +17,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useUserLocation } from "@/hooks/useUserLocation";
+import { LocationGate } from "@/components/LocationGate";
+
 
 import { distanceKm, formatDistance } from "@/lib/distance";
 import {
@@ -99,7 +101,7 @@ const Index = () => {
     defaultAddr && defaultAddr.lat && defaultAddr.lng
       ? { lat: Number(defaultAddr.lat), lng: Number(defaultAddr.lng) }
       : null;
-  const { coords, requesting, denied, requestGps } = useUserLocation(addrCoords);
+  const { coords, requesting, denied, requestGps, setManual } = useUserLocation(addrCoords);
 
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [activeSub, setActiveSub] = useState<string | null>(null);
@@ -231,7 +233,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24 md:pb-0">
+      <LocationGate
+        hasCoords={!!coords}
+        requesting={requesting}
+        onUseGps={requestGps}
+        onManual={setManual}
+      />
       <Header />
+
 
       {/* Hero personalizado */}
       <section className="border-b border-border/40 bg-gradient-to-b from-muted/40 to-transparent">
