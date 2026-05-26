@@ -176,7 +176,10 @@ export const NewOrderAlerts = () => {
       return;
     }
     if (loopRef.current) return;
-    loopRef.current = window.setInterval(() => playDing(), 8000);
+    loopRef.current = window.setInterval(() => {
+      const anyWithSound = alerts.some((a) => shouldPlaySound(a.storeId));
+      if (anyWithSound) playDing();
+    }, 8000);
     return () => {
       if (loopRef.current) { window.clearInterval(loopRef.current); loopRef.current = null; }
     };
