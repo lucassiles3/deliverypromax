@@ -41,16 +41,24 @@ const Store = () => {
     if (store && !activeCat) setActiveCat(store.categories[0] ?? "");
   }, [store, activeCat]);
 
+  const categoryList = useMemo(() => {
+    if (!store) return [] as string[];
+    const fromStore = store.categories ?? [];
+    if (fromStore.length > 0) return fromStore;
+    // fallback: deriva categorias dos próprios produtos
+    return Array.from(new Set(store.products.map((p) => p.category).filter(Boolean)));
+  }, [store]);
+
   const grouped = useMemo(() => {
     if (!store) return {};
     const filtered = store.products.filter((p) =>
       !query ? true : p.name.toLowerCase().includes(query.toLowerCase())
     );
-    return store.categories.reduce<Record<string, typeof store.products>>((acc, c) => {
+    return categoryList.reduce<Record<string, typeof store.products>>((acc, c) => {
       acc[c] = filtered.filter((p) => p.category === c);
       return acc;
     }, {});
-  }, [store, query]);
+  }, [store, query, categoryList]);
 
   if (isLoading) return <div className="min-h-screen" />;
 
