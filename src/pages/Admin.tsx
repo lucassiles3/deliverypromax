@@ -686,6 +686,8 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
       return;
     }
     toast.success("Loja criada! Vamos configurar 🚀");
+    try { sessionStorage.setItem("admin:initialTab", "store"); } catch {}
+    await qc.invalidateQueries({ queryKey: ["store-access"] });
     await qc.invalidateQueries({ queryKey: ["stores"] });
   };
 
