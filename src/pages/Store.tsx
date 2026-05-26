@@ -83,8 +83,12 @@ const Store = () => {
       <div className="container -mt-12 relative">
         <div className="rounded-3xl bg-card p-5 shadow-float md:p-7">
           <div className="flex items-start gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-muted text-3xl shadow-card md:h-20 md:w-20 md:text-4xl">
-              {store.logo}
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-muted text-3xl shadow-card md:h-20 md:w-20 md:text-4xl">
+              {store.logo && /^https?:\/\//.test(store.logo) ? (
+                <img src={store.logo} alt={store.name} className="h-full w-full object-cover" />
+              ) : (
+                <span>{store.logo}</span>
+              )}
             </div>
             <div className="flex-1">
               <h1 className="font-display text-2xl font-bold md:text-3xl">{store.name}</h1>
