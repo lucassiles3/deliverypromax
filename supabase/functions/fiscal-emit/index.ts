@@ -38,6 +38,25 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!order) return json({ error: "order not found" }, 404);
 
+    // Authorization: only store owner / active team members can emit
+    const { data: store } = await admin
+      .from("stores")
+      .select("owner_id")
+      .eq("id", order.store_id)
+      .maybeSingle();
+    let authorized = store?.owner_id === user.id;
+    if (!authorized) {
+      const { data: member } = await admin
+        .from("store_members")
+        .select("id")
+        .eq("store_id", order.store_id)
+        .eq("user_id", user.id)
+        .eq("active", true)
+        .maybeSingle();
+      authorized = !!member;
+    }
+    if (!authorized) return json({ error: "forbidden" }, 403);
+
     const { data: cfg } = await admin
       .from("store_fiscal_config")
       .select("*")

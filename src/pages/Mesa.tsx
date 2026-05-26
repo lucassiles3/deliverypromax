@@ -41,9 +41,7 @@ const Mesa = () => {
     if (!token) return;
     (async () => {
       const { data: t } = await supabase
-        .from("tables")
-        .select("id, store_id, number, name")
-        .eq("qr_token", token)
+        .rpc("resolve_table_by_qr", { _token: token })
         .maybeSingle();
       if (t) {
         setTable(t);
@@ -60,10 +58,7 @@ const Mesa = () => {
     enabled: !!table?.id,
     queryFn: async () => {
       const { data } = await supabase
-        .from("table_sessions")
-        .select("id, status, subtotal, service_fee, service_fee_percent, total, opened_at")
-        .eq("table_id", table.id)
-        .eq("status", "open")
+        .rpc("get_open_session_safe", { _table_id: table.id })
         .maybeSingle();
       return data;
     },

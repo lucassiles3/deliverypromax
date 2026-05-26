@@ -24,6 +24,22 @@ async function hmacHex(secret: string, body: string): Promise<string> {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const cronSecret = Deno.env.get("CRON_SECRET");
+  if (!cronSecret) {
+    return new Response(JSON.stringify({ error: "service not configured" }), {
+      status: 503,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const provided = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim()
+    || req.headers.get("x-cron-secret") || "";
+  if (provided !== cronSecret) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
   // Pega até 50 entregas pendentes (success=false e attempts<5)

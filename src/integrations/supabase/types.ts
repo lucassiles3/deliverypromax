@@ -3914,6 +3914,18 @@ export type Database = {
       }
       generate_weekly_payouts: { Args: { _store_id: string }; Returns: number }
       get_open_cash_register: { Args: { _store_id: string }; Returns: string }
+      get_open_session_safe: {
+        Args: { _table_id: string }
+        Returns: {
+          id: string
+          opened_at: string
+          service_fee: number
+          service_fee_percent: number
+          status: string
+          subtotal: number
+          total: number
+        }[]
+      }
       get_store_role: {
         Args: { _store_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["staff_role"]
@@ -3960,6 +3972,15 @@ export type Database = {
         Args: { _key_hash: string }
         Returns: {
           key_id: string
+          store_id: string
+        }[]
+      }
+      resolve_table_by_qr: {
+        Args: { _token: string }
+        Returns: {
+          id: string
+          name: string
+          number: number
           store_id: string
         }[]
       }
