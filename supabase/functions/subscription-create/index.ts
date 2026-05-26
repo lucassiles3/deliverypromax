@@ -49,9 +49,13 @@ Deno.serve(async (req) => {
     if (!jwt) return json({ error: "unauthenticated" }, 401);
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
-    const { data: userRes } = await admin.auth.getUser(jwt);
+    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: `Bearer ${jwt}` } },
+    });
+    const { data: userRes, error: userErr } = await userClient.auth.getUser();
     const user = userRes?.user;
-    if (!user) return json({ error: "invalid token" }, 401);
+    if (userErr || !user) return json({ error: "invalid token" }, 401);
+
 
     const body = await req.json().catch(() => ({}));
     const storeId = body.store_id as string | undefined;
