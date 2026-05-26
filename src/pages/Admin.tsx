@@ -334,12 +334,16 @@ const Admin = () => {
   if (
     storeId &&
     currentRole === "owner" &&
-    subState &&
-    subState.state === "expired" &&
-    !bypassPaywall
+    ((subState && subState.state === "expired" && !bypassPaywall) || showPaywall)
   ) {
     return (
-      <SubscriptionPaywall storeId={storeId} onActive={() => setBypassPaywall(true)} />
+      <SubscriptionPaywall
+        storeId={storeId}
+        onActive={() => {
+          setBypassPaywall(true);
+          setShowPaywall(false);
+        }}
+      />
     );
   }
 
