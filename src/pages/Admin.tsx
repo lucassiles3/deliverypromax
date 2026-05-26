@@ -666,7 +666,9 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
       slug: slugToUse,
       phone: phone.trim() || null,
       whatsapp_phone: phone.trim() || null,
-      city: city.trim() || null,
+      city: location?.city ?? null,
+      lat: location?.lat ?? null,
+      lng: location?.lng ?? null,
       cuisine: cuisine.trim() || null,
       open: true,
     });
