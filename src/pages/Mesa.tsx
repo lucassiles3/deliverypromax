@@ -58,10 +58,7 @@ const Mesa = () => {
     enabled: !!table?.id,
     queryFn: async () => {
       const { data } = await supabase
-        .from("table_sessions")
-        .select("id, status, subtotal, service_fee, service_fee_percent, total, opened_at")
-        .eq("table_id", table.id)
-        .eq("status", "open")
+        .rpc("get_open_session_safe", { _table_id: table.id })
         .maybeSingle();
       return data;
     },
