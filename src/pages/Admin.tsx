@@ -746,7 +746,6 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
             <LocationPicker value={location} onChange={setLocation} />
           </div>
           </div>
-          <div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Segmento</label>
