@@ -14,8 +14,26 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    const expectedSecret = Deno.env.get("CHATBOT_CALLBACK_SECRET");
+    if (!expectedSecret) {
+      return new Response(JSON.stringify({ error: "service not configured" }), {
+        status: 503,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const providedSecret =
+      req.headers.get("x-webhook-secret") ||
+      (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
+
     const body = await req.json().catch(() => ({}));
-    const { store_id, qr_code, status } = body ?? {};
+    const { store_id, qr_code, status, secret: bodySecret } = body ?? {};
+
+    if (providedSecret !== expectedSecret && bodySecret !== expectedSecret) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!store_id || typeof store_id !== "string") {
       return new Response(JSON.stringify({ error: "store_id required" }), {
