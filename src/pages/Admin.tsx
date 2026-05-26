@@ -720,24 +720,23 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">WhatsApp</label>
-              <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="(11) 99999-9999"
-                className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Cidade</label>
-              <input
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="São Paulo"
-                className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
-              />
-            </div>
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">WhatsApp</label>
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="(11) 99999-9999"
+              className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Localização da loja *
+            </label>
+            <p className="mt-1 mb-2 text-xs text-muted-foreground">
+              Busque seu endereço, use sua localização atual ou toque no mapa para soltar o alfinete.
+            </p>
+            <LocationPicker value={location} onChange={setLocation} />
           </div>
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Segmento</label>
