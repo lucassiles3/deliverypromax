@@ -26,6 +26,7 @@ export const NewOrderAlerts = () => {
   const [soundMap, setSoundMap] = useState<Record<string, boolean>>({});
   const audioUnlockedRef = useRef(false);
   const loopRef = useRef<number | null>(null);
+  const shouldPlaySoundRef = useRef<(storeId: string) => boolean>(() => true);
 
   // Unlock audio on first interaction
   useEffect(() => {
