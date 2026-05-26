@@ -58,6 +58,7 @@ import { SettingsTab } from "@/components/admin/SettingsTab";
 import { StoreSettingsTab } from "@/components/admin/StoreSettingsTab";
 import { FinancialTab } from "@/components/admin/FinancialTab";
 import { CustomersTab } from "@/components/admin/CustomersTab";
+import { LocationPicker } from "@/components/admin/LocationPicker";
 import { MarketingTab } from "@/components/admin/MarketingTab";
 import { TeamTab } from "@/components/admin/TeamTab";
 import { IntegrationsTab } from "@/components/admin/IntegrationsTab";
