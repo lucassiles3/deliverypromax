@@ -154,6 +154,7 @@ const Admin = () => {
 
   // Estado da assinatura (gate do dono)
   const [bypassPaywall, setBypassPaywall] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   const { data: subState } = useQuery({
     queryKey: ["subscription-state", storeId, currentRole],
     enabled: !!storeId && currentRole === "owner",
