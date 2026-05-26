@@ -60,6 +60,7 @@ import { FinancialTab } from "@/components/admin/FinancialTab";
 import { CustomersTab } from "@/components/admin/CustomersTab";
 import { LocationPicker } from "@/components/admin/LocationPicker";
 import { SubscriptionPaywall } from "@/components/admin/SubscriptionPaywall";
+import { TrialBanner } from "@/components/admin/TrialBanner";
 import { CATEGORIES, SUBCATEGORIES } from "@/components/CategoryGrid";
 import { MarketingTab } from "@/components/admin/MarketingTab";
 import { TeamTab } from "@/components/admin/TeamTab";
@@ -153,6 +154,7 @@ const Admin = () => {
 
   // Estado da assinatura (gate do dono)
   const [bypassPaywall, setBypassPaywall] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   const { data: subState } = useQuery({
     queryKey: ["subscription-state", storeId, currentRole],
     enabled: !!storeId && currentRole === "owner",
@@ -332,12 +334,16 @@ const Admin = () => {
   if (
     storeId &&
     currentRole === "owner" &&
-    subState &&
-    subState.state === "expired" &&
-    !bypassPaywall
+    ((subState && subState.state === "expired" && !bypassPaywall) || showPaywall)
   ) {
     return (
-      <SubscriptionPaywall storeId={storeId} onActive={() => setBypassPaywall(true)} />
+      <SubscriptionPaywall
+        storeId={storeId}
+        onActive={() => {
+          setBypassPaywall(true);
+          setShowPaywall(false);
+        }}
+      />
     );
   }
 
@@ -536,6 +542,10 @@ const Admin = () => {
           </div>
         </div>
       </header>
+
+      {currentRole === "owner" && (
+        <TrialBanner state={subState} onSubscribe={() => setShowPaywall(true)} />
+      )}
 
       <div className="container py-3 md:py-6 md:flex md:gap-6">
         {/* Sidebar (tablet/desktop) */}
