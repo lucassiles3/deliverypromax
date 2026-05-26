@@ -147,7 +147,7 @@ export const NewOrderAlerts = () => {
             };
             setAlerts((prev) => (prev.find((a) => a.id === alert.id) ? prev : [alert, ...prev]));
             setOpen(true);
-            playDing();
+            if (shouldPlaySound(s.id)) playDing();
             if (navigator.vibrate) {
               try { navigator.vibrate([300, 120, 300, 120, 600]); } catch {/* ignore */}
             }
