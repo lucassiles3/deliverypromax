@@ -36,21 +36,28 @@ const Store = () => {
   const radius = store?.deliveryRadiusKm ?? null;
   const outOfRange = distance !== null && radius !== null && distance > radius;
 
+  const categoryList = useMemo(() => {
+    if (!store) return [] as string[];
+    const fromStore = store.categories ?? [];
+    if (fromStore.length > 0) return fromStore;
+    return Array.from(new Set(store.products.map((p) => p.category).filter(Boolean)));
+  }, [store]);
+
   useEffect(() => {
     document.title = store ? `${store.name} • Itchat Brasil` : "Itchat Brasil";
-    if (store && !activeCat) setActiveCat(store.categories[0] ?? "");
-  }, [store, activeCat]);
+    if (store && !activeCat) setActiveCat(categoryList[0] ?? "");
+  }, [store, activeCat, categoryList]);
 
   const grouped = useMemo(() => {
     if (!store) return {};
     const filtered = store.products.filter((p) =>
       !query ? true : p.name.toLowerCase().includes(query.toLowerCase())
     );
-    return store.categories.reduce<Record<string, typeof store.products>>((acc, c) => {
+    return categoryList.reduce<Record<string, typeof store.products>>((acc, c) => {
       acc[c] = filtered.filter((p) => p.category === c);
       return acc;
     }, {});
-  }, [store, query]);
+  }, [store, query, categoryList]);
 
   if (isLoading) return <div className="min-h-screen" />;
 
@@ -76,8 +83,12 @@ const Store = () => {
       <div className="container -mt-12 relative">
         <div className="rounded-3xl bg-card p-5 shadow-float md:p-7">
           <div className="flex items-start gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-muted text-3xl shadow-card md:h-20 md:w-20 md:text-4xl">
-              {store.logo}
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-muted text-3xl shadow-card md:h-20 md:w-20 md:text-4xl">
+              {store.logo && /^https?:\/\//.test(store.logo) ? (
+                <img src={store.logo} alt={store.name} className="h-full w-full object-cover" />
+              ) : (
+                <span>{store.logo}</span>
+              )}
             </div>
             <div className="flex-1">
               <h1 className="font-display text-2xl font-bold md:text-3xl">{store.name}</h1>
@@ -187,7 +198,7 @@ const Store = () => {
       <div className="sticky top-16 z-30 mt-4 border-y bg-background/90 backdrop-blur">
         <div className="container">
           <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 py-3">
-            {store.categories.map((c) => (
+            {categoryList.map((c) => (
               <button
                 key={c}
                 onClick={() => {
@@ -214,7 +225,7 @@ const Store = () => {
           variant="leaderboard"
           label="Banner loja — antes do cardápio"
         />
-        {store.categories.map((c) => {
+        {categoryList.map((c) => {
           const list = grouped[c] ?? [];
           if (list.length === 0) return null;
           return (
