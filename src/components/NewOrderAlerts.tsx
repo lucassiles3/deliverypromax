@@ -61,6 +61,32 @@ export const NewOrderAlerts = () => {
     }
   }, []);
 
+  // Buscar toggles de som de todas as lojas
+  useEffect(() => {
+    if (stores.length === 0) {
+      setSoundMap({});
+      return;
+    }
+    const ids = stores.map((s) => s.id);
+    supabase
+      .from("stores")
+      .select("id, sound_alerts_enabled")
+      .in("id", ids)
+      .then(({ data, error }) => {
+        if (error) return;
+        const map: Record<string, boolean> = {};
+        data?.forEach((row: any) => {
+          map[row.id] = row.sound_alerts_enabled !== false;
+        });
+        setSoundMap(map);
+      });
+  }, [stores]);
+
+  const shouldPlaySound = useCallback(
+    (storeId: string) => soundMap[storeId] !== false,
+    [soundMap],
+  );
+
   const playDing = useCallback(() => {
     try {
       const Ctx = window.AudioContext || (window as any).webkitAudioContext;
