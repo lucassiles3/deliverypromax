@@ -93,7 +93,13 @@ const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const qc = useQueryClient();
   const [storeId, setStoreId] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("dashboard");
+  const [tab, setTab] = useState<Tab>(() => {
+    try {
+      const t = sessionStorage.getItem("admin:initialTab");
+      if (t) { sessionStorage.removeItem("admin:initialTab"); return t as Tab; }
+    } catch {}
+    return "dashboard";
+  });
   const { toggles, update: updateToggles } = useStoreToggles(storeId);
   const soundEnabled = toggles.sound_alerts_enabled;
   const autoPrintEnabled = toggles.auto_print_enabled;
@@ -686,6 +692,8 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
       return;
     }
     toast.success("Loja criada! Vamos configurar 🚀");
+    try { sessionStorage.setItem("admin:initialTab", "store"); } catch {}
+    await qc.invalidateQueries({ queryKey: ["store-access"] });
     await qc.invalidateQueries({ queryKey: ["stores"] });
   };
 
