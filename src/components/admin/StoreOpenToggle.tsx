@@ -37,7 +37,7 @@ export const StoreOpenToggle = ({ storeId, variant = "floating", className }: Pr
   useEffect(() => {
     if (!storeId) return;
     const channel = supabase
-      .channel(`store-open-${storeId}`)
+      .channel(`store-open-${storeId}-${Math.random().toString(36).slice(2, 8)}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "stores", filter: `id=eq.${storeId}` },
