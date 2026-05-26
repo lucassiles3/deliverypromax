@@ -39,7 +39,7 @@ const Store = () => {
   useEffect(() => {
     document.title = store ? `${store.name} • Itchat Brasil` : "Itchat Brasil";
     if (store && !activeCat) setActiveCat(categoryList[0] ?? "");
-  }, [store, activeCat]);
+  }, [store, activeCat, categoryList]);
 
   const categoryList = useMemo(() => {
     if (!store) return [] as string[];
