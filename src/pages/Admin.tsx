@@ -738,6 +738,7 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
             </p>
             <LocationPicker value={location} onChange={setLocation} />
           </div>
+          </div>
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Segmento</label>
             <input
