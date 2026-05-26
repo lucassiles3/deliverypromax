@@ -11,7 +11,7 @@ export const TrialBanner = ({ state, onSubscribe }: Props) => {
   if (state.state !== "trial") return null;
 
   const days = state.trial_days_left ?? 0;
-  const price = state.plan_price ?? 150;
+  const price = 150;
 
   const urgent = days <= 2;
 
