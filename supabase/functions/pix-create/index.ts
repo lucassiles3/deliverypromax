@@ -151,13 +151,35 @@ Deno.serve(async (req) => {
     if (orderId) {
       const { data: order } = await admin
         .from("orders")
-        .select("id, store_id, user_id, total, customer_name, customer_phone")
+        .select("id, store_id, user_id, total, subtotal, delivery_fee, coupon_discount, customer_name, customer_phone")
         .eq("id", orderId)
         .maybeSingle();
       if (!order) return json({ error: "order not found" }, 404);
       if (order.user_id !== user.id) return json({ error: "forbidden" }, 403);
+
+      // Server-side recompute to prevent client-tampered totals from reaching the gateway
+      const { data: items } = await admin
+        .from("order_items")
+        .select("quantity, unit_price, product_id, total")
+        .eq("order_id", orderId);
+      let itemsSum = 0;
+      for (const it of items ?? []) {
+        // Trust stored item.total (validated by tg_item_total) but cross-check unit_price>0
+        const t = Number((it as any).total ?? (Number(it.quantity) * Number(it.unit_price)));
+        if (!Number.isFinite(t) || t < 0) return json({ error: "invalid items" }, 400);
+        itemsSum += t;
+      }
+      const expected = +(
+        itemsSum + Number(order.delivery_fee || 0) - Number(order.coupon_discount || 0)
+      ).toFixed(2);
+      const stored = Number(order.total);
+      if (Math.abs(stored - expected) > 0.02) {
+        console.error("pix-create total mismatch", { orderId, stored, expected, itemsSum });
+        return json({ error: "order total mismatch" }, 400);
+      }
+
       storeId = order.store_id;
-      amount = Number(order.total);
+      amount = expected; // charge the recomputed amount
       payerName = order.customer_name;
       reference = order.id;
     } else {
