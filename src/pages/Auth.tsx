@@ -14,7 +14,17 @@ type Account = "customer" | "owner";
 const Auth = () => {
   const { user, roles, signIn, signUp } = useAuth();
   const navigate = useNavigate();
-  const [account, setAccount] = useState<Account>("customer");
+  const [account, setAccountState] = useState<Account>(() => {
+    try {
+      const stored = localStorage.getItem("ff_pending_account_type") as Account | null;
+      if (stored === "owner" || stored === "customer") return stored;
+    } catch {}
+    return "customer";
+  });
+  const setAccount = (a: Account) => {
+    try { localStorage.setItem("ff_pending_account_type", a); } catch {}
+    setAccountState(a);
+  };
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,13 +38,6 @@ const Auth = () => {
     document.title =
       mode === "signup" ? "Cadastre-se • Itchat Brasil" : mode === "forgot" ? "Recuperar senha • Itchat Brasil" : "Entrar • Itchat Brasil";
   }, [mode]);
-
-  // Persist account choice so it survives OAuth redirect / email confirmation
-  useEffect(() => {
-    try {
-      localStorage.setItem("ff_pending_account_type", account);
-    } catch {}
-  }, [account]);
 
   // Redireciona conforme tipo de conta selecionado.
   // Lojista → /admin (promovendo se necessário). Cliente → /
