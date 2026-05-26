@@ -41,9 +41,7 @@ const Mesa = () => {
     if (!token) return;
     (async () => {
       const { data: t } = await supabase
-        .from("tables")
-        .select("id, store_id, number, name")
-        .eq("qr_token", token)
+        .rpc("resolve_table_by_qr", { _token: token })
         .maybeSingle();
       if (t) {
         setTable(t);
