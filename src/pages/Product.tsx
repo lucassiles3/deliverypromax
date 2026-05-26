@@ -67,8 +67,8 @@ const Product = () => {
 
   return (
     <div className="min-h-screen bg-background pb-32">
-      {/* Hero image */}
-      <div className="relative h-72 w-full overflow-hidden md:h-96">
+      {/* Hero image - sempre quadrada (1:1) em todos os dispositivos */}
+      <div className="relative mx-auto aspect-square w-full max-w-md overflow-hidden bg-muted md:max-w-lg">
         <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent" />
         <button
