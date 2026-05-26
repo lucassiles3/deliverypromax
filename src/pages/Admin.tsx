@@ -315,9 +315,16 @@ const Admin = () => {
     return <CreateStoreOnboarding userId={user.id} userEmail={user.email ?? ""} />;
   }
 
-
-
   const currentStore = stores.find((s) => s.id === storeId);
+
+  // Gate de assinatura: bloqueia o painel apenas para o DONO quando o período acabou
+  if (storeId && currentRole === "owner") {
+    return (
+      <SubscriptionGate storeId={storeId}>
+        <AdminContent />
+      </SubscriptionGate>
+    );
+  }
 
   const sections: { id: Tab; label: string; icon: typeof Clock }[] = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
