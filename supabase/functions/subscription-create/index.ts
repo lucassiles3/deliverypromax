@@ -167,7 +167,9 @@ Deno.serve(async (req) => {
     const payment = list?.data?.[0];
     let qr: any = null;
     if (payment?.id) {
-      qr = await asaas(`/payments/${payment.id}/pixQrCode`).catch(() => null);
+      if (billingType === "PIX") {
+        qr = await asaas(`/payments/${payment.id}/pixQrCode`).catch(() => null);
+      }
       await admin.from("subscription_payments").upsert({
         store_id: storeId,
         subscription_id: subRow?.id ?? null,
@@ -193,6 +195,7 @@ Deno.serve(async (req) => {
         invoice_url: payment?.invoiceUrl ?? null,
         due_date: payment?.dueDate ?? null,
         value: PRO_PRICE,
+        billing_type: billingType,
         pix: qr ? { encodedImage: qr.encodedImage, payload: qr.payload, expirationDate: qr.expirationDate } : null,
       },
     });
