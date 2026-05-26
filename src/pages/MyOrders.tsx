@@ -126,7 +126,16 @@ const MyOrders = () => {
               return (
                 <article key={o.id} className="overflow-hidden rounded-2xl bg-card shadow-soft">
                   <header className="flex flex-wrap items-center gap-3 border-b p-4">
-                    <span className="text-2xl">{store?.logo ?? "🏪"}</span>
+                    {store?.logo && /^https?:\/\//.test(store.logo) ? (
+                      <img
+                        src={store.logo}
+                        alt={store?.name ?? "Loja"}
+                        className="h-10 w-10 rounded-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="text-2xl">{store?.logo ?? "🏪"}</span>
+                    )}
                     <div className="flex-1">
                       <h3 className="font-display text-lg font-bold">{store?.name ?? "Loja"}</h3>
                       <p className="text-xs text-muted-foreground">
