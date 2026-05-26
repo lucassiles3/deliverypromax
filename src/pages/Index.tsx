@@ -99,7 +99,7 @@ const Index = () => {
     defaultAddr && defaultAddr.lat && defaultAddr.lng
       ? { lat: Number(defaultAddr.lat), lng: Number(defaultAddr.lng) }
       : null;
-  const { coords, requesting, denied, requestGps } = useUserLocation(addrCoords);
+  const { coords, requesting, denied, requestGps, setManual } = useUserLocation(addrCoords);
 
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [activeSub, setActiveSub] = useState<string | null>(null);
