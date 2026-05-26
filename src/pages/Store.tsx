@@ -38,7 +38,7 @@ const Store = () => {
 
   useEffect(() => {
     document.title = store ? `${store.name} • Itchat Brasil` : "Itchat Brasil";
-    if (store && !activeCat) setActiveCat(store.categories[0] ?? "");
+    if (store && !activeCat) setActiveCat(categoryList[0] ?? "");
   }, [store, activeCat]);
 
   const categoryList = useMemo(() => {
@@ -195,7 +195,7 @@ const Store = () => {
       <div className="sticky top-16 z-30 mt-4 border-y bg-background/90 backdrop-blur">
         <div className="container">
           <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 py-3">
-            {store.categories.map((c) => (
+            {categoryList.map((c) => (
               <button
                 key={c}
                 onClick={() => {
@@ -222,7 +222,7 @@ const Store = () => {
           variant="leaderboard"
           label="Banner loja — antes do cardápio"
         />
-        {store.categories.map((c) => {
+        {categoryList.map((c) => {
           const list = grouped[c] ?? [];
           if (list.length === 0) return null;
           return (
