@@ -12,6 +12,7 @@ const json = (d: unknown, s = 200) =>
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const ASAAS_API_KEY = Deno.env.get("ASAAS_API_KEY")!;
 const ASAAS_BASE = (Deno.env.get("ASAAS_ENV") === "production")
   ? "https://api.asaas.com/v3"
@@ -48,9 +49,13 @@ Deno.serve(async (req) => {
     if (!jwt) return json({ error: "unauthenticated" }, 401);
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
-    const { data: userRes } = await admin.auth.getUser(jwt);
+    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: `Bearer ${jwt}` } },
+    });
+    const { data: userRes, error: userErr } = await userClient.auth.getUser();
     const user = userRes?.user;
-    if (!user) return json({ error: "invalid token" }, 401);
+    if (userErr || !user) return json({ error: "invalid token" }, 401);
+
 
     const body = await req.json().catch(() => ({}));
     const storeId = body.store_id as string | undefined;
