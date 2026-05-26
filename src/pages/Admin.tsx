@@ -151,6 +151,19 @@ const Admin = () => {
     if (!storeId && stores.length) setStoreId(stores[0].id);
   }, [stores, storeId]);
 
+  // Estado da assinatura (gate do dono)
+  const [bypassPaywall, setBypassPaywall] = useState(false);
+  const { data: subState } = useQuery({
+    queryKey: ["subscription-state", storeId, currentRole],
+    enabled: !!storeId && currentRole === "owner",
+    refetchInterval: 30000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("store_subscription_state", { _store_id: storeId! });
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
   // Se o tab atual não é permitido pelo papel, cai na primeira tab válida
   useEffect(() => {
     if (!currentRole) return;
