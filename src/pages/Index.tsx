@@ -17,6 +17,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useUserLocation } from "@/hooks/useUserLocation";
+import { LocationGate } from "@/components/LocationGate";
+
 
 import { distanceKm, formatDistance } from "@/lib/distance";
 import {
