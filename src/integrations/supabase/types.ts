@@ -3106,6 +3106,81 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_payments: {
+        Row: {
+          amount: number
+          billing_type: string | null
+          created_at: string
+          due_date: string | null
+          external_id: string | null
+          external_subscription_id: string | null
+          gateway: string
+          id: string
+          invoice_url: string | null
+          paid_at: string | null
+          pix_payload: string | null
+          pix_qr_code: string | null
+          raw: Json | null
+          status: string
+          store_id: string
+          subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          billing_type?: string | null
+          created_at?: string
+          due_date?: string | null
+          external_id?: string | null
+          external_subscription_id?: string | null
+          gateway?: string
+          id?: string
+          invoice_url?: string | null
+          paid_at?: string | null
+          pix_payload?: string | null
+          pix_qr_code?: string | null
+          raw?: Json | null
+          status?: string
+          store_id: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          billing_type?: string | null
+          created_at?: string
+          due_date?: string | null
+          external_id?: string | null
+          external_subscription_id?: string | null
+          gateway?: string
+          id?: string
+          invoice_url?: string | null
+          paid_at?: string | null
+          pix_payload?: string | null
+          pix_qr_code?: string | null
+          raw?: Json | null
+          status?: string
+          store_id?: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payments_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "store_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           active: boolean
@@ -3989,6 +4064,7 @@ export type Database = {
         Args: { _campaign_id: string }
         Returns: number
       }
+      store_subscription_state: { Args: { _store_id: string }; Returns: Json }
       top_visited_listings: {
         Args: { _limit?: number }
         Returns: {

@@ -59,6 +59,7 @@ import { StoreSettingsTab } from "@/components/admin/StoreSettingsTab";
 import { FinancialTab } from "@/components/admin/FinancialTab";
 import { CustomersTab } from "@/components/admin/CustomersTab";
 import { LocationPicker } from "@/components/admin/LocationPicker";
+import { SubscriptionPaywall } from "@/components/admin/SubscriptionPaywall";
 import { CATEGORIES, SUBCATEGORIES } from "@/components/CategoryGrid";
 import { MarketingTab } from "@/components/admin/MarketingTab";
 import { TeamTab } from "@/components/admin/TeamTab";
@@ -149,6 +150,19 @@ const Admin = () => {
   useEffect(() => {
     if (!storeId && stores.length) setStoreId(stores[0].id);
   }, [stores, storeId]);
+
+  // Estado da assinatura (gate do dono)
+  const [bypassPaywall, setBypassPaywall] = useState(false);
+  const { data: subState } = useQuery({
+    queryKey: ["subscription-state", storeId, currentRole],
+    enabled: !!storeId && currentRole === "owner",
+    refetchInterval: 30000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("store_subscription_state", { _store_id: storeId! });
+      if (error) throw error;
+      return data as any;
+    },
+  });
 
   // Se o tab atual não é permitido pelo papel, cai na primeira tab válida
   useEffect(() => {
@@ -314,9 +328,21 @@ const Admin = () => {
     return <CreateStoreOnboarding userId={user.id} userEmail={user.email ?? ""} />;
   }
 
-
+  // Bloqueia o painel para o dono quando o trial acabou e ainda não pagou
+  if (
+    storeId &&
+    currentRole === "owner" &&
+    subState &&
+    subState.state === "expired" &&
+    !bypassPaywall
+  ) {
+    return (
+      <SubscriptionPaywall storeId={storeId} onActive={() => setBypassPaywall(true)} />
+    );
+  }
 
   const currentStore = stores.find((s) => s.id === storeId);
+
 
   const sections: { id: Tab; label: string; icon: typeof Clock }[] = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
