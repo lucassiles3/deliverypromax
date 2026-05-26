@@ -543,6 +543,10 @@ const Admin = () => {
         </div>
       </header>
 
+      {currentRole === "owner" && (
+        <TrialBanner state={subState} onSubscribe={() => setShowPaywall(true)} />
+      )}
+
       <div className="container py-3 md:py-6 md:flex md:gap-6">
         {/* Sidebar (tablet/desktop) */}
         <aside className="hidden md:block md:w-56 lg:w-64 shrink-0">
