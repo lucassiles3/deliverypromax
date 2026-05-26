@@ -631,7 +631,12 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
   const [slugTouched, setSlugTouched] = useState(false);
   const [phone, setPhone] = useState("");
   const [location, setLocation] = useState<import("@/components/admin/LocationPicker").PickedLocation | null>(null);
-  const [cuisine, setCuisine] = useState("");
+  const [categoryKey, setCategoryKey] = useState("");
+  const [subKey, setSubKey] = useState("");
+  const subOptions = categoryKey ? (SUBCATEGORIES[categoryKey] ?? []) : [];
+  const selectedCategory = CATEGORIES.find((c) => c.key === categoryKey);
+  const selectedSub = subOptions.find((s) => s.key === subKey);
+  const cuisine = selectedSub?.label || selectedCategory?.label || "";
   const [saving, setSaving] = useState(false);
 
   const isListingsManager = userEmail.toLowerCase() === "suporteitchat@gmail.com";
