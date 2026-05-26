@@ -13,10 +13,14 @@ const json = (d: unknown, s = 200) =>
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-const ASAAS_API_KEY = Deno.env.get("ASAAS_API_KEY")!;
-const ASAAS_BASE = (Deno.env.get("ASAAS_ENV") === "production")
-  ? "https://api.asaas.com/v3"
-  : "https://sandbox.asaas.com/api/v3";
+const ASAAS_API_KEY = (Deno.env.get("ASAAS_API_KEY") ?? "").trim();
+const ASAAS_ENV_RAW = (Deno.env.get("ASAAS_ENV") ?? "").trim().toLowerCase();
+// Auto-detect from key: Asaas production keys contain "_prod_", sandbox contain "_hmlg_"
+const KEY_IS_PROD = /\$aact_prod_/i.test(ASAAS_API_KEY);
+const KEY_IS_SANDBOX = /\$aact_hmlg_/i.test(ASAAS_API_KEY);
+const IS_PROD = KEY_IS_PROD || (!KEY_IS_SANDBOX && (ASAAS_ENV_RAW === "production" || ASAAS_ENV_RAW === "prod" || ASAAS_ENV_RAW === "live"));
+const ASAAS_BASE = IS_PROD ? "https://api.asaas.com/v3" : "https://sandbox.asaas.com/api/v3";
+console.log("[asaas] env=", ASAAS_ENV_RAW, "base=", ASAAS_BASE, "keyPrefix=", ASAAS_API_KEY.slice(0, 12), "keyLen=", ASAAS_API_KEY.length);
 
 const PRO_PRICE = 150.0;
 
