@@ -60,6 +60,7 @@ import { FinancialTab } from "@/components/admin/FinancialTab";
 import { CustomersTab } from "@/components/admin/CustomersTab";
 import { LocationPicker } from "@/components/admin/LocationPicker";
 import { SubscriptionPaywall } from "@/components/admin/SubscriptionPaywall";
+import { TrialBanner } from "@/components/admin/TrialBanner";
 import { CATEGORIES, SUBCATEGORIES } from "@/components/CategoryGrid";
 import { MarketingTab } from "@/components/admin/MarketingTab";
 import { TeamTab } from "@/components/admin/TeamTab";
