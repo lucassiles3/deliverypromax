@@ -64,6 +64,8 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const storeId = body.store_id as string | undefined;
     const cpfCnpj = (body.cpfCnpj as string | undefined)?.replace(/\D/g, "");
+    const billingTypeRaw = (body.billing_type as string | undefined)?.toUpperCase();
+    const billingType: "PIX" | "CREDIT_CARD" = billingTypeRaw === "CREDIT_CARD" ? "CREDIT_CARD" : "PIX";
     if (!storeId) return json({ error: "missing store_id" }, 400);
 
     const { data: store } = await admin
@@ -71,6 +73,7 @@ Deno.serve(async (req) => {
       .select("id, name, owner_id, phone")
       .eq("id", storeId)
       .maybeSingle();
+
     if (!store) return json({ error: "store not found" }, 404);
     if (store.owner_id !== user.id) return json({ error: "forbidden" }, 403);
 
