@@ -73,7 +73,7 @@ export const ProductModal = ({ product, storeSlug, onClose }: Props) => {
       <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-md overflow-hidden p-0 sm:max-w-md sm:rounded-2xl">
         {product && (
           <div className="flex max-h-[90vh] flex-col">
-            <div className="relative h-36 shrink-0 overflow-hidden sm:h-40">
+            <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-muted">
               <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
               <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />
               {product.bestseller && (
