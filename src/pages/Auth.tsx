@@ -29,28 +29,30 @@ const Auth = () => {
       mode === "signup" ? "Cadastre-se • Itchat Brasil" : mode === "forgot" ? "Recuperar senha • Itchat Brasil" : "Entrar • Itchat Brasil";
   }, [mode]);
 
-  // Promote to store_owner when "Sou lojista" is selected, then redirect.
+  // Redireciona conforme tipo de conta selecionado.
+  // Lojista → /admin (promovendo se necessário). Cliente → /
   useEffect(() => {
     if (!user) return;
     const finalize = async () => {
       const isOwner = roles.includes("store_owner") || roles.includes("admin");
 
-      // If user picked "Lojista" and isn't owner yet → promote
-      if (account === "owner" && !isOwner) {
-        const { error } = await supabase.functions.invoke("claim-owner-role");
-        setPendingOwner(false);
-        if (error) {
-          toast.error("Não foi possível ativar sua conta de lojista");
-          return;
+      if (account === "owner") {
+        if (!isOwner) {
+          const { error } = await supabase.functions.invoke("claim-owner-role");
+          setPendingOwner(false);
+          if (error) {
+            toast.error("Não foi possível ativar sua conta de lojista");
+            return;
+          }
+          toast.success("Conta de lojista ativada! 🏪");
         }
-        toast.success("Conta de lojista ativada! 🏪");
-        window.location.href = "/admin";
+        setPendingOwner(false);
+        window.location.replace("/admin");
         return;
       }
 
       setPendingOwner(false);
-      if (account === "owner" && isOwner) navigate("/admin");
-      else if (account === "customer") navigate("/");
+      window.location.replace("/");
     };
     finalize();
   }, [user, roles, pendingOwner, account, navigate]);
