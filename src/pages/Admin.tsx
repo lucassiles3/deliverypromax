@@ -747,13 +747,34 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
           </div>
           </div>
           <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Segmento</label>
-            <input
-              value={cuisine}
-              onChange={(e) => setCuisine(e.target.value)}
-              placeholder="Hamburgueria, Pizzaria, Mercado…"
-              className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Segmento</label>
+              <select
+                value={categoryKey}
+                onChange={(e) => { setCategoryKey(e.target.value); setSubKey(""); }}
+                className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+              >
+                <option value="">Selecione um segmento…</option>
+                {CATEGORIES.map((c) => (
+                  <option key={c.key} value={c.key}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Subcategoria</label>
+              <select
+                value={subKey}
+                onChange={(e) => setSubKey(e.target.value)}
+                disabled={!categoryKey || subOptions.length === 0}
+                className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary disabled:opacity-50"
+              >
+                <option value="">{categoryKey ? "Selecione uma subcategoria…" : "Escolha o segmento primeiro"}</option>
+                {subOptions.map((s) => (
+                  <option key={s.key} value={s.key}>{s.emoji} {s.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <Button
