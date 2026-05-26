@@ -29,29 +29,46 @@ const Auth = () => {
       mode === "signup" ? "Cadastre-se • Itchat Brasil" : mode === "forgot" ? "Recuperar senha • Itchat Brasil" : "Entrar • Itchat Brasil";
   }, [mode]);
 
+  // Persist account choice so it survives OAuth redirect / email confirmation
+  useEffect(() => {
+    try {
+      localStorage.setItem("ff_pending_account_type", account);
+    } catch {}
+  }, [account]);
+
   // Redireciona conforme tipo de conta selecionado.
   // Lojista → /admin (promovendo se necessário). Cliente → /
   useEffect(() => {
     if (!user) return;
     const finalize = async () => {
+      const stored = (() => {
+        try {
+          return localStorage.getItem("ff_pending_account_type") as Account | null;
+        } catch {
+          return null;
+        }
+      })();
+      const effectiveAccount: Account = stored ?? account;
       const isOwner = roles.includes("store_owner") || roles.includes("admin");
 
-      if (account === "owner") {
+      if (effectiveAccount === "owner") {
         if (!isOwner) {
           const { error } = await supabase.functions.invoke("claim-owner-role");
-          setPendingOwner(false);
           if (error) {
             toast.error("Não foi possível ativar sua conta de lojista");
+            setPendingOwner(false);
             return;
           }
           toast.success("Conta de lojista ativada! 🏪");
         }
         setPendingOwner(false);
+        try { localStorage.removeItem("ff_pending_account_type"); } catch {}
         window.location.replace("/admin");
         return;
       }
 
       setPendingOwner(false);
+      try { localStorage.removeItem("ff_pending_account_type"); } catch {}
       window.location.replace("/");
     };
     finalize();
