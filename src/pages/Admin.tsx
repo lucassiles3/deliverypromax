@@ -628,7 +628,7 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [phone, setPhone] = useState("");
-  const [city, setCity] = useState("");
+  const [location, setLocation] = useState<import("@/components/admin/LocationPicker").PickedLocation | null>(null);
   const [cuisine, setCuisine] = useState("");
   const [saving, setSaving] = useState(false);
 
