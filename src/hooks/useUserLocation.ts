@@ -46,5 +46,10 @@ export const useUserLocation = (fallback?: { lat: number; lng: number } | null) 
     );
   };
 
-  return { coords, requesting, denied, requestGps };
+  const setManual = (lat: number, lng: number) => {
+    setCoords({ lat, lng, source: "address" });
+    setDenied(false);
+  };
+
+  return { coords, requesting, denied, requestGps, setManual };
 };
