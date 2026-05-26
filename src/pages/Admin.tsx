@@ -303,29 +303,9 @@ const Admin = () => {
   if (authLoading) return <div className="min-h-screen" />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!storesLoading && stores.length === 0) {
-    const isListingsManager = (user?.email ?? "").toLowerCase() === "suporteitchat@gmail.com";
-    return (
-      <div className="min-h-screen bg-muted/40 p-6">
-        <div className="container mx-auto max-w-md rounded-2xl bg-card p-8 text-center shadow-soft">
-          <h1 className="font-display text-2xl font-bold">Sem lojas atribuídas</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Sua conta ainda não é dona de nenhuma loja. Fale com o administrador.
-          </p>
-          {isListingsManager && (
-            <Link
-              to="/admin/parceiros"
-              className="mt-4 inline-block rounded-xl gradient-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-glow"
-            >
-              Gerenciar estabelecimentos parceiros
-            </Link>
-          )}
-          <div className="mt-3">
-            <Link to="/" className="text-sm font-bold text-primary">← Voltar</Link>
-          </div>
-        </div>
-      </div>
-    );
+    return <CreateStoreOnboarding userId={user.id} userEmail={user.email ?? ""} />;
   }
+
 
 
   const currentStore = stores.find((s) => s.id === storeId);
@@ -631,4 +611,167 @@ const KpiBlock = ({
   </div>
 );
 
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 60);
+
+const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmail: string }) => {
+  const qc = useQueryClient();
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [cuisine, setCuisine] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const isListingsManager = userEmail.toLowerCase() === "suporteitchat@gmail.com";
+
+  const handleNameChange = (v: string) => {
+    setName(v);
+    if (!slugTouched) setSlug(slugify(v));
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (saving) return;
+    const finalSlug = slugify(slug || name);
+    if (!name.trim() || !finalSlug) {
+      toast.error("Informe o nome da loja");
+      return;
+    }
+    setSaving(true);
+
+    // Garante role de lojista
+    await supabase.functions.invoke("claim-owner-role").catch(() => null);
+
+    const { data: existing } = await supabase
+      .from("stores")
+      .select("id")
+      .eq("slug", finalSlug)
+      .maybeSingle();
+
+    const slugToUse = existing ? `${finalSlug}-${Math.random().toString(36).slice(2, 6)}` : finalSlug;
+
+    const { error } = await supabase.from("stores").insert({
+      owner_id: userId,
+      name: name.trim(),
+      slug: slugToUse,
+      phone: phone.trim() || null,
+      whatsapp_phone: phone.trim() || null,
+      city: city.trim() || null,
+      cuisine: cuisine.trim() || null,
+      open: true,
+    });
+
+    setSaving(false);
+    if (error) {
+      toast.error(error.message || "Não foi possível criar a loja");
+      return;
+    }
+    toast.success("Loja criada! Vamos configurar 🚀");
+    await qc.invalidateQueries({ queryKey: ["stores"] });
+  };
+
+  return (
+    <div className="min-h-screen bg-muted/40 px-4 py-10">
+      <div className="container mx-auto max-w-xl">
+        <div className="mb-6 text-center">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-glow">
+            <StoreIcon className="h-7 w-7" />
+          </div>
+          <h1 className="font-display text-3xl font-bold">Vamos criar sua loja 🏪</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Em poucos segundos você terá seu delivery no ar. Depois você ajusta horários, cardápio, taxa de entrega e formas de pagamento.
+          </p>
+        </div>
+
+        <form onSubmit={submit} className="rounded-3xl bg-card p-6 shadow-float space-y-4">
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Nome da loja *</label>
+            <input
+              required
+              value={name}
+              onChange={(e) => handleNameChange(e.target.value)}
+              placeholder="Ex: Hamburgueria do João"
+              className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Link da sua loja *</label>
+            <div className="mt-1 flex items-center rounded-xl border-2 border-border bg-background overflow-hidden focus-within:border-primary">
+              <span className="px-3 py-3 text-xs text-muted-foreground border-r border-border bg-muted/50">/loja/</span>
+              <input
+                required
+                value={slug}
+                onChange={(e) => { setSlug(slugify(e.target.value)); setSlugTouched(true); }}
+                placeholder="hamburgueria-do-joao"
+                className="flex-1 bg-transparent px-3 py-3 text-sm outline-none"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">WhatsApp</label>
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="(11) 99999-9999"
+                className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Cidade</label>
+              <input
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="São Paulo"
+                className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Segmento</label>
+            <input
+              value={cuisine}
+              onChange={(e) => setCuisine(e.target.value)}
+              placeholder="Hamburgueria, Pizzaria, Mercado…"
+              className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            size="lg"
+            disabled={saving}
+            className="h-12 w-full rounded-xl bg-accent text-accent-foreground font-bold shadow-glow hover:bg-accent/90"
+          >
+            {saving ? "Criando sua loja..." : "Criar loja e continuar configurando →"}
+          </Button>
+
+          {isListingsManager && (
+            <Link
+              to="/admin/parceiros"
+              className="block text-center text-xs font-bold text-primary hover:underline"
+            >
+              Gerenciar estabelecimentos parceiros
+            </Link>
+          )}
+          <Link to="/" className="block text-center text-xs text-muted-foreground hover:text-foreground">
+            ← Voltar ao início
+          </Link>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 export default Admin;
+
