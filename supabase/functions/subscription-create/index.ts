@@ -64,6 +64,8 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const storeId = body.store_id as string | undefined;
     const cpfCnpj = (body.cpfCnpj as string | undefined)?.replace(/\D/g, "");
+    const billingTypeRaw = (body.billing_type as string | undefined)?.toUpperCase();
+    const billingType: "PIX" | "CREDIT_CARD" = billingTypeRaw === "CREDIT_CARD" ? "CREDIT_CARD" : "PIX";
     if (!storeId) return json({ error: "missing store_id" }, 400);
 
     const { data: store } = await admin
@@ -71,6 +73,7 @@ Deno.serve(async (req) => {
       .select("id, name, owner_id, phone")
       .eq("id", storeId)
       .maybeSingle();
+
     if (!store) return json({ error: "store not found" }, 404);
     if (store.owner_id !== user.id) return json({ error: "forbidden" }, 403);
 
@@ -112,7 +115,7 @@ Deno.serve(async (req) => {
       customerId = customer.id;
     }
 
-    // 2) Garante subscription mensal PIX no Asaas
+    // 2) Garante subscription mensal no Asaas (PIX ou Cartão)
     let subscriptionId = sub?.gateway_subscription_id as string | null;
     if (!subscriptionId) {
       const nextDue = new Date(Date.now() + 24 * 3600_000).toISOString().slice(0, 10);
@@ -120,7 +123,7 @@ Deno.serve(async (req) => {
         method: "POST",
         body: JSON.stringify({
           customer: customerId,
-          billingType: "PIX",
+          billingType,
           cycle: "MONTHLY",
           value: PRO_PRICE,
           nextDueDate: nextDue,
@@ -129,6 +132,12 @@ Deno.serve(async (req) => {
         }),
       });
       subscriptionId = subResp.id;
+    } else {
+      // Atualiza método de cobrança se mudou
+      await asaas(`/subscriptions/${subscriptionId}`, {
+        method: "POST",
+        body: JSON.stringify({ billingType }),
+      }).catch(() => null);
     }
 
     // 3) Persiste assinatura
@@ -158,7 +167,9 @@ Deno.serve(async (req) => {
     const payment = list?.data?.[0];
     let qr: any = null;
     if (payment?.id) {
-      qr = await asaas(`/payments/${payment.id}/pixQrCode`).catch(() => null);
+      if (billingType === "PIX") {
+        qr = await asaas(`/payments/${payment.id}/pixQrCode`).catch(() => null);
+      }
       await admin.from("subscription_payments").upsert({
         store_id: storeId,
         subscription_id: subRow?.id ?? null,
@@ -184,6 +195,7 @@ Deno.serve(async (req) => {
         invoice_url: payment?.invoiceUrl ?? null,
         due_date: payment?.dueDate ?? null,
         value: PRO_PRICE,
+        billing_type: billingType,
         pix: qr ? { encodedImage: qr.encodedImage, payload: qr.payload, expirationDate: qr.expirationDate } : null,
       },
     });
