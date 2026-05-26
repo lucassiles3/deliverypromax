@@ -23,6 +23,7 @@ export const NewOrderAlerts = () => {
   const navigate = useNavigate();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [open, setOpen] = useState(false);
+  const [soundMap, setSoundMap] = useState<Record<string, boolean>>({});
   const audioUnlockedRef = useRef(false);
   const loopRef = useRef<number | null>(null);
 
