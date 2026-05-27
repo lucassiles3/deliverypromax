@@ -51,10 +51,11 @@ import { toast } from "sonner";
 import { resolveAsset } from "@/lib/assetMap";
 import { ProductFormData } from "@/components/admin/ProductFormModal";
 import { CustomerHistoryDrawer } from "@/components/admin/CustomerHistoryDrawer";
-import { ReportsTab } from "@/components/admin/ReportsTab";
-import { DashboardTab } from "@/components/admin/DashboardTab";
-import { MenuTab } from "@/components/admin/MenuTab";
-import { OrdersKanban } from "@/components/admin/OrdersKanban";
+// Tabs principais agora lazy — reduzem o bundle inicial do /admin
+const ReportsTab = lazy(() => import("@/components/admin/ReportsTab").then(m => ({ default: m.ReportsTab })));
+const DashboardTab = lazy(() => import("@/components/admin/DashboardTab").then(m => ({ default: m.DashboardTab })));
+const MenuTab = lazy(() => import("@/components/admin/MenuTab").then(m => ({ default: m.MenuTab })));
+const OrdersKanban = lazy(() => import("@/components/admin/OrdersKanban").then(m => ({ default: m.OrdersKanban })));
 import { LocationPicker } from "@/components/admin/LocationPicker";
 import { SubscriptionPaywall } from "@/components/admin/SubscriptionPaywall";
 import { TrialBanner } from "@/components/admin/TrialBanner";
@@ -578,10 +579,6 @@ const Admin = () => {
             </div>
           </div>
 
-          {tab === "dashboard" && storeId && canAccessSection(currentRole, "dashboard") && <DashboardTab storeId={storeId} onNavigate={(t) => setTab(t as Tab)} />}
-          {tab === "orders" && storeId && canAccessSection(currentRole, "orders") && <OrdersKanban storeId={storeId} />}
-          {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
-
           {tab === "pdv" && storeId && !toggles.pdv_enabled && (
             <div className="rounded-2xl border-2 border-dashed border-border bg-card p-8 text-center">
               <h3 className="font-display text-lg font-bold">PDV desabilitado</h3>
@@ -592,6 +589,9 @@ const Admin = () => {
           )}
 
           <Suspense fallback={<TabSkeleton />}>
+            {tab === "dashboard" && storeId && canAccessSection(currentRole, "dashboard") && <DashboardTab storeId={storeId} onNavigate={(t) => setTab(t as Tab)} />}
+            {tab === "orders" && storeId && canAccessSection(currentRole, "orders") && <OrdersKanban storeId={storeId} />}
+            {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
             {tab === "pdv" && storeId && currentStore && canAccessSection(currentRole, "pdv") && toggles.pdv_enabled && (
               <PDVTab storeId={storeId} storeName={currentStore.name} />
             )}
