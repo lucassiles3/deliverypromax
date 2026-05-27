@@ -734,10 +734,69 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
     await qc.invalidateQueries({ queryKey: ["stores"] });
   };
 
+  if (mode === "ask") {
+    return (
+      <div className="min-h-screen bg-muted/40 px-4 py-10">
+        <div className="container mx-auto max-w-xl">
+          <div className="mb-6 text-center">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-glow">
+              <StoreIcon className="h-7 w-7" />
+            </div>
+            <h1 className="font-display text-3xl font-bold">Bem-vindo ao itChat 👋</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Antes de começarmos: você já possui um catálogo digital em outra plataforma
+              (ex.: Anota Aí, Cardápio Web, Menudino) e gostaria de continuar usando?
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              onClick={() => setMode("external")}
+              className="rounded-3xl bg-card p-6 text-left shadow-float transition-smooth hover:shadow-glow hover:border-primary border-2 border-transparent"
+            >
+              <div className="text-2xl">✅</div>
+              <div className="mt-2 font-display text-lg font-bold">Sim, já tenho</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Cadastre o link do seu catálogo atual e apareça no itChat para os clientes.
+              </div>
+            </button>
+            <button
+              onClick={() => setMode("store")}
+              className="rounded-3xl bg-card p-6 text-left shadow-float transition-smooth hover:shadow-glow hover:border-primary border-2 border-transparent"
+            >
+              <div className="text-2xl">🏪</div>
+              <div className="mt-2 font-display text-lg font-bold">Não, quero criar</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Crie sua loja completa no itChat com cardápio, pedidos e entregas.
+              </div>
+            </button>
+          </div>
+          <Link to="/" className="mt-4 block text-center text-xs text-muted-foreground hover:text-foreground">
+            ← Voltar ao início
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === "external") {
+    return (
+      <ExternalCatalogOnboarding
+        userId={userId}
+        onBack={() => setMode("ask")}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-muted/40 px-4 py-10">
       <div className="container mx-auto max-w-xl">
         <div className="mb-6 text-center">
+          <button
+            onClick={() => setMode("ask")}
+            className="mb-3 inline-flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-3 w-3" /> Voltar
+          </button>
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-glow">
             <StoreIcon className="h-7 w-7" />
           </div>
