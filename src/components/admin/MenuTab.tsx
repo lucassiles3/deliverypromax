@@ -439,6 +439,7 @@ export const MenuTab = ({ storeId }: { storeId: string }) => {
           onChanged={() => qc.invalidateQueries({ queryKey: ["menu-categories", storeId] })}
         />
       )}
+      </>)}
     </div>
   );
 };
