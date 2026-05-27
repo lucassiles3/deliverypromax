@@ -404,10 +404,40 @@ const Index = () => {
       </section>
 
 
-
+      {/* Banner promocional premium */}
+      <section className="container pb-2">
+        <div className="relative overflow-hidden rounded-[28px] gradient-primary p-6 shadow-glow">
+          <div className="pointer-events-none absolute -right-8 -top-12 h-48 w-48 rounded-full bg-white/15 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-10 -left-6 h-40 w-40 rounded-full bg-accent/30 blur-2xl" />
+          <div className="relative grid grid-cols-[1fr,auto] items-center gap-3">
+            <div className="text-white">
+              <h3 className="font-display text-2xl font-extrabold leading-tight md:text-3xl">
+                Ofertas que<br/>cabem no <span className="text-accent">bolso</span>
+              </h3>
+              <p className="mt-1 text-sm text-white/85">Descontos exclusivos só para você!</p>
+              <Link
+                to="/categorias"
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-primary shadow-soft transition-bounce hover:scale-[1.03]"
+              >
+                Ver ofertas
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <img
+              src={promoBasket}
+              alt=""
+              width={180}
+              height={180}
+              loading="lazy"
+              className="h-32 w-32 animate-float-bob object-contain drop-shadow-2xl md:h-40 md:w-40"
+            />
+          </div>
+        </div>
+      </section>
 
       {/* Mais visitadas do mês — carrossel de logos */}
       <TopVisitedRail />
+
 
       {/* Filtros */}
       <section className="container pb-3">
