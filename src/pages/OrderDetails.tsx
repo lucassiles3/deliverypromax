@@ -206,7 +206,11 @@ const OrderDetails = () => {
       <div className="container max-w-3xl space-y-4 py-6">
         {/* Header da loja */}
         <section className="flex items-center gap-3 rounded-2xl bg-card p-4 shadow-soft">
-          <span className="text-3xl">{order.stores?.logo ?? "🏪"}</span>
+          {order.stores?.logo && /^https?:\/\//.test(order.stores.logo) ? (
+            <img src={order.stores.logo} alt={order.stores?.name ?? "Loja"} className="h-12 w-12 rounded-full object-cover" />
+          ) : (
+            <span className="text-3xl">{order.stores?.logo ?? "🏪"}</span>
+          )}
           <div className="flex-1">
             <h2 className="font-display text-lg font-bold">{order.stores?.name ?? "Loja"}</h2>
             <p className="text-xs text-muted-foreground">
