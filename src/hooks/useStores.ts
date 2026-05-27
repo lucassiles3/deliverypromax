@@ -96,19 +96,20 @@ export const useStoreBySlug = (slug: string) =>
     queryKey: ["store", slug],
     enabled: !!slug,
     queryFn: async (): Promise<Store | null> => {
-      const { data: s, error } = await supabase
+      // Paraleliza as duas queries — a de produtos filtra pela slug via inner-join
+      // em stores, evitando o waterfall (fetch loja → fetch produtos).
+      const storePromise = supabase
         .from("stores")
         .select("*")
         .eq("slug", slug)
         .maybeSingle();
-      if (error) throw error;
-      if (!s) return null;
 
-      const { data: products } = await supabase
+      const productsPromise = supabase
         .from("products")
         .select(
           `id, name, description, price, old_price, image_url, category, rating, reviews,
            bestseller, promo, position,
+           stores!inner(slug),
            addon_groups!addon_groups_product_id_fkey (
              id, name, type, required, max_select, position,
              addon_options (id, name, price, position),
@@ -128,9 +129,17 @@ export const useStoreBySlug = (slug: string) =>
              )
            )`,
         )
-        .eq("store_id", s.id)
+        .eq("stores.slug", slug)
         .eq("active", true)
         .order("position");
+
+      const [{ data: s, error: storeError }, { data: products }] = await Promise.all([
+        storePromise,
+        productsPromise,
+      ]);
+
+      if (storeError) throw storeError;
+      if (!s) return null;
 
       const itemsToOptions = (groupItems: any[] = []) =>
         (groupItems ?? [])
