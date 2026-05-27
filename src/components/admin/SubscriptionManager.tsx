@@ -398,6 +398,66 @@ const Stat = ({ icon: Icon, label, value, hint }: { icon: any; label: string; va
   </div>
 );
 
+const BillingConfigCard = ({
+  subId, billingDay, graceDays, onSaved,
+}: { subId: string; billingDay: number; graceDays: number; onSaved: () => void }) => {
+  const [day, setDay] = useState(billingDay);
+  const [grace, setGrace] = useState(graceDays);
+  const [saving, setSaving] = useState(false);
+  const dirty = day !== billingDay || grace !== graceDays;
+
+  const save = async () => {
+    if (day < 1 || day > 28) return toast.error("Dia de cobrança deve ser entre 1 e 28");
+    if (grace < 0 || grace > 30) return toast.error("Tolerância deve ser entre 0 e 30 dias");
+    setSaving(true);
+    const { error } = await supabase
+      .from("store_subscriptions")
+      .update({ billing_day: day, grace_days: grace })
+      .eq("id", subId);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Configuração de cobrança atualizada");
+    onSaved();
+  };
+
+  return (
+    <div className="rounded-3xl bg-card p-6 shadow-float">
+      <div className="mb-4 flex items-center gap-2">
+        <Settings className="h-5 w-5 text-primary" />
+        <h2 className="font-display text-lg font-bold">Configuração de cobrança</h2>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Dia de cobrança mensal
+          </label>
+          <input
+            type="number" min={1} max={28} value={day}
+            onChange={(e) => setDay(Number(e.target.value))}
+            className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3 text-lg font-bold"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">A fatura do mês será gerada nesse dia (1 a 28).</p>
+        </div>
+        <div>
+          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Tolerância antes do bloqueio
+          </label>
+          <input
+            type="number" min={0} max={30} value={grace}
+            onChange={(e) => setGrace(Number(e.target.value))}
+            className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3 text-lg font-bold"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">Dias após o vencimento até a loja ser bloqueada (0 a 30).</p>
+        </div>
+      </div>
+      <Button onClick={save} disabled={!dirty || saving} className="mt-4">
+        <Save className="mr-2 h-4 w-4" />
+        {saving ? "Salvando..." : "Salvar configuração"}
+      </Button>
+    </div>
+  );
+};
+
 const MiniStat = ({ label, value }: { label: string; value: string }) => (
   <div className="rounded-2xl bg-muted/40 p-4">
     <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
