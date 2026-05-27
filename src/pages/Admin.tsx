@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { Link, Navigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -55,22 +55,24 @@ import { ReportsTab } from "@/components/admin/ReportsTab";
 import { DashboardTab } from "@/components/admin/DashboardTab";
 import { MenuTab } from "@/components/admin/MenuTab";
 import { OrdersKanban } from "@/components/admin/OrdersKanban";
-import { SettingsTab } from "@/components/admin/SettingsTab";
-import { StoreSettingsTab } from "@/components/admin/StoreSettingsTab";
-import { FinancialTab } from "@/components/admin/FinancialTab";
-import { CustomersTab } from "@/components/admin/CustomersTab";
 import { LocationPicker } from "@/components/admin/LocationPicker";
 import { SubscriptionPaywall } from "@/components/admin/SubscriptionPaywall";
 import { TrialBanner } from "@/components/admin/TrialBanner";
 import { CATEGORIES, SUBCATEGORIES } from "@/components/CategoryGrid";
-import { MarketingTab } from "@/components/admin/MarketingTab";
-import { TeamTab } from "@/components/admin/TeamTab";
-import { IntegrationsTab } from "@/components/admin/IntegrationsTab";
-import { PDVTab } from "@/components/admin/PDVTab";
-import { TablesTab } from "@/components/admin/TablesTab";
-import { CouriersTab } from "@/components/admin/CouriersTab";
-import StockTab from "@/components/admin/StockTab";
-import HistoryTab from "@/components/admin/HistoryTab";
+
+// Tabs pesadas: carregadas sob demanda para reduzir o bundle inicial do /admin
+const SettingsTab = lazy(() => import("@/components/admin/SettingsTab").then(m => ({ default: m.SettingsTab })));
+const StoreSettingsTab = lazy(() => import("@/components/admin/StoreSettingsTab").then(m => ({ default: m.StoreSettingsTab })));
+const FinancialTab = lazy(() => import("@/components/admin/FinancialTab").then(m => ({ default: m.FinancialTab })));
+const CustomersTab = lazy(() => import("@/components/admin/CustomersTab").then(m => ({ default: m.CustomersTab })));
+const MarketingTab = lazy(() => import("@/components/admin/MarketingTab").then(m => ({ default: m.MarketingTab })));
+const TeamTab = lazy(() => import("@/components/admin/TeamTab").then(m => ({ default: m.TeamTab })));
+const IntegrationsTab = lazy(() => import("@/components/admin/IntegrationsTab").then(m => ({ default: m.IntegrationsTab })));
+const PDVTab = lazy(() => import("@/components/admin/PDVTab").then(m => ({ default: m.PDVTab })));
+const TablesTab = lazy(() => import("@/components/admin/TablesTab").then(m => ({ default: m.TablesTab })));
+const CouriersTab = lazy(() => import("@/components/admin/CouriersTab").then(m => ({ default: m.CouriersTab })));
+const StockTab = lazy(() => import("@/components/admin/StockTab"));
+const HistoryTab = lazy(() => import("@/components/admin/HistoryTab"));
 
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 import { useStoreToggles } from "@/hooks/useStoreToggles";
@@ -578,9 +580,8 @@ const Admin = () => {
 
           {tab === "dashboard" && storeId && canAccessSection(currentRole, "dashboard") && <DashboardTab storeId={storeId} onNavigate={(t) => setTab(t as Tab)} />}
           {tab === "orders" && storeId && canAccessSection(currentRole, "orders") && <OrdersKanban storeId={storeId} />}
-          {tab === "pdv" && storeId && currentStore && canAccessSection(currentRole, "pdv") && toggles.pdv_enabled && (
-            <PDVTab storeId={storeId} storeName={currentStore.name} />
-          )}
+          {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
+
           {tab === "pdv" && storeId && !toggles.pdv_enabled && (
             <div className="rounded-2xl border-2 border-dashed border-border bg-card p-8 text-center">
               <h3 className="font-display text-lg font-bold">PDV desabilitado</h3>
@@ -589,26 +590,31 @@ const Admin = () => {
               </p>
             </div>
           )}
-          {tab === "tables" && storeId && canAccessSection(currentRole, "tables") && <TablesTab storeId={storeId} />}
-          {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
-          {tab === "stock" && storeId && canAccessSection(currentRole, "stock") && <StockTab storeId={storeId} />}
 
-          {tab === "customers" && storeId && canAccessSection(currentRole, "customers") && <CustomersTab storeId={storeId} />}
-          {tab === "couriers" && storeId && canAccessSection(currentRole, "couriers") && <CouriersTab storeId={storeId} />}
-          {tab === "marketing" && storeId && canAccessSection(currentRole, "marketing") && <MarketingTab storeId={storeId} />}
-          {tab === "financial" && storeId && currentStore && canAccessSection(currentRole, "financial") && (
-            <FinancialTab storeId={storeId} storeName={currentStore.name} />
-          )}
-          {tab === "reports" && storeId && currentStore && canAccessSection(currentRole, "reports") && (
-            <ReportsTab storeId={storeId} storeName={currentStore.name} />
-          )}
-          {tab === "history" && storeId && canAccessSection(currentRole, "history") && <HistoryTab storeId={storeId} />}
-          {tab === "store" && storeId && canAccessSection(currentRole, "store") && <StoreSettingsTab storeId={storeId} />}
-          {tab === "settings" && storeId && canAccessSection(currentRole, "settings") && <SettingsTab storeId={storeId} />}
-          {tab === "team" && storeId && canAccessSection(currentRole, "team") && <TeamTab storeId={storeId} />}
-          {tab === "integrations" && storeId && canAccessSection(currentRole, "integrations") && <IntegrationsTab storeId={storeId} />}
+          <Suspense fallback={<TabSkeleton />}>
+            {tab === "pdv" && storeId && currentStore && canAccessSection(currentRole, "pdv") && toggles.pdv_enabled && (
+              <PDVTab storeId={storeId} storeName={currentStore.name} />
+            )}
+            {tab === "tables" && storeId && canAccessSection(currentRole, "tables") && <TablesTab storeId={storeId} />}
+            {tab === "stock" && storeId && canAccessSection(currentRole, "stock") && <StockTab storeId={storeId} />}
+            {tab === "customers" && storeId && canAccessSection(currentRole, "customers") && <CustomersTab storeId={storeId} />}
+            {tab === "couriers" && storeId && canAccessSection(currentRole, "couriers") && <CouriersTab storeId={storeId} />}
+            {tab === "marketing" && storeId && canAccessSection(currentRole, "marketing") && <MarketingTab storeId={storeId} />}
+            {tab === "financial" && storeId && currentStore && canAccessSection(currentRole, "financial") && (
+              <FinancialTab storeId={storeId} storeName={currentStore.name} />
+            )}
+            {tab === "reports" && storeId && currentStore && canAccessSection(currentRole, "reports") && (
+              <ReportsTab storeId={storeId} storeName={currentStore.name} />
+            )}
+            {tab === "history" && storeId && canAccessSection(currentRole, "history") && <HistoryTab storeId={storeId} />}
+            {tab === "store" && storeId && canAccessSection(currentRole, "store") && <StoreSettingsTab storeId={storeId} />}
+            {tab === "settings" && storeId && canAccessSection(currentRole, "settings") && <SettingsTab storeId={storeId} />}
+            {tab === "team" && storeId && canAccessSection(currentRole, "team") && <TeamTab storeId={storeId} />}
+            {tab === "integrations" && storeId && canAccessSection(currentRole, "integrations") && <IntegrationsTab storeId={storeId} />}
+          </Suspense>
         </div>
       </div>
+
 
       {storeId && (
         <CustomerHistoryDrawer
@@ -622,6 +628,14 @@ const Admin = () => {
     </div>
   );
 };
+
+const TabSkeleton = () => (
+  <div className="space-y-3">
+    <div className="h-10 w-1/3 animate-pulse rounded-xl bg-muted" />
+    <div className="h-48 w-full animate-pulse rounded-2xl bg-muted" />
+    <div className="h-24 w-full animate-pulse rounded-2xl bg-muted" />
+  </div>
+);
 
 const KpiBlock = ({
   icon: Icon,

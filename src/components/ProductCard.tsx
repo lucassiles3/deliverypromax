@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Star, Plus, Flame } from "lucide-react";
 import type { Product } from "@/data/stores";
 import { FavoriteProductButton } from "@/components/FavoriteButton";
@@ -9,7 +10,7 @@ type Props = {
   onOpen: (product: Product) => void;
 };
 
-export const ProductCard = ({ product, storeId, onOpen }: Props) => {
+export const ProductCard = memo(({ product, storeId, onOpen }: Props) => {
   return (
     <article
       onClick={() => onOpen(product)}
@@ -77,4 +78,5 @@ export const ProductCard = ({ product, storeId, onOpen }: Props) => {
       </div>
     </article>
   );
-};
+});
+ProductCard.displayName = "ProductCard";

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Clock, Bike, MapPin, CheckCircle2, AlertCircle, Star } from "lucide-react";
 import type { Store } from "@/data/stores";
@@ -18,7 +19,7 @@ type Props = {
   isOpen?: boolean;
 };
 
-export const StoreCard = ({ store, index = 0, distanceKm = null, inRange, isOpen = true }: Props) => {
+export const StoreCard = memo(({ store, index = 0, distanceKm = null, inRange, isOpen = true }: Props) => {
   const tagline = (store as any).tagline as string | undefined;
   const externalUrl = (store as any)._externalUrl as string | undefined;
   const isExternal = !!externalUrl;
@@ -130,5 +131,5 @@ export const StoreCard = ({ store, index = 0, distanceKm = null, inRange, isOpen
       </article>
     </Wrapper>
   );
-
-};
+});
+StoreCard.displayName = "StoreCard";
