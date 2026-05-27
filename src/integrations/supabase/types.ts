@@ -1486,6 +1486,99 @@ export type Database = {
           },
         ]
       }
+      monthly_invoices: {
+        Row: {
+          asaas_payment_id: string | null
+          base_amount: number
+          billing_model: string
+          commission_total: number
+          created_at: string
+          due_date: string | null
+          extras_total: number
+          gross_sales: number
+          id: string
+          invoice_url: string | null
+          orders_count: number
+          paid_at: string | null
+          per_order_total: number
+          period_end: string
+          period_start: string
+          pix_payload: string | null
+          pix_qr_code: string | null
+          raw: Json | null
+          status: string
+          store_id: string
+          subscription_id: string | null
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          asaas_payment_id?: string | null
+          base_amount?: number
+          billing_model: string
+          commission_total?: number
+          created_at?: string
+          due_date?: string | null
+          extras_total?: number
+          gross_sales?: number
+          id?: string
+          invoice_url?: string | null
+          orders_count?: number
+          paid_at?: string | null
+          per_order_total?: number
+          period_end: string
+          period_start: string
+          pix_payload?: string | null
+          pix_qr_code?: string | null
+          raw?: Json | null
+          status?: string
+          store_id: string
+          subscription_id?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          asaas_payment_id?: string | null
+          base_amount?: number
+          billing_model?: string
+          commission_total?: number
+          created_at?: string
+          due_date?: string | null
+          extras_total?: number
+          gross_sales?: number
+          id?: string
+          invoice_url?: string | null
+          orders_count?: number
+          paid_at?: string | null
+          per_order_total?: number
+          period_end?: string
+          period_start?: string
+          pix_payload?: string | null
+          pix_qr_code?: string | null
+          raw?: Json | null
+          status?: string
+          store_id?: string
+          subscription_id?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_invoices_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monthly_invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "store_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -2955,16 +3048,20 @@ export type Database = {
       }
       store_subscriptions: {
         Row: {
+          billing_model: string
           cancelled_at: string | null
+          commission_percent: number
           created_at: string
           current_period_end: string | null
           current_period_start: string
           gateway: string | null
           gateway_customer_id: string | null
           gateway_subscription_id: string | null
+          grace_until: string | null
           id: string
           monthly_amount: number
           next_payment_at: string | null
+          per_order_fee: number
           plan_id: string | null
           status: Database["public"]["Enums"]["subscription_status"]
           store_id: string
@@ -2972,16 +3069,20 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          billing_model?: string
           cancelled_at?: string | null
+          commission_percent?: number
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string
           gateway?: string | null
           gateway_customer_id?: string | null
           gateway_subscription_id?: string | null
+          grace_until?: string | null
           id?: string
           monthly_amount?: number
           next_payment_at?: string | null
+          per_order_fee?: number
           plan_id?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
           store_id: string
@@ -2989,16 +3090,20 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          billing_model?: string
           cancelled_at?: string | null
+          commission_percent?: number
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string
           gateway?: string | null
           gateway_customer_id?: string | null
           gateway_subscription_id?: string | null
+          grace_until?: string | null
           id?: string
           monthly_amount?: number
           next_payment_at?: string | null
+          per_order_fee?: number
           plan_id?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
           store_id?: string
@@ -3331,10 +3436,13 @@ export type Database = {
       subscription_plans: {
         Row: {
           active: boolean
+          billing_model: string
+          commission_percent: number
           created_at: string
           features: Json
           id: string
           name: string
+          per_order_fee: number
           price_monthly: number
           price_yearly: number | null
           slug: string
@@ -3344,10 +3452,13 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          billing_model?: string
+          commission_percent?: number
           created_at?: string
           features?: Json
           id?: string
           name: string
+          per_order_fee?: number
           price_monthly?: number
           price_yearly?: number | null
           slug: string
@@ -3357,10 +3468,13 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          billing_model?: string
+          commission_percent?: number
           created_at?: string
           features?: Json
           id?: string
           name?: string
+          per_order_fee?: number
           price_monthly?: number
           price_yearly?: number | null
           slug?: string
@@ -4133,6 +4247,11 @@ export type Database = {
       dre_report: {
         Args: { _from: string; _store_id: string; _to: string }
         Returns: Json
+      }
+      enforce_subscription_grace: { Args: never; Returns: number }
+      generate_monthly_invoice: {
+        Args: { _period_start: string; _store_id: string }
+        Returns: string
       }
       generate_weekly_payouts: { Args: { _store_id: string }; Returns: number }
       get_open_cash_register: { Args: { _store_id: string }; Returns: string }
