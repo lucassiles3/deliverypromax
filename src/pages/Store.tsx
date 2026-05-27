@@ -82,6 +82,62 @@ const Store = () => {
       {/* Store info */}
       <div className="container -mt-12 relative">
         <div className="rounded-3xl bg-card p-5 shadow-float md:p-7">
+          <button
+            type="button"
+            onClick={() => setInfoOpen(true)}
+            className="flex w-full items-start gap-4 text-left transition-smooth hover:opacity-90"
+            aria-label="Ver informações do estabelecimento"
+          >
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-muted text-3xl shadow-card md:h-20 md:w-20 md:text-4xl">
+              {store.logo && /^https?:\/\//.test(store.logo) ? (
+                <img src={store.logo} alt={store.name} className="h-full w-full object-cover" />
+              ) : (
+                <span>{store.logo}</span>
+              )}
+            </div>
+            <div className="flex-1">
+              <h1 className="flex items-center gap-1.5 font-display text-2xl font-bold md:text-3xl">
+                {store.name}
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </h1>
+              <p className="text-sm text-muted-foreground">{store.tagline}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
+                <div className="flex items-center gap-1 font-semibold">
+                  <Star className="h-4 w-4 fill-accent text-accent" /> {store.rating}
+                  <span className="ml-1 font-normal text-muted-foreground">({store.reviews})</span>
+                </div>
+                <span className="text-border">•</span>
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Clock className="h-4 w-4" /> {store.deliveryTime}
+                </div>
+                <span className="text-border">•</span>
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Bike className="h-4 w-4" />
+                  {store.deliveryFee === 0 ? "Grátis" : `R$ ${store.deliveryFee.toFixed(2).replace(".", ",")}`}
+                </div>
+                <span className="text-border">•</span>
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <MapPin className="h-4 w-4" /> {store.city}
+                </div>
+              </div>
+            </div>
+            <span
+              className={`hidden shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold md:flex ${
+                store.open && isStoreOpen(store.openingHours)
+                  ? "bg-success/10 text-success"
+                  : "bg-destructive/10 text-destructive"
+              }`}
+            >
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  store.open && isStoreOpen(store.openingHours) ? "animate-pulse bg-success" : "bg-destructive"
+                }`}
+              />
+              {store.open && isStoreOpen(store.openingHours) ? "Aberto agora" : "Fechado"}
+              <Clock className="h-3.5 w-3.5 opacity-70" />
+            </span>
+          </button>
+          <div className="hidden">
           <div className="flex items-start gap-4">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-muted text-3xl shadow-card md:h-20 md:w-20 md:text-4xl">
               {store.logo && /^https?:\/\//.test(store.logo) ? (
