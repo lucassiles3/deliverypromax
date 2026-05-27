@@ -559,7 +559,7 @@ const Index = () => {
             <section className="mb-8">
               <div className="mb-3 flex items-end justify-between">
                 <div>
-                  <h2 className="font-display text-xl font-bold md:text-2xl">🤝 Parceiros locais</h2>
+                  <h2 className="font-display text-xl font-bold md:text-2xl">Parceiros locais</h2>
                   <p className="text-xs text-muted-foreground">Toque para abrir o catálogo</p>
                 </div>
               </div>
