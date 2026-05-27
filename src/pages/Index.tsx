@@ -292,28 +292,6 @@ const Index = () => {
               </span>
             </button>
 
-            <div className="flex items-center gap-2">
-              <Link
-                to="/notificacoes"
-                className="relative flex h-11 w-11 items-center justify-center rounded-2xl glass shadow-soft transition-bounce hover:scale-105"
-                aria-label="Notificações"
-              >
-                <Bell className="h-5 w-5 text-foreground" />
-                <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-secondary" />
-              </Link>
-              <button
-                onClick={() => openCart(true)}
-                className="relative flex h-11 w-11 items-center justify-center rounded-2xl glass shadow-soft transition-bounce hover:scale-105"
-                aria-label="Carrinho"
-              >
-                <ShoppingBag className="h-5 w-5 text-foreground" />
-                {cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-secondary px-1 text-[10px] font-bold text-secondary-foreground">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-            </div>
           </div>
 
           {/* Saudação + cesta 3D */}
