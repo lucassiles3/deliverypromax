@@ -888,7 +888,15 @@ const Checkout = () => {
                     <p className="mb-2 text-xs font-semibold text-muted-foreground">
                       📍 Ajuste o pino no mapa para localização exata
                     </p>
-                    <LocationPicker value={coords} onChange={setCoords} />
+                    <Suspense
+                      fallback={
+                        <div className="flex h-64 w-full items-center justify-center rounded-xl bg-muted">
+                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                        </div>
+                      }
+                    >
+                      <LocationPicker value={coords} onChange={setCoords} />
+                    </Suspense>
                   </div>
                 </section>
               )}
