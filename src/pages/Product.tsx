@@ -131,27 +131,52 @@ const Product = () => {
                 <div className="space-y-2">
                   {g.options.map((opt) => {
                     const checked = !!picks[g.id]?.find((o) => o.id === opt.id);
+                    const disabled = !!opt.outOfStock;
                     return (
                       <label
                         key={opt.id}
-                        className={`flex cursor-pointer items-center justify-between rounded-xl border-2 p-3 transition-smooth ${
-                          checked ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                        className={`flex items-center justify-between rounded-xl border-2 p-3 transition-smooth ${
+                          disabled
+                            ? "cursor-not-allowed border-border opacity-50"
+                            : "cursor-pointer " +
+                              (checked ? "border-primary bg-primary/5" : "border-border hover:border-primary/30")
                         }`}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
                           <input
                             type={g.type === "single" ? "radio" : "checkbox"}
                             name={g.id}
                             checked={checked}
+                            disabled={disabled}
                             onChange={() =>
                               g.type === "single" ? setSingle(g, opt) : toggleMulti(g, opt)
                             }
                             className="h-4 w-4 accent-primary"
                           />
-                          <span className="text-sm font-medium">{opt.name}</span>
+                          {opt.image && (
+                            <img
+                              src={opt.image}
+                              alt=""
+                              loading="lazy"
+                              className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                            />
+                          )}
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium">{opt.name}</div>
+                            {opt.description && (
+                              <div className="truncate text-[11px] text-muted-foreground">
+                                {opt.description}
+                              </div>
+                            )}
+                            {disabled && (
+                              <div className="text-[10px] font-bold uppercase text-destructive">
+                                Esgotado
+                              </div>
+                            )}
+                          </div>
                         </div>
                         {opt.price > 0 && (
-                          <span className="text-sm font-bold text-primary">
+                          <span className="shrink-0 text-sm font-bold text-primary">
                             +R$ {opt.price.toFixed(2).replace(".", ",")}
                           </span>
                         )}
