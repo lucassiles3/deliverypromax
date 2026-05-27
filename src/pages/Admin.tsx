@@ -74,6 +74,7 @@ const TablesTab = lazy(() => import("@/components/admin/TablesTab").then(m => ({
 const CouriersTab = lazy(() => import("@/components/admin/CouriersTab").then(m => ({ default: m.CouriersTab })));
 const StockTab = lazy(() => import("@/components/admin/StockTab"));
 const HistoryTab = lazy(() => import("@/components/admin/HistoryTab"));
+const SubscriptionManager = lazy(() => import("@/components/admin/SubscriptionManager").then(m => ({ default: m.SubscriptionManager })));
 
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 import { useStoreToggles } from "@/hooks/useStoreToggles";
