@@ -35,19 +35,20 @@ export const StoreCard = memo(({ store, index = 0, distanceKm = null, inRange, i
     : { to: `/loja/${store.slug}` };
 
   // Prefetch da loja no primeiro sinal de intenção (hover/touch/focus).
-  // Quando o cliente realmente clica, a página já abre instantânea.
+  // Quando o cliente realmente clica, a tela abre quase instantânea — o cache
+  // já tem a row e o navegador já abriu a conexão HTTP/2 com o Supabase.
   const qc = useQueryClient();
   const prefetched = (window as any).__storePrefetched ||= new Set<string>();
   const prefetch = useCallback(() => {
     if (isExternal || !store.slug || prefetched.has(store.slug)) return;
     prefetched.add(store.slug);
     qc.prefetchQuery({
-      queryKey: ["store", store.slug],
+      queryKey: ["store-prefetch", store.slug],
       staleTime: 1000 * 60 * 2,
       queryFn: async () => {
         const { data } = await supabase
           .from("stores")
-          .select("*")
+          .select("id, slug, name, logo, cover_url, open")
           .eq("slug", store.slug)
           .maybeSingle();
         return data;
