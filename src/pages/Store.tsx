@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useParams, Link, Navigate, useNavigate } from "react-router-dom";
-import { ArrowLeft, Star, Clock, Bike, MapPin, Search, Flame, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Star, Clock, Bike, MapPin, Search, Flame, AlertTriangle, Info } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ProductCard } from "@/components/ProductCard";
 import { PromoCountdown } from "@/components/PromoCountdown";
@@ -9,8 +9,8 @@ import { useStoreBySlug } from "@/hooks/useStores";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { distanceKm, formatDistance } from "@/lib/distance";
-import { isStoreOpen, nextOpeningLabel, formatHoursList } from "@/lib/storeHours";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { isStoreOpen } from "@/lib/storeHours";
+import { StoreInfoDialog } from "@/components/StoreInfoDialog";
 
 const Store = () => {
   const { slug = "" } = useParams();
@@ -28,6 +28,7 @@ const Store = () => {
   const navigate = useNavigate();
   const [activeCat, setActiveCat] = useState("");
   const [query, setQuery] = useState("");
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const distance =
     coords && store?.lat && store?.lng
@@ -80,7 +81,12 @@ const Store = () => {
       {/* Store info */}
       <div className="container -mt-12 relative">
         <div className="rounded-3xl bg-card p-5 shadow-float md:p-7">
-          <div className="flex items-start gap-4">
+          <button
+            type="button"
+            onClick={() => setInfoOpen(true)}
+            className="flex w-full items-start gap-4 text-left transition-smooth hover:opacity-90"
+            aria-label="Ver informações do estabelecimento"
+          >
             <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-muted text-3xl shadow-card md:h-20 md:w-20 md:text-4xl">
               {store.logo && /^https?:\/\//.test(store.logo) ? (
                 <img src={store.logo} alt={store.name} className="h-full w-full object-cover" />
@@ -89,7 +95,10 @@ const Store = () => {
               )}
             </div>
             <div className="flex-1">
-              <h1 className="font-display text-2xl font-bold md:text-3xl">{store.name}</h1>
+              <h1 className="flex items-center gap-1.5 font-display text-2xl font-bold md:text-3xl">
+                {store.name}
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </h1>
               <p className="text-sm text-muted-foreground">{store.tagline}</p>
               <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
                 <div className="flex items-center gap-1 font-semibold">
@@ -111,46 +120,22 @@ const Store = () => {
                 </div>
               </div>
             </div>
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  className={`hidden shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-bounce hover:scale-105 md:flex ${
-                    store.open && isStoreOpen(store.openingHours)
-                      ? "bg-success/10 text-success"
-                      : "bg-destructive/10 text-destructive"
-                  }`}
-                >
-                  <span
-                    className={`h-2 w-2 rounded-full ${
-                      store.open && isStoreOpen(store.openingHours) ? "animate-pulse bg-success" : "bg-destructive"
-                    }`}
-                  />
-                  {store.open && isStoreOpen(store.openingHours) ? "Aberto agora" : "Fechado"}
-                  <Clock className="h-3.5 w-3.5 opacity-70" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 p-3">
-                <p className="mb-2 text-xs font-bold uppercase text-muted-foreground">Horários</p>
-                <ul className="space-y-1 text-sm">
-                  {formatHoursList(store.openingHours).map((h) => (
-                    <li key={h.day} className="flex justify-between">
-                      <span className="font-medium">{h.day}</span>
-                      <span className="text-muted-foreground">{h.range}</span>
-                    </li>
-                  ))}
-                </ul>
-                {!store.open ? (
-                  <p className="mt-2 rounded-md bg-destructive/10 p-2 text-xs font-bold text-destructive">
-                    Loja temporariamente fechada pelo lojista
-                  </p>
-                ) : !isStoreOpen(store.openingHours) ? (
-                  <p className="mt-2 rounded-md bg-muted p-2 text-xs font-bold text-foreground">
-                    {nextOpeningLabel(store.openingHours)}
-                  </p>
-                ) : null}
-              </PopoverContent>
-            </Popover>
-          </div>
+            <span
+              className={`hidden shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold md:flex ${
+                store.open && isStoreOpen(store.openingHours)
+                  ? "bg-success/10 text-success"
+                  : "bg-destructive/10 text-destructive"
+              }`}
+            >
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  store.open && isStoreOpen(store.openingHours) ? "animate-pulse bg-success" : "bg-destructive"
+                }`}
+              />
+              {store.open && isStoreOpen(store.openingHours) ? "Aberto agora" : "Fechado"}
+              <Clock className="h-3.5 w-3.5 opacity-70" />
+            </span>
+          </button>
 
           {store.promo && (
             <div className="mt-4 flex items-center gap-2 rounded-xl gradient-promo p-3 text-primary-foreground shadow-glow">
@@ -161,6 +146,8 @@ const Store = () => {
           )}
         </div>
       </div>
+
+      <StoreInfoDialog store={store} open={infoOpen} onOpenChange={setInfoOpen} />
 
       {/* Aviso fora do raio de entrega */}
       {outOfRange && (

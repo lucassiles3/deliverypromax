@@ -62,6 +62,17 @@ export type Store = {
   lat?: number;
   lng?: number;
   deliveryRadiusKm?: number;
+  cnpj?: string;
+  phone?: string;
+  instagram?: string;
+  website?: string;
+  shortDescription?: string;
+  addressCep?: string;
+  addressStreet?: string;
+  addressNumber?: string;
+  addressComplement?: string;
+  addressNeighborhood?: string;
+  addressState?: string;
 };
 
 export type Coupon = {

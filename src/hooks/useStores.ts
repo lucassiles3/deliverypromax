@@ -26,6 +26,17 @@ type DbStore = {
   lat?: number | null;
   lng?: number | null;
   delivery_radius_km?: number | null;
+  cnpj?: string | null;
+  phone?: string | null;
+  instagram?: string | null;
+  website?: string | null;
+  short_description?: string | null;
+  address_cep?: string | null;
+  address_street?: string | null;
+  address_number?: string | null;
+  address_complement?: string | null;
+  address_neighborhood?: string | null;
+  address_state?: string | null;
 };
 
 const mapStore = (s: DbStore, products: Product[] = []): Store => ({
@@ -52,6 +63,17 @@ const mapStore = (s: DbStore, products: Product[] = []): Store => ({
   lat: s.lat != null ? Number(s.lat) : undefined,
   lng: s.lng != null ? Number(s.lng) : undefined,
   deliveryRadiusKm: s.delivery_radius_km != null ? Number(s.delivery_radius_km) : undefined,
+  cnpj: s.cnpj ?? undefined,
+  phone: s.phone ?? undefined,
+  instagram: s.instagram ?? undefined,
+  website: s.website ?? undefined,
+  shortDescription: s.short_description ?? undefined,
+  addressCep: s.address_cep ?? undefined,
+  addressStreet: s.address_street ?? undefined,
+  addressNumber: s.address_number ?? undefined,
+  addressComplement: s.address_complement ?? undefined,
+  addressNeighborhood: s.address_neighborhood ?? undefined,
+  addressState: s.address_state ?? undefined,
 });
 
 export const useStores = () =>
