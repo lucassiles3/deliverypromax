@@ -668,6 +668,7 @@ const slugify = (s: string) =>
 
 const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmail: string }) => {
   const qc = useQueryClient();
+  const [mode, setMode] = useState<"ask" | "external" | "store">("ask");
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
@@ -733,10 +734,69 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
     await qc.invalidateQueries({ queryKey: ["stores"] });
   };
 
+  if (mode === "ask") {
+    return (
+      <div className="min-h-screen bg-muted/40 px-4 py-10">
+        <div className="container mx-auto max-w-xl">
+          <div className="mb-6 text-center">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-glow">
+              <StoreIcon className="h-7 w-7" />
+            </div>
+            <h1 className="font-display text-3xl font-bold">Bem-vindo ao itChat 👋</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Antes de começarmos: você já possui um catálogo digital em outra plataforma
+              (ex.: Anota Aí, Cardápio Web, Menudino) e gostaria de continuar usando?
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              onClick={() => setMode("external")}
+              className="rounded-3xl bg-card p-6 text-left shadow-float transition-smooth hover:shadow-glow hover:border-primary border-2 border-transparent"
+            >
+              <div className="text-2xl">✅</div>
+              <div className="mt-2 font-display text-lg font-bold">Sim, já tenho</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Cadastre o link do seu catálogo atual e apareça no itChat para os clientes.
+              </div>
+            </button>
+            <button
+              onClick={() => setMode("store")}
+              className="rounded-3xl bg-card p-6 text-left shadow-float transition-smooth hover:shadow-glow hover:border-primary border-2 border-transparent"
+            >
+              <div className="text-2xl">🏪</div>
+              <div className="mt-2 font-display text-lg font-bold">Não, quero criar</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Crie sua loja completa no itChat com cardápio, pedidos e entregas.
+              </div>
+            </button>
+          </div>
+          <Link to="/" className="mt-4 block text-center text-xs text-muted-foreground hover:text-foreground">
+            ← Voltar ao início
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === "external") {
+    return (
+      <ExternalCatalogOnboarding
+        userId={userId}
+        onBack={() => setMode("ask")}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-muted/40 px-4 py-10">
       <div className="container mx-auto max-w-xl">
         <div className="mb-6 text-center">
+          <button
+            onClick={() => setMode("ask")}
+            className="mb-3 inline-flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-3 w-3" /> Voltar
+          </button>
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-glow">
             <StoreIcon className="h-7 w-7" />
           </div>
@@ -846,5 +906,285 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
   );
 };
 
+type ExtHours = Record<string, { open: string; close: string; closed: boolean }>;
+const EXT_DAYS: { key: string; label: string }[] = [
+  { key: "mon", label: "Seg" },
+  { key: "tue", label: "Ter" },
+  { key: "wed", label: "Qua" },
+  { key: "thu", label: "Qui" },
+  { key: "fri", label: "Sex" },
+  { key: "sat", label: "Sáb" },
+  { key: "sun", label: "Dom" },
+];
+const defaultExtHours: ExtHours = EXT_DAYS.reduce((acc, d) => {
+  acc[d.key] = { open: "09:00", close: "18:00", closed: false };
+  return acc;
+}, {} as ExtHours);
+
+const ExternalCatalogOnboarding = ({ userId, onBack }: { userId: string; onBack: () => void }) => {
+  const qc = useQueryClient();
+  const [name, setName] = useState("");
+  const [logo, setLogo] = useState("🏪");
+  const [categoryKey, setCategoryKey] = useState(CATEGORIES[0].key);
+  const [subKey, setSubKey] = useState("");
+  const [catalogUrl, setCatalogUrl] = useState("");
+  const [address, setAddress] = useState("");
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [hours, setHours] = useState<ExtHours>(defaultExtHours);
+  const [deliveryTime, setDeliveryTime] = useState("");
+  const [deliveryFee, setDeliveryFee] = useState<number | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const subOptions = SUBCATEGORIES[categoryKey] ?? [];
+
+  const handleLogoUpload = async (file: File) => {
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) return toast.error("Logo deve ter no máximo 2MB");
+    setUploading(true);
+    const ext = file.name.split(".").pop() || "png";
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("listing-logos").upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type,
+    });
+    setUploading(false);
+    if (error) return toast.error(error.message);
+    const { data } = supabase.storage.from("listing-logos").getPublicUrl(path);
+    setLogo(data.publicUrl);
+    toast.success("Logo enviada");
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (saving) return;
+    if (!name.trim()) return toast.error("Informe o nome do estabelecimento");
+    if (!catalogUrl.trim()) return toast.error("Informe o link do seu catálogo");
+    setSaving(true);
+    const { error } = await supabase.from("external_listings" as any).insert({
+      name: name.trim(),
+      logo: logo.trim() || null,
+      category_key: categoryKey,
+      subcategory_key: subKey || null,
+      catalog_url: catalogUrl.trim(),
+      address: address.trim() || null,
+      lat: location?.lat ?? null,
+      lng: location?.lng ?? null,
+      opening_hours: hours,
+      active: true,
+      delivery_time: deliveryTime || null,
+      delivery_fee: deliveryFee,
+      created_by: userId,
+    });
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Seu catálogo foi cadastrado no itChat! 🎉");
+    qc.invalidateQueries({ queryKey: ["external-listings"] });
+    onBack();
+  };
+
+  const isImageUrl = (s: string) => /^https?:\/\//i.test(s);
+
+  return (
+    <div className="min-h-screen bg-muted/40 px-4 py-10">
+      <div className="container mx-auto max-w-xl">
+        <div className="mb-6 text-center">
+          <button
+            onClick={onBack}
+            className="mb-3 inline-flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-3 w-3" /> Voltar
+          </button>
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-glow">
+            <StoreIcon className="h-7 w-7" />
+          </div>
+          <h1 className="font-display text-3xl font-bold">Cadastre seu catálogo 🔗</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Adicione o link do seu catálogo digital existente e apareça no itChat para milhares de clientes.
+          </p>
+        </div>
+
+        <form onSubmit={submit} className="rounded-3xl bg-card p-6 shadow-float space-y-4">
+          <div className="flex gap-3">
+            <label className="relative flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-muted text-3xl hover:border-primary">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0])}
+              />
+              {isImageUrl(logo) ? (
+                <img src={logo} alt="Logo" className="h-full w-full object-cover" />
+              ) : (
+                <span>{logo || "🏪"}</span>
+              )}
+              {uploading && (
+                <span className="absolute inset-0 flex items-center justify-center bg-background/80 text-[10px] font-bold">
+                  Enviando...
+                </span>
+              )}
+            </label>
+            <div className="flex-1">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Nome *</label>
+              <input
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ex: Pizzaria do João"
+                className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+              />
+              <p className="mt-1 text-[10px] text-muted-foreground">Clique na imagem para enviar a logo</p>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Link do seu catálogo *
+            </label>
+            <input
+              required
+              value={catalogUrl}
+              onChange={(e) => setCatalogUrl(e.target.value)}
+              placeholder="https://anota.ai/seu-restaurante"
+              className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+            />
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Cole aqui o link do Anota Aí, Cardápio Web, Menudino ou qualquer outro catálogo digital.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Segmento *</label>
+              <select
+                value={categoryKey}
+                onChange={(e) => { setCategoryKey(e.target.value); setSubKey(""); }}
+                className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c.key} value={c.key}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Subcategoria</label>
+              <select
+                value={subKey}
+                onChange={(e) => setSubKey(e.target.value)}
+                disabled={subOptions.length === 0}
+                className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary disabled:opacity-50"
+              >
+                <option value="">Selecione…</option>
+                {subOptions.map((s) => (
+                  <option key={s.key} value={s.key}>{s.emoji} {s.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Endereço</label>
+            <input
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Rua, número, bairro, cidade"
+              className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 inline-block">
+              Localização no mapa
+            </label>
+            <LocationPicker
+              value={location ? { lat: location.lat, lng: location.lng, address: address || "" } : null}
+              onChange={(c) => setLocation({ lat: c.lat, lng: c.lng })}
+            />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Tempo de entrega</label>
+              <select
+                value={deliveryTime}
+                onChange={(e) => setDeliveryTime(e.target.value)}
+                className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+              >
+                <option value="">Selecione...</option>
+                {[20, 30, 40, 50, 60, 90].map((m) => (
+                  <option key={m} value={`${m} min`}>{`Até ${m} min`}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Frete a partir de (R$)</label>
+              <input
+                type="number"
+                min={0}
+                step="0.5"
+                value={deliveryFee ?? ""}
+                onChange={(e) => setDeliveryFee(e.target.value === "" ? null : Number(e.target.value))}
+                placeholder="0,00"
+                className="mt-1 w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5" /> Horário de funcionamento
+            </label>
+            <div className="mt-2 space-y-1.5">
+              {EXT_DAYS.map((d) => {
+                const h = hours[d.key];
+                return (
+                  <div key={d.key} className="flex items-center gap-2 rounded-lg border bg-muted/30 p-2">
+                    <span className="w-10 text-xs font-bold uppercase">{d.label}</span>
+                    <label className="flex items-center gap-1.5 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={!h.closed}
+                        onChange={(e) => setHours({ ...hours, [d.key]: { ...h, closed: !e.target.checked } })}
+                      />
+                      {h.closed ? "Fechado" : "Aberto"}
+                    </label>
+                    {!h.closed && (
+                      <div className="ml-auto flex items-center gap-1">
+                        <input
+                          type="time"
+                          value={h.open}
+                          onChange={(e) => setHours({ ...hours, [d.key]: { ...h, open: e.target.value } })}
+                          className="rounded border px-2 py-1 text-xs"
+                        />
+                        <span className="text-muted-foreground">→</span>
+                        <input
+                          type="time"
+                          value={h.close}
+                          onChange={(e) => setHours({ ...hours, [d.key]: { ...h, close: e.target.value } })}
+                          className="rounded border px-2 py-1 text-xs"
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            size="lg"
+            disabled={saving}
+            className="h-12 w-full rounded-xl bg-accent text-accent-foreground font-bold shadow-glow hover:bg-accent/90"
+          >
+            {saving ? "Cadastrando..." : "Cadastrar catálogo no itChat →"}
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 export default Admin;
+
 
