@@ -15,6 +15,7 @@ import {
   LogOut,
   Shield,
   Image as ImageIcon,
+  Receipt,
 } from "lucide-react";
 import MasterDashboard from "@/components/master/MasterDashboard";
 import MasterStores from "@/components/master/MasterStores";
@@ -24,6 +25,7 @@ import MasterUsers from "@/components/master/MasterUsers";
 import MasterLogs from "@/components/master/MasterLogs";
 import MasterSupport from "@/components/master/MasterSupport";
 import MasterBanners from "@/components/master/MasterBanners";
+import MasterBillingAudit from "@/components/master/MasterBillingAudit";
 
 
 type View =
