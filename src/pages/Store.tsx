@@ -137,78 +137,6 @@ const Store = () => {
               <Clock className="h-3.5 w-3.5 opacity-70" />
             </span>
           </button>
-          <div className="hidden">
-          <div className="flex items-start gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-muted text-3xl shadow-card md:h-20 md:w-20 md:text-4xl">
-              {store.logo && /^https?:\/\//.test(store.logo) ? (
-                <img src={store.logo} alt={store.name} className="h-full w-full object-cover" />
-              ) : (
-                <span>{store.logo}</span>
-              )}
-            </div>
-            <div className="flex-1">
-              <h1 className="font-display text-2xl font-bold md:text-3xl">{store.name}</h1>
-              <p className="text-sm text-muted-foreground">{store.tagline}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
-                <div className="flex items-center gap-1 font-semibold">
-                  <Star className="h-4 w-4 fill-accent text-accent" /> {store.rating}
-                  <span className="ml-1 font-normal text-muted-foreground">({store.reviews})</span>
-                </div>
-                <span className="text-border">•</span>
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <Clock className="h-4 w-4" /> {store.deliveryTime}
-                </div>
-                <span className="text-border">•</span>
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <Bike className="h-4 w-4" />
-                  {store.deliveryFee === 0 ? "Grátis" : `R$ ${store.deliveryFee.toFixed(2).replace(".", ",")}`}
-                </div>
-                <span className="text-border">•</span>
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <MapPin className="h-4 w-4" /> {store.city}
-                </div>
-              </div>
-            </div>
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  className={`hidden shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-bounce hover:scale-105 md:flex ${
-                    store.open && isStoreOpen(store.openingHours)
-                      ? "bg-success/10 text-success"
-                      : "bg-destructive/10 text-destructive"
-                  }`}
-                >
-                  <span
-                    className={`h-2 w-2 rounded-full ${
-                      store.open && isStoreOpen(store.openingHours) ? "animate-pulse bg-success" : "bg-destructive"
-                    }`}
-                  />
-                  {store.open && isStoreOpen(store.openingHours) ? "Aberto agora" : "Fechado"}
-                  <Clock className="h-3.5 w-3.5 opacity-70" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 p-3">
-                <p className="mb-2 text-xs font-bold uppercase text-muted-foreground">Horários</p>
-                <ul className="space-y-1 text-sm">
-                  {formatHoursList(store.openingHours).map((h) => (
-                    <li key={h.day} className="flex justify-between">
-                      <span className="font-medium">{h.day}</span>
-                      <span className="text-muted-foreground">{h.range}</span>
-                    </li>
-                  ))}
-                </ul>
-                {!store.open ? (
-                  <p className="mt-2 rounded-md bg-destructive/10 p-2 text-xs font-bold text-destructive">
-                    Loja temporariamente fechada pelo lojista
-                  </p>
-                ) : !isStoreOpen(store.openingHours) ? (
-                  <p className="mt-2 rounded-md bg-muted p-2 text-xs font-bold text-foreground">
-                    {nextOpeningLabel(store.openingHours)}
-                  </p>
-                ) : null}
-              </PopoverContent>
-            </Popover>
-          </div>
 
           {store.promo && (
             <div className="mt-4 flex items-center gap-2 rounded-xl gradient-promo p-3 text-primary-foreground shadow-glow">
@@ -219,6 +147,8 @@ const Store = () => {
           )}
         </div>
       </div>
+
+      <StoreInfoDialog store={store} open={infoOpen} onOpenChange={setInfoOpen} />
 
       {/* Aviso fora do raio de entrega */}
       {outOfRange && (
