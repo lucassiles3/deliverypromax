@@ -51,10 +51,11 @@ import { toast } from "sonner";
 import { resolveAsset } from "@/lib/assetMap";
 import { ProductFormData } from "@/components/admin/ProductFormModal";
 import { CustomerHistoryDrawer } from "@/components/admin/CustomerHistoryDrawer";
-import { ReportsTab } from "@/components/admin/ReportsTab";
-import { DashboardTab } from "@/components/admin/DashboardTab";
-import { MenuTab } from "@/components/admin/MenuTab";
-import { OrdersKanban } from "@/components/admin/OrdersKanban";
+// Tabs principais agora lazy — reduzem o bundle inicial do /admin
+const ReportsTab = lazy(() => import("@/components/admin/ReportsTab").then(m => ({ default: m.ReportsTab })));
+const DashboardTab = lazy(() => import("@/components/admin/DashboardTab").then(m => ({ default: m.DashboardTab })));
+const MenuTab = lazy(() => import("@/components/admin/MenuTab").then(m => ({ default: m.MenuTab })));
+const OrdersKanban = lazy(() => import("@/components/admin/OrdersKanban").then(m => ({ default: m.OrdersKanban })));
 import { LocationPicker } from "@/components/admin/LocationPicker";
 import { SubscriptionPaywall } from "@/components/admin/SubscriptionPaywall";
 import { TrialBanner } from "@/components/admin/TrialBanner";
