@@ -1,10 +1,13 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Clock, Bike, MapPin, CheckCircle2, AlertCircle, Star } from "lucide-react";
 import type { Store } from "@/data/stores";
 import { formatDistance } from "@/lib/distance";
 import { LazyImage } from "./LazyImage";
 import { FavoriteStoreButton, FavoriteListingButton } from "./FavoriteButton";
+import { supabase } from "@/integrations/supabase/client";
+import { resolveAsset } from "@/lib/assetMap";
 
 function isImageUrl(str: string): boolean {
   return /^https?:\/\//i.test(str) || /\.(png|jpe?g|webp|svg|gif|bmp)(\?.*)?$/i.test(str);
@@ -31,9 +34,34 @@ export const StoreCard = memo(({ store, index = 0, distanceKm = null, inRange, i
     ? { href: externalUrl, rel: "noopener" }
     : { to: `/loja/${store.slug}` };
 
+  // Prefetch da loja no primeiro sinal de intenção (hover/touch/focus).
+  // Quando o cliente realmente clica, a tela abre quase instantânea — o cache
+  // já tem a row e o navegador já abriu a conexão HTTP/2 com o Supabase.
+  const qc = useQueryClient();
+  const prefetched = (window as any).__storePrefetched ||= new Set<string>();
+  const prefetch = useCallback(() => {
+    if (isExternal || !store.slug || prefetched.has(store.slug)) return;
+    prefetched.add(store.slug);
+    qc.prefetchQuery({
+      queryKey: ["store-prefetch", store.slug],
+      staleTime: 1000 * 60 * 2,
+      queryFn: async () => {
+        const { data } = await supabase
+          .from("stores")
+          .select("id, slug, name, logo, cover_url, open")
+          .eq("slug", store.slug)
+          .maybeSingle();
+        return data;
+      },
+    });
+  }, [qc, store.slug, isExternal, prefetched]);
+
   return (
     <Wrapper
       {...wrapperProps}
+      onMouseEnter={prefetch}
+      onTouchStart={prefetch}
+      onFocus={prefetch}
       className="group block animate-float-in"
       style={{ animationDelay: `${index * 70}ms` }}
     >

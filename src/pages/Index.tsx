@@ -36,12 +36,16 @@ import {
 import { Link } from "react-router-dom";
 import type { Store, Product } from "@/data/stores";
 
-const useFeaturedProducts = (stores: Store[]) =>
-  useQuery({
-    queryKey: ["featured-products", stores.map((s) => s.id).join(",")],
+const useFeaturedProducts = (stores: Store[]) => {
+  // Mapa estável para usar dentro do queryFn sem invalidar o cache toda vez que
+  // o array `stores` for recriado (qualquer realtime/refetch trocava a referência).
+  const storeMap = useMemo(() => new Map(stores.map((s) => [s.id, s])), [stores]);
+
+  const query = useQuery({
+    queryKey: ["featured-products"],
     enabled: stores.length > 0,
+    staleTime: 1000 * 60 * 5,
     queryFn: async () => {
-      const storeMap = new Map(stores.map((s) => [s.id, s]));
       const { data, error } = await supabase
         .from("products")
         .select("id, name, description, price, old_price, image_url, category, rating, reviews, bestseller, promo, store_id")
@@ -50,28 +54,36 @@ const useFeaturedProducts = (stores: Store[]) =>
         .order("rating", { ascending: false })
         .limit(12);
       if (error) throw error;
-      return (data ?? [])
-        .map((p: any) => {
-          const store = storeMap.get(p.store_id);
-          if (!store) return null;
-          return {
-            id: p.id,
-            name: p.name,
-            description: p.description ?? "",
-            price: Number(p.price),
-            oldPrice: p.old_price ? Number(p.old_price) : undefined,
-            image: resolveAsset(p.image_url),
-            category: p.category ?? "Outros",
-            rating: Number(p.rating ?? 5),
-            reviews: p.reviews ?? 0,
-            bestseller: !!p.bestseller,
-            promo: !!p.promo,
-            _store: store,
-          } as Product & { _store: Store };
-        })
-        .filter(Boolean) as (Product & { _store: Store })[];
+      return data ?? [];
     },
   });
+
+  // Junção loja×produto feita em memória, sem refetch.
+  const items = useMemo(() => {
+    return (query.data ?? [])
+      .map((p: any) => {
+        const store = storeMap.get(p.store_id);
+        if (!store) return null;
+        return {
+          id: p.id,
+          name: p.name,
+          description: p.description ?? "",
+          price: Number(p.price),
+          oldPrice: p.old_price ? Number(p.old_price) : undefined,
+          image: resolveAsset(p.image_url),
+          category: p.category ?? "Outros",
+          rating: Number(p.rating ?? 5),
+          reviews: p.reviews ?? 0,
+          bestseller: !!p.bestseller,
+          promo: !!p.promo,
+          _store: store,
+        } as Product & { _store: Store };
+      })
+      .filter(Boolean) as (Product & { _store: Store })[];
+  }, [query.data, storeMap]);
+
+  return { ...query, data: items };
+};
 
 type FilterKey = "promo" | "rated" | "fast";
 
