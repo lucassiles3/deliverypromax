@@ -553,7 +553,7 @@ const Index = () => {
       ) : (
         // Modo descoberta: rails
         <div className="container pb-12 pt-2">
-          <HomeBannerCarousel />
+
 
           {externalListings.length > 0 && (
             <section className="mb-8">
