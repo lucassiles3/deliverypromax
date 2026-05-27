@@ -116,24 +116,24 @@ const App = () => (
             <Suspense fallback={<PageFallback />}>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/loja/:slug" element={<Store />} />
-                <Route path="/loja/:slug/produto/:productId" element={<Product />} />
-                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/loja/:slug" element={withFallback(<Store />, <StoreFallback />)} />
+                <Route path="/loja/:slug/produto/:productId" element={withFallback(<Product />, <StoreFallback />)} />
+                <Route path="/checkout" element={withFallback(<Checkout />, <CheckoutFallback />)} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/parceiros" element={<AdminListings />} />
                 <Route path="/pdv" element={<PDV />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/meus-pedidos" element={<MyOrders />} />
-                <Route path="/meus-pedidos/:id" element={<OrderDetails />} />
-                <Route path="/conta" element={<MinhaConta />} />
-                <Route path="/enderecos" element={<Enderecos />} />
-                <Route path="/favoritos" element={<Favoritos />} />
-                <Route path="/notificacoes" element={<Notificacoes />} />
+                <Route path="/meus-pedidos" element={withFallback(<MyOrders />, <AccountFallback />)} />
+                <Route path="/meus-pedidos/:id" element={withFallback(<OrderDetails />, <AccountFallback />)} />
+                <Route path="/conta" element={withFallback(<MinhaConta />, <AccountFallback />)} />
+                <Route path="/enderecos" element={withFallback(<Enderecos />, <AccountFallback />)} />
+                <Route path="/favoritos" element={withFallback(<Favoritos />, <AccountFallback />)} />
+                <Route path="/notificacoes" element={withFallback(<Notificacoes />, <AccountFallback />)} />
                 <Route path="/categorias" element={<Categorias />} />
                 <Route path="/mesa/:token" element={<Mesa />} />
                 <Route path="/entregador" element={<Entregador />} />
-                <Route path="/recompensas" element={<Recompensas />} />
+                <Route path="/recompensas" element={withFallback(<Recompensas />, <AccountFallback />)} />
                 <Route path="/master" element={<Master />} />
                 <Route path="/landing" element={<Landing />} />
                 <Route path="/cadastro" element={<Cadastro />} />
