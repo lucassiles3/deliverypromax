@@ -176,7 +176,7 @@ export const NewOrderAlerts = () => {
         .subscribe(),
     );
     return () => { channels.forEach((c) => supabase.removeChannel(c)); };
-  }, [user, stores, playDing]);
+  }, [user, storesKey, playDing]);
 
   // Loop while there are unacknowledged alerts
   useEffect(() => {
