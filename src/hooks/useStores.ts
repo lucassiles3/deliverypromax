@@ -76,14 +76,22 @@ const mapStore = (s: DbStore, products: Product[] = []): Store => ({
   addressState: s.address_state ?? undefined,
 });
 
+// Colunas essenciais para listagens (home, busca, categorias).
+// Detalhes (cnpj, endereço completo, opening_hours) só são carregados na página da loja.
+const STORE_LIST_COLUMNS =
+  "id, slug, name, tagline, cuisine, logo, cover_url, city, rating, reviews, " +
+  "delivery_time, delivery_fee, free_shipping_threshold, min_order, open, promo, " +
+  "categories, lat, lng, delivery_radius_km";
+
 export const useStores = () =>
   useQuery({
     queryKey: ["stores"],
+    staleTime: 1000 * 60 * 10, // lista de lojas muda pouco → 10 min
     queryFn: async (): Promise<Store[]> => {
       // Oculta lojas demo/seed (sem dono atribuído) de todas as listagens públicas.
       const { data, error } = await supabase
         .from("stores")
-        .select("*")
+        .select(STORE_LIST_COLUMNS)
         .not("owner_id", "is", null)
         .order("name");
       if (error) throw error;
