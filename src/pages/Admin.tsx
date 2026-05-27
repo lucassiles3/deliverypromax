@@ -629,6 +629,14 @@ const Admin = () => {
   );
 };
 
+const TabSkeleton = () => (
+  <div className="space-y-3">
+    <div className="h-10 w-1/3 animate-pulse rounded-xl bg-muted" />
+    <div className="h-48 w-full animate-pulse rounded-2xl bg-muted" />
+    <div className="h-24 w-full animate-pulse rounded-2xl bg-muted" />
+  </div>
+);
+
 const KpiBlock = ({
   icon: Icon,
   label,
