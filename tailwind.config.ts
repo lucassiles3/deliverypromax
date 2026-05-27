@@ -87,8 +87,8 @@ export default {
         },
       },
       fontFamily: {
-        display: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', '-apple-system', 'system-ui', 'sans-serif'],
+        sans: ['Inter', '-apple-system', 'system-ui', 'sans-serif'],
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
