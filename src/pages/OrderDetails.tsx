@@ -648,12 +648,12 @@ const LiveCourierTracking = ({
 };
 
 /* =========================================================================
- * Logística por app (Uber/99/Lalamove/iFood Pegue&Leve)
+ * Logística por app (Uber/Lalamove/iFood Pegue&Leve)
  *  - Quando o pedido vira "pronto" (ou se a loja desativou a trava), exibe:
  *      • dados da loja (nome, endereço, telefone, horário)
  *      • dados da retirada (código, nome do pedido, expedidor)
  *      • instruções automáticas (+ instrução personalizada da loja)
- *      • botões: copiar tudo, WhatsApp, abrir Uber, abrir 99
+ *      • botões: copiar tudo, WhatsApp, abrir Uber
  *      • formulário para colar o link de rastreio do entregador
  * =======================================================================*/
 const LogisticsPickupSection = ({ order }: { order: any }) => {
@@ -675,9 +675,7 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
     toast.success(`${label} copiado`);
   };
 
-  const [provider, setProvider] = useState<string>(order.courier_tracking_provider ?? "");
   const [url, setUrl] = useState<string>(order.courier_tracking_url ?? "");
-  const [note, setNote] = useState<string>(order.courier_tracking_notes ?? "");
   const [saving, setSaving] = useState(false);
 
   const status = order.status as string;
@@ -707,7 +705,7 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
     .filter(Boolean)
     .join("\n");
 
-  // Deep links Uber/99 (pickup = loja, dropoff = cliente)
+  // Deep links Uber (pickup = loja, dropoff = cliente)
   const uberUrl = (() => {
     if (store.lat == null || store.lng == null) return null;
     const params = new URLSearchParams({
@@ -727,19 +725,6 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
       if (addrLabel) params.set("dropoff[formatted_address]", addrLabel);
     }
     return `https://m.uber.com/ul/?${params.toString()}`;
-  })();
-
-  const noveNoveUrl = (() => {
-    if (store.lat == null || store.lng == null) return "https://99app.com";
-    const params = new URLSearchParams({
-      pickup_lat: String(store.lat),
-      pickup_lng: String(store.lng),
-    });
-    if (order.delivery_lat != null && order.delivery_lng != null) {
-      params.set("dropoff_lat", String(order.delivery_lat));
-      params.set("dropoff_lng", String(order.delivery_lng));
-    }
-    return `https://app.99app.com/open/ride/request?${params.toString()}`;
   })();
 
   const shareWhatsApp = () => {
@@ -762,8 +747,6 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
     try {
       const patch: any = {
         courier_tracking_url: url.trim(),
-        courier_tracking_provider: provider.trim() || null,
-        courier_tracking_notes: note.trim() || null,
       };
       // Se a loja NÃO exige confirmação, já promove para "saiu para entrega"
       if (status === "ready" && store.logistics_pickup_require_confirm === false) {
@@ -896,14 +879,6 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
               🚗 Abrir Uber
             </a>
           )}
-          <a
-            href={noveNoveUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#FFD400] text-xs font-bold text-black hover:opacity-90"
-          >
-            🚕 Abrir 99
-          </a>
         </div>
       )}
 
@@ -920,22 +895,9 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
               {alreadySent ? "Atualizar entregador" : "Enviar link do entregador para a loja"}
             </p>
             <input
-              placeholder="App utilizado (Uber, 99, Lalamove…)"
-              value={provider}
-              onChange={(e) => setProvider(e.target.value)}
-              className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
-            />
-            <input
               placeholder="Cole o link de rastreio (https://...)"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
-            />
-            <textarea
-              placeholder="Observação para o motorista (opcional)"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={2}
               className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
             />
             <Button onClick={submit} disabled={saving} className="h-12 w-full rounded-xl gradient-primary font-bold">
