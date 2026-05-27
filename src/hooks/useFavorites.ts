@@ -15,7 +15,7 @@ function useFavoritesRealtime(
   useEffect(() => {
     if (!user) return;
     const channel = supabase
-      .channel(`rt-${table}-${user.id}-${instanceId}-${Math.random().toString(36).slice(2, 8)}`)
+      .channel(`rt-${table}-${user.id}-${instanceId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table, filter: `user_id=eq.${user.id}` },

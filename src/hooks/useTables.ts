@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -83,10 +83,11 @@ export const useTables = (storeId: string | null) => {
     },
   });
 
+  const channelId = useId();
   useEffect(() => {
     if (!storeId) return;
     const ch = supabase
-      .channel(`tables-${storeId}-${Math.random().toString(36).slice(2, 8)}`)
+      .channel(`tables-${storeId}-${channelId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "tables", filter: `store_id=eq.${storeId}` }, () => {
         qc.invalidateQueries({ queryKey: ["tables", storeId] });
       })
@@ -98,7 +99,7 @@ export const useTables = (storeId: string | null) => {
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [storeId, qc]);
+  }, [storeId, qc, channelId]);
 
   return query;
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
@@ -13,6 +13,7 @@ const empty: LoyaltyState = { cashback: 0, totalSpent: 0, ordersCount: 0 };
 export const useLoyalty = (): LoyaltyState => {
   const { user } = useAuth();
   const [state, setState] = useState<LoyaltyState>(empty);
+  const channelId = useId();
 
   useEffect(() => {
     if (!user) {
@@ -36,7 +37,7 @@ export const useLoyalty = (): LoyaltyState => {
     load();
 
     const ch = supabase
-      .channel(`loyalty:${user.id}:${Math.random().toString(36).slice(2)}`)
+      .channel(`loyalty:${user.id}:${channelId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "user_loyalty", filter: `user_id=eq.${user.id}` },
@@ -48,7 +49,7 @@ export const useLoyalty = (): LoyaltyState => {
       active = false;
       supabase.removeChannel(ch);
     };
-  }, [user]);
+  }, [user, channelId]);
 
   return state;
 };

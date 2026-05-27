@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell, Check } from "lucide-react";
@@ -23,16 +23,17 @@ export const TableCalls = ({ storeId }: { storeId: string }) => {
     refetchInterval: 10_000,
   });
 
+  const channelId = useId();
   useEffect(() => {
     const ch = supabase
-      .channel(`calls-${storeId}-${Math.random().toString(36).slice(2, 8)}`)
+      .channel(`calls-${storeId}-${channelId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "table_calls", filter: `store_id=eq.${storeId}` }, (p: any) => {
         qc.invalidateQueries({ queryKey: ["table-calls", storeId] });
         toast(`🔔 Mesa ${p.new?.table_id?.slice(0, 6)}: chamada de garçom`);
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [storeId, qc]);
+  }, [storeId, qc, channelId]);
 
   const resolve = async (id: string) => {
     await supabase.from("table_calls").update({ resolved: true, resolved_at: new Date().toISOString() }).eq("id", id);
