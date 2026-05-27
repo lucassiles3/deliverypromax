@@ -19,7 +19,9 @@ type Alert = {
 
 export const NewOrderAlerts = () => {
   const { user } = useAuth();
-  const { data: stores = [] } = useStoreAccess();
+  const { data: storesData } = useStoreAccess();
+  const stores = useMemo(() => storesData ?? [], [storesData]);
+  const storesKey = useMemo(() => stores.map((s) => s.id).sort().join(","), [stores]);
   const navigate = useNavigate();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [open, setOpen] = useState(false);
