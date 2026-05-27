@@ -9,8 +9,7 @@ import { useStoreBySlug } from "@/hooks/useStores";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { distanceKm, formatDistance } from "@/lib/distance";
-import { isStoreOpen, nextOpeningLabel, formatHoursList } from "@/lib/storeHours";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { isStoreOpen } from "@/lib/storeHours";
 import { StoreInfoDialog } from "@/components/StoreInfoDialog";
 
 const Store = () => {
