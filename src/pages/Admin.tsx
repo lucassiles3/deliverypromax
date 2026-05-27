@@ -360,6 +360,7 @@ const Admin = () => {
     { id: "settings", label: "Operação", icon: SettingsIcon },
     { id: "team", label: "Equipe", icon: UserCog },
     { id: "integrations", label: "Integrações", icon: Plug },
+    { id: "subscription", label: "Assinatura", icon: CreditCard },
   ];
   const visibleSections = sections.filter((s) => canAccessSection(currentRole, s.id));
   const currentSection = visibleSections.find((s) => s.id === tab);
