@@ -3042,6 +3042,7 @@ export type Database = {
           chatbot_qr_updated_at: string | null
           chatbot_status: string | null
           city: string | null
+          cnpj: string | null
           courier_gps_alert_min: number
           courier_gps_reassign_min: number
           courier_mode: string
@@ -3117,6 +3118,7 @@ export type Database = {
           chatbot_qr_updated_at?: string | null
           chatbot_status?: string | null
           city?: string | null
+          cnpj?: string | null
           courier_gps_alert_min?: number
           courier_gps_reassign_min?: number
           courier_mode?: string
@@ -3192,6 +3194,7 @@ export type Database = {
           chatbot_qr_updated_at?: string | null
           chatbot_status?: string | null
           city?: string | null
+          cnpj?: string | null
           courier_gps_alert_min?: number
           courier_gps_reassign_min?: number
           courier_mode?: string
