@@ -83,7 +83,7 @@ export const NewOrderAlerts = () => {
         });
         setSoundMap(map);
       });
-  }, [stores]);
+  }, [storesKey]);
 
   const shouldPlaySound = useCallback(
     (storeId: string) => soundMap[storeId] !== false,
