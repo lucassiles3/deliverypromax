@@ -103,7 +103,8 @@ Deno.serve(async (req) => {
     let customerId = sub?.gateway_customer_id as string | null;
     if (!customerId) {
       if (!cpfCnpj || cpfCnpj.length < 11) {
-        return json({ error: "cpfCnpj required", code: "need_cpf_cnpj" }, 400);
+        // Return 200 with a flag so the client can prompt for CPF/CNPJ without triggering a runtime error.
+        return json({ data: { need_cpf_cnpj: true } }, 200);
       }
       const customer = await asaas("/customers", {
         method: "POST",

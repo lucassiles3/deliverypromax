@@ -86,12 +86,12 @@ export const SubscriptionPaywall = ({ storeId, onActive }: PaywallProps) => {
       const { res, json } = await callFn("subscription-create", payload);
 
       if (!res.ok) {
-        if (json?.code === "need_cpf_cnpj" || /cpfcnpj/i.test(json?.error ?? "")) {
-          setNeedsCpf(true);
-          toast.info("Informe seu CPF ou CNPJ para gerar a cobrança.");
-          return;
-        }
         throw new Error(json?.error || `Erro ${res.status}`);
+      }
+      if (json?.data?.need_cpf_cnpj) {
+        setNeedsCpf(true);
+        toast.info("Informe seu CPF ou CNPJ para gerar a cobrança.");
+        return;
       }
 
       if (billingModel === "commission") {
