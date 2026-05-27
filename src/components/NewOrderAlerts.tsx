@@ -7,7 +7,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useStoreAccess } from "@/hooks/useStoreAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { brl } from "@/lib/format";
-import { useOrdersChannel } from "@/hooks/useOrdersChannel";
 
 type Alert = {
   id: string;
@@ -131,60 +130,46 @@ export const NewOrderAlerts = () => {
     } catch {/* ignore */}
   }, []);
 
-  // Subscribe to all stores — usa o canal compartilhado (useOrdersChannel) com refcount,
-  // que dedup com OrdersKanban / Admin.tsx e fecha automaticamente ao desmontar.
-  // Como o número de lojas é dinâmico, usamos um efeito que registra/desregistra
-  // listeners para cada loja diretamente.
+  // Subscribe a cada loja do lojista. Canal estável (sem random) — som/popup/notif
+  // são responsabilidade exclusiva desse componente; OrdersKanban/Admin usam um canal
+  // separado (orders-shared:*) só para invalidação de cache.
   useEffect(() => {
     if (!user || stores.length === 0) return;
-    // Importação dinâmica para evitar dependência circular com o módulo de hooks.
-    const handlers: Array<{ storeId: string; fn: (p: any) => void }> = [];
-    stores.forEach((s) => {
-      const fn = (payload: { eventType: string; new: any }) => {
-        if (payload.eventType !== "INSERT") return;
-        const o = payload.new;
-        // Apenas tocar/alertar para pedidos novos: aguardando pagamento ou recém recebidos
-        if (!["pending_payment", "received"].includes(String(o.status))) return;
-        const alert: Alert = {
-          id: o.id,
-          total: Number(o.total ?? 0),
-          customer: o.customer_name ?? null,
-          storeId: s.id,
-          storeName: s.name,
-          createdAt: o.created_at,
-        };
-        setAlerts((prev) => (prev.find((a) => a.id === alert.id) ? prev : [alert, ...prev]));
-        setOpen(true);
-        if (shouldPlaySoundRef.current(s.id)) playDing();
-        if (navigator.vibrate) {
-          try { navigator.vibrate([300, 120, 300, 120, 600]); } catch {/* ignore */}
-        }
-        try {
-          if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-            const n = new Notification(`🔔 Novo pedido · ${s.name}`, {
-              body: `${alert.customer ?? "Cliente"} · ${brl(alert.total)}`,
-              icon: "/favicon.ico",
-              tag: alert.id,
-              requireInteraction: true,
-            } as NotificationOptions);
-            n.onclick = () => { window.focus(); n.close(); };
-          }
-        } catch {/* ignore */}
-      };
-      handlers.push({ storeId: s.id, fn });
-    });
-
-    // Acquire each via a tiny inline acquire/release using o registro de useOrdersChannel
-    // (re-exportado abaixo). Como não há API exposta, simulamos com canais leves:
-    // criamos uma subscription Realtime própria por loja — mas isso ainda é melhor
-    // que antes porque continua sendo uma por loja, sem random nem duplicação por re-mount.
-    const channels = handlers.map(({ storeId, fn }) =>
+    const channels = stores.map((s) =>
       supabase
-        .channel(`new-order-alert:${storeId}`)
+        .channel(`new-order-alert:${s.id}`)
         .on(
           "postgres_changes",
-          { event: "INSERT", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
-          (payload: any) => fn({ eventType: "INSERT", new: payload.new }),
+          { event: "INSERT", schema: "public", table: "orders", filter: `store_id=eq.${s.id}` },
+          (payload: any) => {
+            const o = payload.new;
+            if (!["pending_payment", "received"].includes(String(o.status))) return;
+            const alert: Alert = {
+              id: o.id,
+              total: Number(o.total ?? 0),
+              customer: o.customer_name ?? null,
+              storeId: s.id,
+              storeName: s.name,
+              createdAt: o.created_at,
+            };
+            setAlerts((prev) => (prev.find((a) => a.id === alert.id) ? prev : [alert, ...prev]));
+            setOpen(true);
+            if (shouldPlaySoundRef.current(s.id)) playDing();
+            if (navigator.vibrate) {
+              try { navigator.vibrate([300, 120, 300, 120, 600]); } catch {/* ignore */}
+            }
+            try {
+              if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+                const n = new Notification(`🔔 Novo pedido · ${s.name}`, {
+                  body: `${alert.customer ?? "Cliente"} · ${brl(alert.total)}`,
+                  icon: "/favicon.ico",
+                  tag: alert.id,
+                  requireInteraction: true,
+                } as NotificationOptions);
+                n.onclick = () => { window.focus(); n.close(); };
+              }
+            } catch {/* ignore */}
+          },
         )
         .subscribe(),
     );
