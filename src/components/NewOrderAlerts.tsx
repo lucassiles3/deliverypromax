@@ -130,7 +130,9 @@ export const NewOrderAlerts = () => {
     } catch {/* ignore */}
   }, []);
 
-  // Subscribe to all stores
+  // Subscribe a cada loja do lojista. Canal estável (sem random) — som/popup/notif
+  // são responsabilidade exclusiva desse componente; OrdersKanban/Admin usam um canal
+  // separado (orders-shared:*) só para invalidação de cache.
   useEffect(() => {
     if (!user || stores.length === 0) return;
     const channels = stores.map((s) =>
@@ -141,7 +143,6 @@ export const NewOrderAlerts = () => {
           { event: "INSERT", schema: "public", table: "orders", filter: `store_id=eq.${s.id}` },
           (payload: any) => {
             const o = payload.new;
-            // Apenas tocar/alertar para pedidos novos: aguardando pagamento ou recém recebidos
             if (!["pending_payment", "received"].includes(String(o.status))) return;
             const alert: Alert = {
               id: o.id,
@@ -153,7 +154,7 @@ export const NewOrderAlerts = () => {
             };
             setAlerts((prev) => (prev.find((a) => a.id === alert.id) ? prev : [alert, ...prev]));
             setOpen(true);
-            if (shouldPlaySound(s.id)) playDing();
+            if (shouldPlaySoundRef.current(s.id)) playDing();
             if (navigator.vibrate) {
               try { navigator.vibrate([300, 120, 300, 120, 600]); } catch {/* ignore */}
             }

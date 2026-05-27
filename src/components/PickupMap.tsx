@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { MapPin, Navigation, Clock } from "lucide-react";
-import { CourierMap } from "@/components/CourierMap";
+import { LazyCourierMap as CourierMap } from "@/components/LazyCourierMap";
 
 interface PickupMapProps {
   storeName: string;

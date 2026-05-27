@@ -32,7 +32,7 @@ import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { StatusTimeline } from "@/components/order/StatusTimeline";
 import { OrderReviews } from "@/components/order/OrderReviews";
-import { CourierMap } from "@/components/CourierMap";
+import { LazyCourierMap as CourierMap } from "@/components/LazyCourierMap";
 import { PickupMap } from "@/components/PickupMap";
 import { RouteReplay } from "@/components/RouteReplay";
 import { useCourierLocation } from "@/hooks/useCourierLocation";

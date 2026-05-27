@@ -46,6 +46,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/co
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useOrdersChannel } from "@/hooks/useOrdersChannel";
 import { toast } from "sonner";
 import { resolveAsset } from "@/lib/assetMap";
 import { ProductFormData } from "@/components/admin/ProductFormModal";
@@ -221,24 +222,12 @@ const Admin = () => {
     document.title = pendingCount > 0 ? `(${pendingCount}) ${base}` : base;
   }, [pendingCount]);
 
-  useEffect(() => {
-    if (!storeId) return;
-    const ch = supabase
-      .channel(`orders:${storeId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
-        () => {
-          // Som/popup/notificação são tratados globalmente em <NewOrderAlerts />.
-          // Aqui apenas invalidamos o cache para refletir o pedido na lista.
-          qc.invalidateQueries({ queryKey: ["admin-orders", storeId] });
-        },
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
-  }, [storeId, qc]);
+  // Canal Realtime compartilhado (refcount em useOrdersChannel).
+  // Som/popup/notificação são tratados globalmente em <NewOrderAlerts />;
+  // aqui só invalidamos o cache para refletir mudanças na lista do admin.
+  useOrdersChannel(storeId, () => {
+    qc.invalidateQueries({ queryKey: ["admin-orders", storeId] });
+  });
 
   const advanceStatus = async (id: string, current: DbStatus) => {
     const next = statusConfig[current].next;
