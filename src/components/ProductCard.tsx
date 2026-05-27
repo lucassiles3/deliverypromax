@@ -78,4 +78,5 @@ export const ProductCard = memo(({ product, storeId, onOpen }: Props) => {
       </div>
     </article>
   );
-};
+});
+ProductCard.displayName = "ProductCard";
