@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Play, Pause, RotateCcw, Clock, Route } from "lucide-react";
-import { CourierMap } from "@/components/CourierMap";
+import { LazyCourierMap as CourierMap } from "@/components/LazyCourierMap";
 import { useCourierOrderHistory } from "@/hooks/useCourierLocation";
 
 interface RouteReplayProps {
