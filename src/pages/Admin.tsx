@@ -74,6 +74,7 @@ const TablesTab = lazy(() => import("@/components/admin/TablesTab").then(m => ({
 const CouriersTab = lazy(() => import("@/components/admin/CouriersTab").then(m => ({ default: m.CouriersTab })));
 const StockTab = lazy(() => import("@/components/admin/StockTab"));
 const HistoryTab = lazy(() => import("@/components/admin/HistoryTab"));
+const SubscriptionManager = lazy(() => import("@/components/admin/SubscriptionManager").then(m => ({ default: m.SubscriptionManager })));
 
 import { useStoreAccess, canAccessSection } from "@/hooks/useStoreAccess";
 import { useStoreToggles } from "@/hooks/useStoreToggles";
@@ -81,7 +82,7 @@ import { StoreOpenToggle } from "@/components/admin/StoreOpenToggle";
 import { Printer } from "lucide-react";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "pdv" | "tables" | "products" | "stock" | "customers" | "marketing" | "financial" | "reports" | "history" | "store" | "settings" | "team" | "integrations" | "couriers";
+type Tab = "dashboard" | "orders" | "pdv" | "tables" | "products" | "stock" | "customers" | "marketing" | "financial" | "reports" | "history" | "store" | "settings" | "team" | "integrations" | "couriers" | "subscription";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
@@ -359,6 +360,7 @@ const Admin = () => {
     { id: "settings", label: "Operação", icon: SettingsIcon },
     { id: "team", label: "Equipe", icon: UserCog },
     { id: "integrations", label: "Integrações", icon: Plug },
+    { id: "subscription", label: "Assinatura", icon: CreditCard },
   ];
   const visibleSections = sections.filter((s) => canAccessSection(currentRole, s.id));
   const currentSection = visibleSections.find((s) => s.id === tab);
@@ -611,6 +613,7 @@ const Admin = () => {
             {tab === "settings" && storeId && canAccessSection(currentRole, "settings") && <SettingsTab storeId={storeId} />}
             {tab === "team" && storeId && canAccessSection(currentRole, "team") && <TeamTab storeId={storeId} />}
             {tab === "integrations" && storeId && canAccessSection(currentRole, "integrations") && <IntegrationsTab storeId={storeId} />}
+            {tab === "subscription" && storeId && currentRole === "owner" && <SubscriptionManager storeId={storeId} />}
           </Suspense>
         </div>
       </div>
