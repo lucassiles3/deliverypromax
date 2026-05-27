@@ -675,9 +675,7 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
     toast.success(`${label} copiado`);
   };
 
-  const [provider, setProvider] = useState<string>(order.courier_tracking_provider ?? "");
   const [url, setUrl] = useState<string>(order.courier_tracking_url ?? "");
-  const [note, setNote] = useState<string>(order.courier_tracking_notes ?? "");
   const [saving, setSaving] = useState(false);
 
   const status = order.status as string;
@@ -707,7 +705,7 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
     .filter(Boolean)
     .join("\n");
 
-  // Deep links Uber/99 (pickup = loja, dropoff = cliente)
+  // Deep links Uber (pickup = loja, dropoff = cliente)
   const uberUrl = (() => {
     if (store.lat == null || store.lng == null) return null;
     const params = new URLSearchParams({
@@ -727,19 +725,6 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
       if (addrLabel) params.set("dropoff[formatted_address]", addrLabel);
     }
     return `https://m.uber.com/ul/?${params.toString()}`;
-  })();
-
-  const noveNoveUrl = (() => {
-    if (store.lat == null || store.lng == null) return "https://99app.com";
-    const params = new URLSearchParams({
-      pickup_lat: String(store.lat),
-      pickup_lng: String(store.lng),
-    });
-    if (order.delivery_lat != null && order.delivery_lng != null) {
-      params.set("dropoff_lat", String(order.delivery_lat));
-      params.set("dropoff_lng", String(order.delivery_lng));
-    }
-    return `https://app.99app.com/open/ride/request?${params.toString()}`;
   })();
 
   const shareWhatsApp = () => {
@@ -762,8 +747,6 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
     try {
       const patch: any = {
         courier_tracking_url: url.trim(),
-        courier_tracking_provider: provider.trim() || null,
-        courier_tracking_notes: note.trim() || null,
       };
       // Se a loja NÃO exige confirmação, já promove para "saiu para entrega"
       if (status === "ready" && store.logistics_pickup_require_confirm === false) {
