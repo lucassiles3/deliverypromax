@@ -648,12 +648,12 @@ const LiveCourierTracking = ({
 };
 
 /* =========================================================================
- * Logística por app (Uber/99/Lalamove/iFood Pegue&Leve)
+ * Logística por app (Uber/Lalamove/iFood Pegue&Leve)
  *  - Quando o pedido vira "pronto" (ou se a loja desativou a trava), exibe:
  *      • dados da loja (nome, endereço, telefone, horário)
  *      • dados da retirada (código, nome do pedido, expedidor)
  *      • instruções automáticas (+ instrução personalizada da loja)
- *      • botões: copiar tudo, WhatsApp, abrir Uber, abrir 99
+ *      • botões: copiar tudo, WhatsApp, abrir Uber
  *      • formulário para colar o link de rastreio do entregador
  * =======================================================================*/
 const LogisticsPickupSection = ({ order }: { order: any }) => {
