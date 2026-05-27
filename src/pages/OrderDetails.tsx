@@ -896,14 +896,6 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
               🚗 Abrir Uber
             </a>
           )}
-          <a
-            href={noveNoveUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#FFD400] text-xs font-bold text-black hover:opacity-90"
-          >
-            🚕 Abrir 99
-          </a>
         </div>
       )}
 
