@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useParams, Link, Navigate, useNavigate } from "react-router-dom";
-import { ArrowLeft, Star, Clock, Bike, MapPin, Search, Flame, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Star, Clock, Bike, MapPin, Search, Flame, AlertTriangle, Info } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ProductCard } from "@/components/ProductCard";
 import { PromoCountdown } from "@/components/PromoCountdown";
@@ -11,6 +11,7 @@ import { useUserLocation } from "@/hooks/useUserLocation";
 import { distanceKm, formatDistance } from "@/lib/distance";
 import { isStoreOpen, nextOpeningLabel, formatHoursList } from "@/lib/storeHours";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { StoreInfoDialog } from "@/components/StoreInfoDialog";
 
 const Store = () => {
   const { slug = "" } = useParams();
