@@ -262,6 +262,10 @@ const Index = () => {
         onUseGps={requestGps}
         onManual={setManual}
       />
+      <div className="hidden md:block">
+        <Header />
+      </div>
+
 
       {/* Hero premium — estilo iOS marketplace */}
       <section className="relative overflow-hidden">
