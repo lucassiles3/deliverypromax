@@ -10,7 +10,7 @@ type Props = {
   onOpen: (product: Product) => void;
 };
 
-export const ProductCard = ({ product, storeId, onOpen }: Props) => {
+export const ProductCard = memo(({ product, storeId, onOpen }: Props) => {
   return (
     <article
       onClick={() => onOpen(product)}
