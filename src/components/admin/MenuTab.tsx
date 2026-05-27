@@ -295,8 +295,32 @@ export const MenuTab = ({ storeId }: { storeId: string }) => {
         title="Link público do catálogo"
         description="Compartilhe o catálogo digital da loja — copie ou envie pelo WhatsApp."
       />
+
+      <div className="flex gap-1 rounded-xl bg-muted p-1">
+        <button
+          onClick={() => setView("products")}
+          className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold transition-smooth ${
+            view === "products" ? "bg-background shadow" : "text-muted-foreground"
+          }`}
+        >
+          Produtos
+        </button>
+        <button
+          onClick={() => setView("addons")}
+          className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold transition-smooth ${
+            view === "addons" ? "bg-background shadow" : "text-muted-foreground"
+          }`}
+        >
+          Adicionais
+        </button>
+      </div>
+
+      {view === "addons" && <AddonsLibraryTab storeId={storeId} />}
+
+      {view === "products" && (<>
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-card p-3 shadow-soft">
+
         <div className="relative min-w-[200px] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
