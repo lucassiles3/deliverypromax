@@ -30,6 +30,7 @@ type View =
   | "dashboard"
   | "stores"
   | "subscriptions"
+  | "billing"
   | "orders"
   | "users"
   | "banners"
@@ -40,6 +41,7 @@ const NAV: { key: View; label: string; icon: React.ComponentType<{ className?: s
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "stores", label: "Lojas", icon: StoreIcon },
   { key: "subscriptions", label: "Assinaturas", icon: CreditCard },
+  { key: "billing", label: "Faturamento", icon: Receipt },
   { key: "orders", label: "Pedidos", icon: ShoppingBag },
   { key: "users", label: "Usuários", icon: Users },
   { key: "banners", label: "Banners", icon: ImageIcon },
