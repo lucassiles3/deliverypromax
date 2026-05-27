@@ -34,9 +34,33 @@ export const StoreCard = memo(({ store, index = 0, distanceKm = null, inRange, i
     ? { href: externalUrl, rel: "noopener" }
     : { to: `/loja/${store.slug}` };
 
+  // Prefetch da loja no primeiro sinal de intenção (hover/touch/focus).
+  // Quando o cliente realmente clica, a página já abre instantânea.
+  const qc = useQueryClient();
+  const prefetched = (window as any).__storePrefetched ||= new Set<string>();
+  const prefetch = useCallback(() => {
+    if (isExternal || !store.slug || prefetched.has(store.slug)) return;
+    prefetched.add(store.slug);
+    qc.prefetchQuery({
+      queryKey: ["store", store.slug],
+      staleTime: 1000 * 60 * 2,
+      queryFn: async () => {
+        const { data } = await supabase
+          .from("stores")
+          .select("*")
+          .eq("slug", store.slug)
+          .maybeSingle();
+        return data;
+      },
+    });
+  }, [qc, store.slug, isExternal, prefetched]);
+
   return (
     <Wrapper
       {...wrapperProps}
+      onMouseEnter={prefetch}
+      onTouchStart={prefetch}
+      onFocus={prefetch}
       className="group block animate-float-in"
       style={{ animationDelay: `${index * 70}ms` }}
     >
