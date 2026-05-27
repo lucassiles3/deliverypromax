@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
       status: (sub?.status === "active" ? "active" : "trial"),
       monthly_amount: billingModel === "fixed_plus_per_order" ? FIXED_MONTHLY : 0,
       billing_model: billingModel,
-      per_order_fee: billingModel === "fixed_plus_per_order" ? PER_ORDER_FEE : 0,
+      per_order_fee: PER_ORDER_FEE, // R$1/pedido em AMBOS os modelos
       commission_percent: billingModel === "commission" ? COMMISSION_PCT : 0,
       gateway: "asaas",
       gateway_customer_id: customerId,
