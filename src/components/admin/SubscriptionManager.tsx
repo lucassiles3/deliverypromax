@@ -74,7 +74,7 @@ export const SubscriptionManager = ({ storeId }: Props) => {
     queryFn: async (): Promise<SubRow | null> => {
       const { data, error } = await supabase
         .from("store_subscriptions")
-        .select("id, status, billing_model, monthly_amount, per_order_fee, commission_percent, trial_ends_at, current_period_end, cancelled_at, gateway_subscription_id, gateway_customer_id")
+        .select("id, status, billing_model, monthly_amount, per_order_fee, commission_percent, trial_ends_at, current_period_end, cancelled_at, gateway_subscription_id, gateway_customer_id, billing_day, grace_days")
         .eq("store_id", storeId)
         .maybeSingle();
       if (error) throw error;
@@ -88,10 +88,10 @@ export const SubscriptionManager = ({ storeId }: Props) => {
     queryFn: async (): Promise<Invoice[]> => {
       const { data, error } = await supabase
         .from("monthly_invoices")
-        .select("id, period_start, period_end, billing_model, orders_count, per_order_total, commission_total, gross_sales, total_amount, status, due_date, paid_at, invoice_url")
+        .select("id, period_start, period_end, billing_model, orders_count, per_order_total, commission_total, gross_sales, total_amount, status, due_date, paid_at, invoice_url, asaas_payment_id")
         .eq("store_id", storeId)
         .order("period_start", { ascending: false })
-        .limit(24);
+        .limit(36);
       if (error) throw error;
       return (data ?? []) as Invoice[];
     },
