@@ -37,6 +37,12 @@ import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import {
+  PageFallback,
+  StoreFallback,
+  CheckoutFallback,
+  AccountFallback,
+} from "@/components/RouteFallbacks";
 
 // Lazy: carregadas só quando o usuário acessa a rota
 const Store = lazy(() => import("./pages/Store.tsx"));
@@ -60,10 +66,9 @@ const Landing = lazy(() => import("./pages/Landing.tsx"));
 const Cadastro = lazy(() => import("./pages/Cadastro.tsx"));
 const AdminListings = lazy(() => import("./pages/AdminListings.tsx"));
 
-const PageFallback = () => (
-  <div className="flex min-h-[60vh] items-center justify-center">
-    <div className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-primary" />
-  </div>
+/** Atalho: envolve um elemento em Suspense com fallback dedicado. */
+const withFallback = (node: React.ReactNode, fallback: React.ReactNode) => (
+  <Suspense fallback={fallback}>{node}</Suspense>
 );
 
 const PushBridge = () => {
