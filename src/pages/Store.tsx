@@ -67,10 +67,8 @@ const Store = () => {
     <div className="min-h-screen bg-background pb-20">
       <Header />
 
-      {/* Cover */}
-      <div className="relative h-52 overflow-hidden md:h-72">
-        <img src={store.cover} alt="" width={1600} height={500} className="h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-foreground/40" />
+      {/* Cover - removed background image, white default */}
+      <div className="relative h-32 md:h-40 bg-background">
         <Link
           to="/"
           className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-background/90 backdrop-blur shadow-card transition-bounce hover:scale-110"
