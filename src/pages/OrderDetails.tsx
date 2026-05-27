@@ -912,22 +912,9 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
               {alreadySent ? "Atualizar entregador" : "Enviar link do entregador para a loja"}
             </p>
             <input
-              placeholder="App utilizado (Uber, 99, Lalamove…)"
-              value={provider}
-              onChange={(e) => setProvider(e.target.value)}
-              className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
-            />
-            <input
               placeholder="Cole o link de rastreio (https://...)"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
-            />
-            <textarea
-              placeholder="Observação para o motorista (opcional)"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={2}
               className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
             />
             <Button onClick={submit} disabled={saving} className="h-12 w-full rounded-xl gradient-primary font-bold">
