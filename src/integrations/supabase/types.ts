@@ -58,6 +58,48 @@ export type Database = {
           },
         ]
       }
+      addon_group_items: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          item_id: string
+          position: number
+          price_override: number | null
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          item_id: string
+          position?: number
+          price_override?: number | null
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          item_id?: string
+          position?: number
+          price_override?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addon_group_items_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "addon_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "addon_group_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "addon_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       addon_groups: {
         Row: {
           id: string
@@ -65,8 +107,9 @@ export type Database = {
           min_select: number
           name: string
           position: number | null
-          product_id: string
+          product_id: string | null
           required: boolean
+          store_id: string | null
           type: Database["public"]["Enums"]["addon_type"]
         }
         Insert: {
@@ -75,8 +118,9 @@ export type Database = {
           min_select?: number
           name: string
           position?: number | null
-          product_id: string
+          product_id?: string | null
           required?: boolean
+          store_id?: string | null
           type?: Database["public"]["Enums"]["addon_type"]
         }
         Update: {
@@ -85,8 +129,9 @@ export type Database = {
           min_select?: number
           name?: string
           position?: number | null
-          product_id?: string
+          product_id?: string | null
           required?: boolean
+          store_id?: string | null
           type?: Database["public"]["Enums"]["addon_type"]
         }
         Relationships: [
@@ -95,6 +140,66 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "addon_groups_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      addon_items: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          position: number
+          price: number
+          stock: number | null
+          store_id: string
+          track_stock: boolean
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          position?: number
+          price?: number
+          stock?: number | null
+          store_id: string
+          track_stock?: boolean
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          position?: number
+          price?: number
+          stock?: number | null
+          store_id?: string
+          track_stock?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addon_items_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -1966,6 +2071,45 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_addon_groups: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          position: number
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          position?: number
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          position?: number
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_addon_groups_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "addon_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_addon_groups_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]

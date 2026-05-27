@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { resolveAsset } from "@/lib/assetMap";
 import { AddonGroupsEditor } from "./AddonGroupsEditor";
+import { ProductAddonGroupsLinker } from "./ProductAddonGroupsLinker";
 
 export type ProductFormData = {
   id?: string;
@@ -422,11 +423,23 @@ export const ProductFormModal = ({
         )}
 
         {tab === "addons" && form.id && (
-          <div className="p-5">
-            <p className="mb-3 text-sm text-muted-foreground">
-              Configure grupos de opcionais (ex: ponto da carne, bordas, molhos). Arraste para reordenar.
-            </p>
-            <AddonGroupsEditor productId={form.id} />
+          <div className="space-y-6 p-5">
+            <section>
+              <h3 className="mb-1 font-display text-sm font-bold">Grupos reutilizáveis da loja</h3>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Marque os grupos da biblioteca que devem aparecer neste produto. Crie ou edite grupos na aba
+                <strong> Adicionais</strong> do catálogo.
+              </p>
+              <ProductAddonGroupsLinker storeId={storeId} productId={form.id} />
+            </section>
+            <section>
+              <h3 className="mb-1 font-display text-sm font-bold">Grupos exclusivos deste produto</h3>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Use apenas se este produto tem opções específicas (ex: ponto da carne) que não fazem sentido
+                reutilizar em outros itens.
+              </p>
+              <AddonGroupsEditor productId={form.id} />
+            </section>
           </div>
         )}
 

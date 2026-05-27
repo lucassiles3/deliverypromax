@@ -87,42 +87,89 @@ export const useStoreBySlug = (slug: string) =>
         .select(
           `id, name, description, price, old_price, image_url, category, rating, reviews,
            bestseller, promo, position,
-           addon_groups (
+           addon_groups!addon_groups_product_id_fkey (
              id, name, type, required, max_select, position,
-             addon_options (id, name, price, position)
+             addon_options (id, name, price, position),
+             addon_group_items (
+               position, price_override,
+               addon_items (id, name, description, image_url, price, active, track_stock, stock)
+             )
+           ),
+           product_addon_groups (
+             position,
+             addon_groups (
+               id, name, type, required, max_select, position,
+               addon_group_items (
+                 position, price_override,
+                 addon_items (id, name, description, image_url, price, active, track_stock, stock)
+               )
+             )
            )`,
         )
         .eq("store_id", s.id)
         .eq("active", true)
         .order("position");
 
-      const mapped: Product[] = (products ?? []).map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description ?? "",
-        price: Number(p.price),
-        oldPrice: p.old_price ? Number(p.old_price) : undefined,
-        image: resolveAsset(p.image_url),
-        category: p.category ?? "Outros",
-        rating: Number(p.rating ?? 5),
-        reviews: p.reviews ?? 0,
-        bestseller: !!p.bestseller,
-        promo: !!p.promo,
-        addonGroups: (p.addon_groups ?? [])
+      const itemsToOptions = (groupItems: any[] = []) =>
+        (groupItems ?? [])
+          .filter((gi: any) => gi?.addon_items?.active !== false)
           .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
-          .map(
-            (g: any): AddonGroup => ({
-              id: g.id,
-              name: g.name,
-              type: g.type,
-              required: g.required,
-              max: g.max_select ?? undefined,
-              options: (g.addon_options ?? [])
-                .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
-                .map((o: any) => ({ id: o.id, name: o.name, price: Number(o.price) })),
-            }),
-          ),
-      }));
+          .map((gi: any) => {
+            const it = gi.addon_items ?? {};
+            const out = it.track_stock && (it.stock ?? 0) <= 0;
+            return {
+              id: it.id,
+              name: it.name,
+              description: it.description ?? undefined,
+              image: resolveAsset(it.image_url) || undefined,
+              price: Number(gi.price_override ?? it.price ?? 0),
+              outOfStock: !!out,
+            };
+          });
+
+      const mapGroup = (g: any): AddonGroup => {
+        const fromItems = itemsToOptions(g.addon_group_items);
+        const fromOptions = (g.addon_options ?? [])
+          .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
+          .map((o: any) => ({ id: o.id, name: o.name, price: Number(o.price) }));
+        return {
+          id: g.id,
+          name: g.name,
+          type: g.type,
+          required: g.required,
+          max: g.max_select ?? undefined,
+          options: fromItems.length > 0 ? fromItems : fromOptions,
+        };
+      };
+
+      const mapped: Product[] = (products ?? []).map((p: any) => {
+        const direct = (p.addon_groups ?? []).map((g: any) => ({ g, pos: g.position ?? 0 }));
+        const linked = (p.product_addon_groups ?? []).map((pag: any) => ({
+          g: pag.addon_groups,
+          pos: pag.position ?? 0,
+        }));
+        const seen = new Set<string>();
+        const allGroups = [...direct, ...linked]
+          .filter((x) => x.g && !seen.has(x.g.id) && (seen.add(x.g.id), true))
+          .sort((a, b) => a.pos - b.pos)
+          .map((x) => mapGroup(x.g))
+          .filter((g) => g.options.length > 0);
+
+        return {
+          id: p.id,
+          name: p.name,
+          description: p.description ?? "",
+          price: Number(p.price),
+          oldPrice: p.old_price ? Number(p.old_price) : undefined,
+          image: resolveAsset(p.image_url),
+          category: p.category ?? "Outros",
+          rating: Number(p.rating ?? 5),
+          reviews: p.reviews ?? 0,
+          bestseller: !!p.bestseller,
+          promo: !!p.promo,
+          addonGroups: allGroups,
+        };
+      });
 
       return mapStore(s as unknown as DbStore, mapped);
     },
