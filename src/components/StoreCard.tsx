@@ -19,7 +19,7 @@ type Props = {
   isOpen?: boolean;
 };
 
-export const StoreCard = ({ store, index = 0, distanceKm = null, inRange, isOpen = true }: Props) => {
+export const StoreCard = memo(({ store, index = 0, distanceKm = null, inRange, isOpen = true }: Props) => {
   const tagline = (store as any).tagline as string | undefined;
   const externalUrl = (store as any)._externalUrl as string | undefined;
   const isExternal = !!externalUrl;
