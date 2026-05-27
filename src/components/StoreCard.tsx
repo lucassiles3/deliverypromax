@@ -1,10 +1,13 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Clock, Bike, MapPin, CheckCircle2, AlertCircle, Star } from "lucide-react";
 import type { Store } from "@/data/stores";
 import { formatDistance } from "@/lib/distance";
 import { LazyImage } from "./LazyImage";
 import { FavoriteStoreButton, FavoriteListingButton } from "./FavoriteButton";
+import { supabase } from "@/integrations/supabase/client";
+import { resolveAsset } from "@/lib/assetMap";
 
 function isImageUrl(str: string): boolean {
   return /^https?:\/\//i.test(str) || /\.(png|jpe?g|webp|svg|gif|bmp)(\?.*)?$/i.test(str);
