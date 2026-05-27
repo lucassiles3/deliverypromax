@@ -20,6 +20,9 @@ import { useUserLocation } from "@/hooks/useUserLocation";
 import { LocationGate } from "@/components/LocationGate";
 
 
+import heroBasket from "@/assets/hero-basket-3d.png";
+import promoBasket from "@/assets/promo-basket-3d.png";
+
 import { distanceKm, formatDistance } from "@/lib/distance";
 import {
   Loader2,
@@ -32,8 +35,13 @@ import {
   Zap,
   Heart,
   Filter,
+  Bell,
+  ShoppingBag,
+  Plus,
+  ArrowRight,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useCart } from "@/context/CartContext";
 import type { Store, Product } from "@/data/stores";
 
 const useFeaturedProducts = (stores: Store[]) => {
