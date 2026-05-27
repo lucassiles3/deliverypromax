@@ -613,6 +613,7 @@ const Admin = () => {
             {tab === "settings" && storeId && canAccessSection(currentRole, "settings") && <SettingsTab storeId={storeId} />}
             {tab === "team" && storeId && canAccessSection(currentRole, "team") && <TeamTab storeId={storeId} />}
             {tab === "integrations" && storeId && canAccessSection(currentRole, "integrations") && <IntegrationsTab storeId={storeId} />}
+            {tab === "subscription" && storeId && currentRole === "owner" && <SubscriptionManager storeId={storeId} />}
           </Suspense>
         </div>
       </div>
