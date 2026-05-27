@@ -61,7 +61,43 @@ Deno.serve(async (req) => {
         : event === "PAYMENT_DELETED" ? "cancelled"
         : (payment.status || "pending").toLowerCase();
 
-      // Localiza a assinatura local pelo gateway_subscription_id (ou pelo customer)
+      // (A) Verifica se é uma fatura mensal (monthly_invoice) — via externalReference ou asaas_payment_id
+      const extRef: string = payment.externalReference ?? "";
+      const invoiceIdFromRef = extRef.startsWith("invoice:") ? extRef.slice(8) : null;
+
+      let invoiceRow: any = null;
+      if (invoiceIdFromRef) {
+        const { data } = await admin
+          .from("monthly_invoices").select("id, store_id, status")
+          .eq("id", invoiceIdFromRef).maybeSingle();
+        invoiceRow = data;
+      }
+      if (!invoiceRow) {
+        const { data } = await admin
+          .from("monthly_invoices").select("id, store_id, status")
+          .eq("asaas_payment_id", payment.id).maybeSingle();
+        invoiceRow = data;
+      }
+
+      if (invoiceRow) {
+        const newStatus = status === "paid" ? "paid"
+          : status === "overdue" ? "overdue"
+          : status === "cancelled" || status === "refunded" ? "cancelled"
+          : invoiceRow.status;
+        await admin.from("monthly_invoices").update({
+          status: newStatus,
+          paid_at: status === "paid" ? new Date().toISOString() : null,
+          raw: body,
+        }).eq("id", invoiceRow.id);
+
+        // Reativa loja se a fatura foi paga
+        if (status === "paid") {
+          await admin.rpc("enforce_subscription_grace").catch(() => null);
+        }
+        return json({ ok: true, handled: event, invoice_id: invoiceRow.id, status: newStatus });
+      }
+
+      // (B) Senão, é uma cobrança de subscription (mensalidade fixa)
       let subRow: any = null;
       if (externalSubId) {
         const { data } = await admin
@@ -80,7 +116,6 @@ Deno.serve(async (req) => {
         subRow = data;
       }
 
-      // Upsert da cobrança
       await admin.from("subscription_payments").upsert({
         store_id: subRow?.store_id ?? null,
         subscription_id: subRow?.id ?? null,
@@ -96,7 +131,6 @@ Deno.serve(async (req) => {
         raw: body,
       }, { onConflict: "external_id" });
 
-      // Atualiza estado da assinatura
       if (subRow) {
         if (status === "paid") {
           const base = subRow.current_period_end && new Date(subRow.current_period_end) > new Date()
@@ -109,15 +143,15 @@ Deno.serve(async (req) => {
             current_period_end: newEnd.toISOString(),
             last_payment_at: new Date().toISOString(),
           }).eq("id", subRow.id);
+          await admin.rpc("enforce_subscription_grace").catch(() => null);
         } else if (status === "overdue") {
-          await admin.from("store_subscriptions").update({
-            status: "overdue",
-          }).eq("id", subRow.id);
+          await admin.from("store_subscriptions").update({ status: "overdue" }).eq("id", subRow.id);
         }
       }
 
       return json({ ok: true, handled: event, status });
     }
+
 
     // ===== Eventos de assinatura =====
     if (subscription?.id && event.startsWith("SUBSCRIPTION_")) {
