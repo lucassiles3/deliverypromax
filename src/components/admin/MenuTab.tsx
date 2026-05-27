@@ -71,6 +71,7 @@ export const MenuTab = ({ storeId }: { storeId: string }) => {
   const [editing, setEditing] = useState<ProductFormData | null>(null);
   const [movingProduct, setMovingProduct] = useState<Product | null>(null);
   const [catModalOpen, setCatModalOpen] = useState(false);
+  const [view, setView] = useState<"products" | "addons">("products");
   // Loja (slug + name) para o card de link público do catálogo
   const { data: storeInfo } = useQuery({
     queryKey: ["menu-store-info", storeId],
