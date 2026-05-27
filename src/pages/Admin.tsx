@@ -579,10 +579,6 @@ const Admin = () => {
             </div>
           </div>
 
-          {tab === "dashboard" && storeId && canAccessSection(currentRole, "dashboard") && <DashboardTab storeId={storeId} onNavigate={(t) => setTab(t as Tab)} />}
-          {tab === "orders" && storeId && canAccessSection(currentRole, "orders") && <OrdersKanban storeId={storeId} />}
-          {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
-
           {tab === "pdv" && storeId && !toggles.pdv_enabled && (
             <div className="rounded-2xl border-2 border-dashed border-border bg-card p-8 text-center">
               <h3 className="font-display text-lg font-bold">PDV desabilitado</h3>
@@ -593,6 +589,9 @@ const Admin = () => {
           )}
 
           <Suspense fallback={<TabSkeleton />}>
+            {tab === "dashboard" && storeId && canAccessSection(currentRole, "dashboard") && <DashboardTab storeId={storeId} onNavigate={(t) => setTab(t as Tab)} />}
+            {tab === "orders" && storeId && canAccessSection(currentRole, "orders") && <OrdersKanban storeId={storeId} />}
+            {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
             {tab === "pdv" && storeId && currentStore && canAccessSection(currentRole, "pdv") && toggles.pdv_enabled && (
               <PDVTab storeId={storeId} storeName={currentStore.name} />
             )}
