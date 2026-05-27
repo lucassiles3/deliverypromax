@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, BellOff, X, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,9 @@ type Alert = {
 
 export const NewOrderAlerts = () => {
   const { user } = useAuth();
-  const { data: stores = [] } = useStoreAccess();
+  const { data: storesData } = useStoreAccess();
+  const stores = useMemo(() => storesData ?? [], [storesData]);
+  const storesKey = useMemo(() => stores.map((s) => s.id).sort().join(","), [stores]);
   const navigate = useNavigate();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [open, setOpen] = useState(false);
@@ -81,7 +83,7 @@ export const NewOrderAlerts = () => {
         });
         setSoundMap(map);
       });
-  }, [stores]);
+  }, [storesKey]);
 
   const shouldPlaySound = useCallback(
     (storeId: string) => soundMap[storeId] !== false,
@@ -174,7 +176,7 @@ export const NewOrderAlerts = () => {
         .subscribe(),
     );
     return () => { channels.forEach((c) => supabase.removeChannel(c)); };
-  }, [user, stores, playDing]);
+  }, [user, storesKey, playDing]);
 
   // Loop while there are unacknowledged alerts
   useEffect(() => {
