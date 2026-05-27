@@ -33,10 +33,13 @@ const cuisineFromListing = (l: ExternalListing): string => {
 export const useExternalListings = () =>
   useQuery({
     queryKey: ["external-listings"],
+    staleTime: 1000 * 60 * 10,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("external_listings" as any)
-        .select("*")
+        .select(
+          "id, name, logo, category_key, subcategory_key, catalog_url, address, lat, lng, opening_hours, delivery_time, delivery_radius_km, delivery_fee",
+        )
         .eq("active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
