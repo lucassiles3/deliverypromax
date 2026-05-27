@@ -1,7 +1,5 @@
 // CRON mensal — gera fatura consolidada do mês anterior para cada loja com assinatura.
-// - Modelo "fixed_plus_per_order": cria payment Asaas com R$1 × pedidos entregues
-// - Modelo "commission":          cria payment Asaas com 10% × vendas entregues
-// Agende este endpoint para rodar no dia 1 de cada mês.
+// Roda diariamente; processa apenas lojas cujo billing_day == dia atual (ou todas se ?force=1).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -42,25 +40,45 @@ function previousMonthPeriod(): { start: string; end: string } {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+  const startedAt = Date.now();
+  let runId: string | null = null;
+
   try {
-    const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+    const { data: run } = await admin.from("billing_job_runs").insert({
+      job_name: "monthly-invoice-cron",
+      status: "running",
+    }).select("id").single();
+    runId = run?.id ?? null;
+  } catch (_) { /* logging best-effort */ }
+
+  try {
+    const url = new URL(req.url);
+    const force = url.searchParams.get("force") === "1";
     const body = await req.json().catch(() => ({} as any));
     const { start, end } = body?.period_start && body?.period_end
       ? { start: body.period_start as string, end: body.period_end as string }
       : previousMonthPeriod();
 
-    const { data: subs, error } = await admin
+    const todayDay = new Date().getUTCDate();
+
+    let query = admin
       .from("store_subscriptions")
-      .select("id, store_id, billing_model, per_order_fee, commission_percent, gateway_customer_id, status, stores:store_id(name)")
+      .select("id, store_id, billing_model, per_order_fee, commission_percent, gateway_customer_id, status, billing_day, grace_days, stores:store_id(name)")
       .in("status", ["active", "trial", "overdue"]);
+    if (!force) query = query.eq("billing_day", todayDay);
+
+    const { data: subs, error } = await query;
     if (error) throw error;
 
-    const dueDate = new Date(new Date(end).getTime() + 5 * 86400_000).toISOString().slice(0, 10);
     const results: any[] = [];
+    let succeeded = 0;
+    let failed = 0;
 
     for (const sub of subs ?? []) {
+      const grace = Number(sub.grace_days ?? 5);
+      const dueDate = new Date(new Date(end).getTime() + grace * 86400_000).toISOString().slice(0, 10);
       try {
-        // 1) Gera fatura local via função SQL
         const { data: invId, error: rpcErr } = await admin.rpc("generate_monthly_invoice", {
           _store_id: sub.store_id,
           _period_start: start,
@@ -68,10 +86,7 @@ Deno.serve(async (req) => {
         if (rpcErr) throw rpcErr;
 
         const { data: invoice } = await admin
-          .from("monthly_invoices")
-          .select("*")
-          .eq("id", invId)
-          .maybeSingle();
+          .from("monthly_invoices").select("*").eq("id", invId).maybeSingle();
         if (!invoice || Number(invoice.total_amount) <= 0) {
           results.push({ store_id: sub.store_id, skipped: "no_amount" });
           continue;
@@ -81,11 +96,11 @@ Deno.serve(async (req) => {
           continue;
         }
         if (!sub.gateway_customer_id) {
-          results.push({ store_id: sub.store_id, skipped: "no_customer" });
+          results.push({ store_id: sub.store_id, error: "no_customer" });
+          failed++;
           continue;
         }
 
-        // 2) Cria payment avulso no Asaas
         const description = sub.billing_model === "commission"
           ? `Comissão ${start} a ${end} (${invoice.orders_count} pedidos)`
           : `Taxa por pedido ${start} a ${end} (${invoice.orders_count} × R$ ${Number(sub.per_order_fee).toFixed(2)})`;
@@ -110,16 +125,39 @@ Deno.serve(async (req) => {
           raw: { payment },
         }).eq("id", invoice.id);
 
+        succeeded++;
         results.push({ store_id: sub.store_id, invoice_id: invoice.id, payment_id: payment.id, amount: invoice.total_amount });
       } catch (e) {
+        failed++;
+        const msg = e instanceof Error ? e.message : "unknown";
         console.error("invoice fail", sub.store_id, e);
-        results.push({ store_id: sub.store_id, error: e instanceof Error ? e.message : "unknown" });
+        results.push({ store_id: sub.store_id, store_name: (sub as any).stores?.name, error: msg });
       }
     }
 
-    return json({ ok: true, period: { start, end }, processed: results.length, results });
+    if (runId) {
+      await admin.from("billing_job_runs").update({
+        status: failed === 0 ? "success" : (succeeded > 0 ? "partial" : "error"),
+        finished_at: new Date().toISOString(),
+        duration_ms: Date.now() - startedAt,
+        processed: (subs ?? []).length,
+        succeeded, failed,
+        summary: { period: { start, end }, results, force, todayDay },
+      }).eq("id", runId);
+    }
+
+    return json({ ok: true, period: { start, end }, processed: results.length, succeeded, failed, results });
   } catch (e) {
+    const msg = e instanceof Error ? e.message : "unknown";
     console.error("monthly-invoice-cron", e);
-    return json({ error: e instanceof Error ? e.message : "unknown" }, 500);
+    if (runId) {
+      await admin.from("billing_job_runs").update({
+        status: "error",
+        finished_at: new Date().toISOString(),
+        duration_ms: Date.now() - startedAt,
+        error_message: msg,
+      }).eq("id", runId);
+    }
+    return json({ error: msg }, 500);
   }
 });

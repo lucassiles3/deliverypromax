@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle2, Clock, AlertTriangle, Loader2, RefreshCw, XCircle,
-  Receipt, TrendingUp, Wallet, Calendar, ExternalLink, Percent, ShoppingBag,
+  Receipt, TrendingUp, Wallet, Calendar, ExternalLink, Percent, ShoppingBag, Settings, Save,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SubscriptionPaywall } from "./SubscriptionPaywall";
@@ -24,6 +24,8 @@ type SubRow = {
   cancelled_at: string | null;
   gateway_subscription_id: string | null;
   gateway_customer_id: string | null;
+  billing_day: number | null;
+  grace_days: number | null;
 };
 
 type Invoice = {
@@ -40,6 +42,7 @@ type Invoice = {
   due_date: string | null;
   paid_at: string | null;
   invoice_url: string | null;
+  asaas_payment_id: string | null;
 };
 
 const fmt = (n: number) =>
@@ -71,7 +74,7 @@ export const SubscriptionManager = ({ storeId }: Props) => {
     queryFn: async (): Promise<SubRow | null> => {
       const { data, error } = await supabase
         .from("store_subscriptions")
-        .select("id, status, billing_model, monthly_amount, per_order_fee, commission_percent, trial_ends_at, current_period_end, cancelled_at, gateway_subscription_id, gateway_customer_id")
+        .select("id, status, billing_model, monthly_amount, per_order_fee, commission_percent, trial_ends_at, current_period_end, cancelled_at, gateway_subscription_id, gateway_customer_id, billing_day, grace_days")
         .eq("store_id", storeId)
         .maybeSingle();
       if (error) throw error;
@@ -85,10 +88,10 @@ export const SubscriptionManager = ({ storeId }: Props) => {
     queryFn: async (): Promise<Invoice[]> => {
       const { data, error } = await supabase
         .from("monthly_invoices")
-        .select("id, period_start, period_end, billing_model, orders_count, per_order_total, commission_total, gross_sales, total_amount, status, due_date, paid_at, invoice_url")
+        .select("id, period_start, period_end, billing_model, orders_count, per_order_total, commission_total, gross_sales, total_amount, status, due_date, paid_at, invoice_url, asaas_payment_id")
         .eq("store_id", storeId)
         .order("period_start", { ascending: false })
-        .limit(24);
+        .limit(36);
       if (error) throw error;
       return (data ?? []) as Invoice[];
     },
@@ -255,8 +258,8 @@ export const SubscriptionManager = ({ storeId }: Props) => {
           <Stat
             icon={Calendar}
             label="Tolerância de pagamento"
-            value="5 dias"
-            hint="após o vencimento"
+            value={`${sub.grace_days ?? 5} dias`}
+            hint={`Cobrança no dia ${sub.billing_day ?? 1} de cada mês`}
           />
         </div>
 
@@ -306,16 +309,24 @@ export const SubscriptionManager = ({ storeId }: Props) => {
         </div>
       </div>
 
+      {/* Configuração de cobrança */}
+      <BillingConfigCard
+        subId={sub.id}
+        billingDay={sub.billing_day ?? 1}
+        graceDays={sub.grace_days ?? 5}
+        onSaved={() => qc.invalidateQueries({ queryKey: ["store-subscription", storeId] })}
+      />
+
       {/* Histórico de faturas */}
       <div className="rounded-3xl bg-card p-6 shadow-float">
         <div className="mb-4 flex items-center gap-2">
           <Receipt className="h-5 w-5 text-primary" />
-          <h2 className="font-display text-lg font-bold">Histórico de faturas</h2>
+          <h2 className="font-display text-lg font-bold">Todas as faturas mensais</h2>
         </div>
 
         {invoices.length === 0 ? (
           <p className="rounded-2xl border-2 border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            Nenhuma fatura emitida ainda. A primeira será gerada no dia 1° do próximo mês.
+            Nenhuma fatura emitida ainda. A primeira será gerada no dia {sub.billing_day ?? 1} do próximo mês.
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -327,6 +338,7 @@ export const SubscriptionManager = ({ storeId }: Props) => {
                   <th className="px-3 py-2 text-left font-bold">Vendas</th>
                   <th className="px-3 py-2 text-left font-bold">Total</th>
                   <th className="px-3 py-2 text-left font-bold">Vencimento</th>
+                  <th className="px-3 py-2 text-left font-bold">ID Asaas</th>
                   <th className="px-3 py-2 text-left font-bold">Status</th>
                   <th className="px-3 py-2 text-right font-bold">Ação</th>
                 </tr>
@@ -343,6 +355,9 @@ export const SubscriptionManager = ({ storeId }: Props) => {
                       <td className="px-3 py-3 font-bold">{fmt(inv.total_amount)}</td>
                       <td className="px-3 py-3 text-muted-foreground">
                         {inv.due_date ? new Date(inv.due_date).toLocaleDateString("pt-BR") : "—"}
+                      </td>
+                      <td className="px-3 py-3 font-mono text-xs text-muted-foreground">
+                        {inv.asaas_payment_id ?? "—"}
                       </td>
                       <td className="px-3 py-3"><Badge className={s.cls}>{s.label}</Badge></td>
                       <td className="px-3 py-3 text-right">
@@ -364,6 +379,7 @@ export const SubscriptionManager = ({ storeId }: Props) => {
         )}
       </div>
 
+
       <p className="text-center text-xs text-muted-foreground">
         Em ambos os modelos, a taxa de serviço cobrada do cliente final pertence ao itChat.
         Após o vencimento, há 5 dias de tolerância antes da loja ser pausada automaticamente.
@@ -381,6 +397,66 @@ const Stat = ({ icon: Icon, label, value, hint }: { icon: any; label: string; va
     {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
   </div>
 );
+
+const BillingConfigCard = ({
+  subId, billingDay, graceDays, onSaved,
+}: { subId: string; billingDay: number; graceDays: number; onSaved: () => void }) => {
+  const [day, setDay] = useState(billingDay);
+  const [grace, setGrace] = useState(graceDays);
+  const [saving, setSaving] = useState(false);
+  const dirty = day !== billingDay || grace !== graceDays;
+
+  const save = async () => {
+    if (day < 1 || day > 28) return toast.error("Dia de cobrança deve ser entre 1 e 28");
+    if (grace < 0 || grace > 30) return toast.error("Tolerância deve ser entre 0 e 30 dias");
+    setSaving(true);
+    const { error } = await supabase
+      .from("store_subscriptions")
+      .update({ billing_day: day, grace_days: grace })
+      .eq("id", subId);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Configuração de cobrança atualizada");
+    onSaved();
+  };
+
+  return (
+    <div className="rounded-3xl bg-card p-6 shadow-float">
+      <div className="mb-4 flex items-center gap-2">
+        <Settings className="h-5 w-5 text-primary" />
+        <h2 className="font-display text-lg font-bold">Configuração de cobrança</h2>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Dia de cobrança mensal
+          </label>
+          <input
+            type="number" min={1} max={28} value={day}
+            onChange={(e) => setDay(Number(e.target.value))}
+            className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3 text-lg font-bold"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">A fatura do mês será gerada nesse dia (1 a 28).</p>
+        </div>
+        <div>
+          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Tolerância antes do bloqueio
+          </label>
+          <input
+            type="number" min={0} max={30} value={grace}
+            onChange={(e) => setGrace(Number(e.target.value))}
+            className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3 text-lg font-bold"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">Dias após o vencimento até a loja ser bloqueada (0 a 30).</p>
+        </div>
+      </div>
+      <Button onClick={save} disabled={!dirty || saving} className="mt-4">
+        <Save className="mr-2 h-4 w-4" />
+        {saving ? "Salvando..." : "Salvar configuração"}
+      </Button>
+    </div>
+  );
+};
 
 const MiniStat = ({ label, value }: { label: string; value: string }) => (
   <div className="rounded-2xl bg-muted/40 p-4">

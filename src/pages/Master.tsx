@@ -15,6 +15,7 @@ import {
   LogOut,
   Shield,
   Image as ImageIcon,
+  Receipt,
 } from "lucide-react";
 import MasterDashboard from "@/components/master/MasterDashboard";
 import MasterStores from "@/components/master/MasterStores";
@@ -24,12 +25,14 @@ import MasterUsers from "@/components/master/MasterUsers";
 import MasterLogs from "@/components/master/MasterLogs";
 import MasterSupport from "@/components/master/MasterSupport";
 import MasterBanners from "@/components/master/MasterBanners";
+import MasterBillingAudit from "@/components/master/MasterBillingAudit";
 
 
 type View =
   | "dashboard"
   | "stores"
   | "subscriptions"
+  | "billing"
   | "orders"
   | "users"
   | "banners"
@@ -40,6 +43,7 @@ const NAV: { key: View; label: string; icon: React.ComponentType<{ className?: s
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "stores", label: "Lojas", icon: StoreIcon },
   { key: "subscriptions", label: "Assinaturas", icon: CreditCard },
+  { key: "billing", label: "Faturamento", icon: Receipt },
   { key: "orders", label: "Pedidos", icon: ShoppingBag },
   { key: "users", label: "Usuários", icon: Users },
   { key: "banners", label: "Banners", icon: ImageIcon },
@@ -86,6 +90,7 @@ export default function Master() {
       case "dashboard": return <MasterDashboard />;
       case "stores": return <MasterStores />;
       case "subscriptions": return <MasterSubscriptions />;
+      case "billing": return <MasterBillingAudit />;
       case "orders": return <MasterOrders />;
       case "users": return <MasterUsers />;
       case "banners": return <MasterBanners />;

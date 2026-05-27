@@ -280,6 +280,51 @@ export type Database = {
           },
         ]
       }
+      billing_job_runs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          failed: number | null
+          finished_at: string | null
+          id: string
+          job_name: string
+          processed: number | null
+          started_at: string
+          status: string
+          succeeded: number | null
+          summary: Json | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          failed?: number | null
+          finished_at?: string | null
+          id?: string
+          job_name: string
+          processed?: number | null
+          started_at?: string
+          status?: string
+          succeeded?: number | null
+          summary?: Json | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          failed?: number | null
+          finished_at?: string | null
+          id?: string
+          job_name?: string
+          processed?: number | null
+          started_at?: string
+          status?: string
+          succeeded?: number | null
+          summary?: Json | null
+        }
+        Relationships: []
+      }
       birthday_campaigns: {
         Row: {
           active: boolean
@@ -3048,6 +3093,7 @@ export type Database = {
       }
       store_subscriptions: {
         Row: {
+          billing_day: number
           billing_model: string
           cancelled_at: string | null
           commission_percent: number
@@ -3057,6 +3103,7 @@ export type Database = {
           gateway: string | null
           gateway_customer_id: string | null
           gateway_subscription_id: string | null
+          grace_days: number
           grace_until: string | null
           id: string
           monthly_amount: number
@@ -3069,6 +3116,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          billing_day?: number
           billing_model?: string
           cancelled_at?: string | null
           commission_percent?: number
@@ -3078,6 +3126,7 @@ export type Database = {
           gateway?: string | null
           gateway_customer_id?: string | null
           gateway_subscription_id?: string | null
+          grace_days?: number
           grace_until?: string | null
           id?: string
           monthly_amount?: number
@@ -3090,6 +3139,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          billing_day?: number
           billing_model?: string
           cancelled_at?: string | null
           commission_percent?: number
@@ -3099,6 +3149,7 @@ export type Database = {
           gateway?: string | null
           gateway_customer_id?: string | null
           gateway_subscription_id?: string | null
+          grace_days?: number
           grace_until?: string | null
           id?: string
           monthly_amount?: number
