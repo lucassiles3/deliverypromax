@@ -321,7 +321,7 @@ const Index = () => {
             <div>
               <p className="text-base font-medium text-muted-foreground">{greeting},</p>
               <h1 className="font-display text-4xl font-extrabold tracking-tight text-foreground md:text-5xl">
-                {firstName ?? "Bem-vindo"} <span className="inline-block animate-float-bob">👋</span>
+                {firstName ?? "Bem-vindo"}
               </h1>
             </div>
             <div className="relative">
