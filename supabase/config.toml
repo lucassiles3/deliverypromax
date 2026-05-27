@@ -14,3 +14,10 @@ verify_jwt = false
 
 [functions.asaas-webhook]
 verify_jwt = false
+
+[functions.monthly-invoice-cron]
+verify_jwt = false
+
+[functions.subscription-grace-cron]
+verify_jwt = false
+
