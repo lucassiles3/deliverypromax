@@ -205,7 +205,8 @@ const Admin = () => {
       if (error) throw error;
       return data ?? [];
     },
-    refetchInterval: 15000,
+    // Realtime cobre invalidação; refetch só a cada 60s como segurança contra desconexão.
+    refetchInterval: 60_000,
   });
 
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
@@ -227,19 +228,17 @@ const Admin = () => {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
-        (payload) => {
+        () => {
+          // Som/popup/notificação são tratados globalmente em <NewOrderAlerts />.
+          // Aqui apenas invalidamos o cache para refletir o pedido na lista.
           qc.invalidateQueries({ queryKey: ["admin-orders", storeId] });
-          if (payload.eventType === "INSERT") {
-            toast.success("🔔 Novo pedido recebido!");
-          }
         },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeId, qc, soundEnabled]);
+  }, [storeId, qc]);
 
   const advanceStatus = async (id: string, current: DbStatus) => {
     const next = statusConfig[current].next;
