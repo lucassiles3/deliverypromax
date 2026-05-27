@@ -402,6 +402,13 @@ const Index = () => {
         )}
       </section>
 
+      {/* Banners promocionais */}
+      <section className="container pb-2">
+        <HomeBannerCarousel />
+      </section>
+
+
+
 
       {/* Banner promocional premium */}
       <section className="container pb-2">
