@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Star, Plus, Flame } from "lucide-react";
 import type { Product } from "@/data/stores";
 import { FavoriteProductButton } from "@/components/FavoriteButton";
