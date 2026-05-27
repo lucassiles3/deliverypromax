@@ -81,7 +81,7 @@ import { StoreOpenToggle } from "@/components/admin/StoreOpenToggle";
 import { Printer } from "lucide-react";
 
 type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Tab = "dashboard" | "orders" | "pdv" | "tables" | "products" | "stock" | "customers" | "marketing" | "financial" | "reports" | "history" | "store" | "settings" | "team" | "integrations" | "couriers";
+type Tab = "dashboard" | "orders" | "pdv" | "tables" | "products" | "stock" | "customers" | "marketing" | "financial" | "reports" | "history" | "store" | "settings" | "team" | "integrations" | "couriers" | "subscription";
 type StatusFilter = "all" | "active" | DbStatus;
 type MethodFilter = "all" | "delivery" | "pickup";
 
