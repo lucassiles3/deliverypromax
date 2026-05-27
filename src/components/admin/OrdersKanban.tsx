@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useOrdersChannel } from "@/hooks/useOrdersChannel";
 import {
   DndContext,
   PointerSensor,
@@ -326,27 +327,21 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
     }
   };
 
-  // Realtime: invalidate + auto-print on new order INSERT (sound/popup é global em <NewOrderAlerts />)
-  useEffect(() => {
-    if (!storeId) return;
-    const ch = supabase
-      .channel(`kanban:${storeId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
-        (payload: any) => {
-          qc.invalidateQueries({ queryKey: ["kanban-orders", storeId] });
-          if (payload.eventType === "INSERT") {
-            autoPrintOrder(payload.new.id);
-          }
-        }
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
+  // Realtime: invalidate + auto-print on new order INSERT
+  // (canal compartilhado via useOrdersChannel — som/popup é global em <NewOrderAlerts />)
+  const onOrderEvent = useCallback(
+    (payload: { eventType: string; new: any }) => {
+      qc.invalidateQueries({ queryKey: ["kanban-orders", storeId] });
+      if (payload.eventType === "INSERT") {
+        autoPrintOrder(payload.new.id);
+      }
+    },
+    // autoPrintOrder usa settings; recriamos quando essas flags mudam
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeId, qc, settings?.auto_print_enabled, settings?.print_format]);
+    [storeId, qc, settings?.auto_print_enabled, settings?.print_format],
+  );
+  useOrdersChannel(storeId, onOrderEvent);
+
 
   // Inicializa o "já visto" na primeira carga (não imprime histórico)
   useEffect(() => {
