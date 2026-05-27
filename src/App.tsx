@@ -36,6 +36,7 @@ import { OrderReviewPrompt } from "@/components/OrderReviewPrompt";
 import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Lazy: carregadas só quando o usuário acessa a rota
 const Store = lazy(() => import("./pages/Store.tsx"));
@@ -106,37 +107,43 @@ const App = () => (
         <BrowserRouter>
           <PushBridge />
           <AdSenseLoader />
-          <Suspense fallback={<PageFallback />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/loja/:slug" element={<Store />} />
-              <Route path="/loja/:slug/produto/:productId" element={<Product />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/parceiros" element={<AdminListings />} />
-              <Route path="/pdv" element={<PDV />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/meus-pedidos" element={<MyOrders />} />
-              <Route path="/meus-pedidos/:id" element={<OrderDetails />} />
-              <Route path="/conta" element={<MinhaConta />} />
-              <Route path="/enderecos" element={<Enderecos />} />
-              <Route path="/favoritos" element={<Favoritos />} />
-              <Route path="/notificacoes" element={<Notificacoes />} />
-              <Route path="/categorias" element={<Categorias />} />
-              <Route path="/mesa/:token" element={<Mesa />} />
-              <Route path="/entregador" element={<Entregador />} />
-              <Route path="/recompensas" element={<Recompensas />} />
-              <Route path="/master" element={<Master />} />
-              <Route path="/landing" element={<Landing />} />
-              <Route path="/cadastro" element={<Cadastro />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+          <ErrorBoundary label="routes">
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/loja/:slug" element={<Store />} />
+                <Route path="/loja/:slug/produto/:productId" element={<Product />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/parceiros" element={<AdminListings />} />
+                <Route path="/pdv" element={<PDV />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/meus-pedidos" element={<MyOrders />} />
+                <Route path="/meus-pedidos/:id" element={<OrderDetails />} />
+                <Route path="/conta" element={<MinhaConta />} />
+                <Route path="/enderecos" element={<Enderecos />} />
+                <Route path="/favoritos" element={<Favoritos />} />
+                <Route path="/notificacoes" element={<Notificacoes />} />
+                <Route path="/categorias" element={<Categorias />} />
+                <Route path="/mesa/:token" element={<Mesa />} />
+                <Route path="/entregador" element={<Entregador />} />
+                <Route path="/recompensas" element={<Recompensas />} />
+                <Route path="/master" element={<Master />} />
+                <Route path="/landing" element={<Landing />} />
+                <Route path="/cadastro" element={<Cadastro />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
           <CartDrawer />
           <BottomNav />
-          <NewOrderAlerts />
-          <OrderReviewPrompt />
+          <ErrorBoundary label="new-order-alerts" fallback={null}>
+            <NewOrderAlerts />
+          </ErrorBoundary>
+          <ErrorBoundary label="review-prompt" fallback={null}>
+            <OrderReviewPrompt />
+          </ErrorBoundary>
         </BrowserRouter>
       </CartProvider>
     </TooltipProvider>

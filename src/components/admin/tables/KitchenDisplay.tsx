@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, ChefHat, Bell, CheckCircle2 } from "lucide-react";
@@ -30,15 +30,16 @@ export const KitchenDisplay = ({ storeId }: { storeId: string }) => {
     refetchInterval: 10_000,
   });
 
+  const channelId = useId();
   useEffect(() => {
     const ch = supabase
-      .channel(`kds-${storeId}-${Math.random().toString(36).slice(2, 8)}`)
+      .channel(`kds-${storeId}-${channelId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "table_session_items", filter: `store_id=eq.${storeId}` }, () => {
         qc.invalidateQueries({ queryKey: ["kds", storeId] });
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [storeId, qc]);
+  }, [storeId, qc, channelId]);
 
   const advance = async (id: string, status: "pending" | "preparing" | "ready" | "delivered") => {
     await supabase.from("table_session_items").update({ kitchen_status: status }).eq("id", id);

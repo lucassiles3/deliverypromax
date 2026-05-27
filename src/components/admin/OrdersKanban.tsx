@@ -171,7 +171,9 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
   const { data: orders = [] } = useQuery({
     queryKey: ["kanban-orders", storeId, windowHours],
     enabled: !!storeId,
-    refetchInterval: 10000,
+    // Realtime já invalida em tempo real (canal `kanban:${storeId}` mais abaixo).
+    // Mantemos só um refetch de segurança a cada 60s pra recuperar de desconexões.
+    refetchInterval: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
@@ -187,16 +189,21 @@ export const OrdersKanban = ({ storeId }: { storeId: string }) => {
     },
   });
 
-  // Recurring customers (orders count by user_id from full history)
+  // Recurring customers — limita ao histórico recente (últimos 90 dias, 2k linhas máx).
+  // Evita varredura full-table em lojas com milhares de pedidos.
   const { data: recurring = new Set<string>() } = useQuery({
     queryKey: ["recurring-customers", storeId],
     enabled: !!storeId,
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
+      const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
       const { data, error } = await supabase
         .from("orders")
         .select("user_id")
         .eq("store_id", storeId)
-        .not("user_id", "is", null);
+        .not("user_id", "is", null)
+        .gte("created_at", since)
+        .limit(2000);
       if (error) throw error;
       const counts = new Map<string, number>();
       (data ?? []).forEach((r) => {

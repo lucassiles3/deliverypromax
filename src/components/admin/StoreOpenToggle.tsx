@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Power, PowerOff, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -34,10 +34,11 @@ export const StoreOpenToggle = ({ storeId, variant = "floating", className }: Pr
   });
 
   // Realtime: se outro operador abrir/fechar, reflete imediatamente.
+  const channelId = useId();
   useEffect(() => {
     if (!storeId) return;
     const channel = supabase
-      .channel(`store-open-${storeId}-${Math.random().toString(36).slice(2, 8)}`)
+      .channel(`store-open-${storeId}-${channelId}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "stores", filter: `id=eq.${storeId}` },
@@ -50,7 +51,7 @@ export const StoreOpenToggle = ({ storeId, variant = "floating", className }: Pr
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [storeId, qc]);
+  }, [storeId, qc, channelId]);
 
   const toggle = async () => {
     if (!storeId || !data || saving) return;

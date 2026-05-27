@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -123,10 +123,11 @@ export const TableSessionDrawer = ({ storeId, table, onClose }: Props) => {
   });
 
   // Realtime updates
+  const channelId = useId();
   useEffect(() => {
     if (!session?.id) return;
     const ch = supabase
-      .channel(`session-${session.id}-${Math.random().toString(36).slice(2, 8)}`)
+      .channel(`session-${session.id}-${channelId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "table_session_items", filter: `session_id=eq.${session.id}` }, () => {
         refetchItems();
         refetchSession();
@@ -138,7 +139,7 @@ export const TableSessionDrawer = ({ storeId, table, onClose }: Props) => {
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [session?.id, refetchItems, refetchSession]);
+  }, [session?.id, refetchItems, refetchSession, channelId]);
 
   const categories = useMemo(() => {
     const set = new Set<string>();
