@@ -1,6 +1,13 @@
 // Domain types — data now lives in the database (see /src/hooks/useStores.ts).
 
-export type AddonOption = { id: string; name: string; price: number };
+export type AddonOption = {
+  id: string;
+  name: string;
+  price: number;
+  image?: string;
+  description?: string;
+  outOfStock?: boolean;
+};
 export type AddonGroup = {
   id: string;
   name: string;
