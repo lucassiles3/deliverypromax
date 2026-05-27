@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -17,7 +17,11 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import { LocationPicker } from "@/components/LocationPicker";
+// LocationPicker carrega Leaflet (~150KB). Mantemos lazy para não pesar o caminho
+// crítico do checkout — só baixa quando o cliente escolhe "Entrega".
+const LocationPicker = lazy(() =>
+  import("@/components/LocationPicker").then((m) => ({ default: m.LocationPicker })),
+);
 import { useCart } from "@/context/CartContext";
 import { useStoreBySlug, useCoupons } from "@/hooks/useStores";
 import type { Coupon } from "@/data/stores";
