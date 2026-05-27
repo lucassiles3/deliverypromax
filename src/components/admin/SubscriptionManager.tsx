@@ -258,8 +258,8 @@ export const SubscriptionManager = ({ storeId }: Props) => {
           <Stat
             icon={Calendar}
             label="Tolerância de pagamento"
-            value="5 dias"
-            hint="após o vencimento"
+            value={`${sub.grace_days ?? 5} dias`}
+            hint={`Cobrança no dia ${sub.billing_day ?? 1} de cada mês`}
           />
         </div>
 
