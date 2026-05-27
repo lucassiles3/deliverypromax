@@ -90,6 +90,7 @@ export default function Master() {
       case "dashboard": return <MasterDashboard />;
       case "stores": return <MasterStores />;
       case "subscriptions": return <MasterSubscriptions />;
+      case "billing": return <MasterBillingAudit />;
       case "orders": return <MasterOrders />;
       case "users": return <MasterUsers />;
       case "banners": return <MasterBanners />;
