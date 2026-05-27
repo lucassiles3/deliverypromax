@@ -24,6 +24,8 @@ type SubRow = {
   cancelled_at: string | null;
   gateway_subscription_id: string | null;
   gateway_customer_id: string | null;
+  billing_day: number | null;
+  grace_days: number | null;
 };
 
 type Invoice = {
