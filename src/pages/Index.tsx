@@ -557,12 +557,6 @@ const Index = () => {
 
           {externalListings.length > 0 && (
             <section className="mb-8">
-              <div className="mb-3 flex items-end justify-between">
-                <div>
-                  <h2 className="font-display text-xl font-bold md:text-2xl">Parceiros locais</h2>
-                  <p className="text-xs text-muted-foreground">Toque para abrir o catálogo</p>
-                </div>
-              </div>
               <div className="flex flex-col gap-3 md:grid md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
                 {(externalListings as any[])
                   .slice()
