@@ -29,6 +29,7 @@ const Store = () => {
   const navigate = useNavigate();
   const [activeCat, setActiveCat] = useState("");
   const [query, setQuery] = useState("");
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const distance =
     coords && store?.lat && store?.lng
