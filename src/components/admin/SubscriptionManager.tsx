@@ -309,16 +309,24 @@ export const SubscriptionManager = ({ storeId }: Props) => {
         </div>
       </div>
 
+      {/* Configuração de cobrança */}
+      <BillingConfigCard
+        subId={sub.id}
+        billingDay={sub.billing_day ?? 1}
+        graceDays={sub.grace_days ?? 5}
+        onSaved={() => qc.invalidateQueries({ queryKey: ["store-subscription", storeId] })}
+      />
+
       {/* Histórico de faturas */}
       <div className="rounded-3xl bg-card p-6 shadow-float">
         <div className="mb-4 flex items-center gap-2">
           <Receipt className="h-5 w-5 text-primary" />
-          <h2 className="font-display text-lg font-bold">Histórico de faturas</h2>
+          <h2 className="font-display text-lg font-bold">Todas as faturas mensais</h2>
         </div>
 
         {invoices.length === 0 ? (
           <p className="rounded-2xl border-2 border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            Nenhuma fatura emitida ainda. A primeira será gerada no dia 1° do próximo mês.
+            Nenhuma fatura emitida ainda. A primeira será gerada no dia {sub.billing_day ?? 1} do próximo mês.
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -330,6 +338,7 @@ export const SubscriptionManager = ({ storeId }: Props) => {
                   <th className="px-3 py-2 text-left font-bold">Vendas</th>
                   <th className="px-3 py-2 text-left font-bold">Total</th>
                   <th className="px-3 py-2 text-left font-bold">Vencimento</th>
+                  <th className="px-3 py-2 text-left font-bold">ID Asaas</th>
                   <th className="px-3 py-2 text-left font-bold">Status</th>
                   <th className="px-3 py-2 text-right font-bold">Ação</th>
                 </tr>
@@ -346,6 +355,9 @@ export const SubscriptionManager = ({ storeId }: Props) => {
                       <td className="px-3 py-3 font-bold">{fmt(inv.total_amount)}</td>
                       <td className="px-3 py-3 text-muted-foreground">
                         {inv.due_date ? new Date(inv.due_date).toLocaleDateString("pt-BR") : "—"}
+                      </td>
+                      <td className="px-3 py-3 font-mono text-xs text-muted-foreground">
+                        {inv.asaas_payment_id ?? "—"}
                       </td>
                       <td className="px-3 py-3"><Badge className={s.cls}>{s.label}</Badge></td>
                       <td className="px-3 py-3 text-right">
@@ -366,6 +378,7 @@ export const SubscriptionManager = ({ storeId }: Props) => {
           </div>
         )}
       </div>
+
 
       <p className="text-center text-xs text-muted-foreground">
         Em ambos os modelos, a taxa de serviço cobrada do cliente final pertence ao itChat.
