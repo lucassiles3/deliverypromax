@@ -668,6 +668,7 @@ const slugify = (s: string) =>
 
 const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmail: string }) => {
   const qc = useQueryClient();
+  const [mode, setMode] = useState<"ask" | "external" | "store">("ask");
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
