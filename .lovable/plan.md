@@ -1,66 +1,92 @@
-# Adicionais reutilizáveis no catálogo
+# Plano Pro Híbrido — 2 modelos de cobrança
 
-Hoje cada produto tem seus adicionais isolados (apenas nome + preço, presos a um único produto). Vou transformar em uma **biblioteca da loja** que serve para qualquer ramo (lanchonete, pizzaria, açaí, farmácia, pet, salão, mercado, etc).
+## Objetivo
+Permitir que a loja escolha entre dois modelos ao assinar o Plano Pro, com faturamento mensal automático via Asaas, tolerância de 5 dias e bloqueio/reativação automáticos.
 
-## Como vai funcionar para o lojista
+## Modelos
 
-Nova aba **"Adicionais"** dentro do Catálogo, com duas seções:
+**Modelo A — Fixo + por pedido**
+- R$ 150/mês (mensalidade)
+- + R$ 1,00 por pedido entregue no mês
+- Sem comissão %
 
-1. **Itens adicionais** (a "biblioteca")
-   - Cada item tem: foto, nome, descrição curta, preço, estoque (opcional, com controle on/off), ativo/inativo
-   - Pode ser usado em vários grupos ao mesmo tempo (sem duplicar cadastro)
-   - Exemplos por ramo: bacon/cheddar (lanche), borda recheada (pizza), granola/leite ninho (açaí), embalagem para presente (loja), escova/finalização (salão)
+**Modelo B — Comissão sobre vendas**
+- Sem mensalidade
+- ~10% sobre cada pedido entregue
+- Fatura mensal acumulada
 
-2. **Grupos de adicionais**
-   - Nome do grupo (ex: "Escolha sua borda", "Complementos", "Adicionais")
-   - Tipo: escolha única (radio) ou múltipla (checkbox)
-   - Mínimo / Máximo de seleções, obrigatório sim/não
-   - Lista de itens da biblioteca incluídos no grupo (com ordem arrastável)
-   - Cada grupo pode ser **vinculado a vários produtos** de uma vez
+Em ambos: taxa de serviço cobrada do cliente é do itChat.
 
-Na tela do produto (editar), em vez de cadastrar adicionais do zero, o lojista só **marca quais grupos** quer usar — muito mais rápido quando há dezenas de produtos parecidos.
+## Mudanças no banco
 
-## O que muda para o cliente
+1. `subscription_plans`: adicionar colunas
+   - `billing_model` text ('fixed_plus_per_order' | 'commission')
+   - `per_order_fee numeric` (default 0)
+   - `commission_percent numeric` (default 0)
+   - Seed: criar/atualizar planos `pro_fixed` (R$150 + R$1/pedido) e `pro_commission` (10%).
 
-A tela do produto continua igual: mostra os grupos e opções. Diferenças visuais:
-- Quando o item tem foto, aparece miniatura ao lado do nome
-- Itens sem estoque aparecem desabilitados ("Esgotado")
-- O resto da experiência permanece idêntica (preço somado, observação, qtd)
+2. `store_subscriptions`: adicionar
+   - `billing_model text`
+   - `per_order_fee numeric default 0`
+   - `commission_percent numeric default 0`
+   - `grace_until timestamptz` (5 dias de tolerância pós-vencimento)
 
-## Mudanças técnicas
+3. Nova tabela `monthly_invoices` (fatura mensal consolidada)
+   - store_id, subscription_id, period_start, period_end
+   - base_amount (mensalidade fixa), orders_count, per_order_total
+   - commission_total, gross_sales, extras_total
+   - total_amount, status (open/paid/overdue/cancelled)
+   - asaas_payment_id, due_date, paid_at, raw jsonb
+   - GRANT + RLS (dono lê; service_role escreve)
 
-### Banco de dados (migração)
+4. Função `generate_monthly_invoice(_store_id, _period)` SECURITY DEFINER
+   - calcula pedidos `delivered` do mês
+   - aplica modelo da assinatura
+   - cria/atualiza `monthly_invoices`
 
-- `addon_items` (biblioteca por loja): `store_id`, `name`, `description`, `image_url`, `price`, `track_stock`, `stock`, `active`, `position`
-- `addon_groups`: adicionar `store_id` (grupos passam a pertencer à loja, não a 1 produto) e deixar `product_id` como **legado/deprecated** (mantido para não quebrar dados existentes)
-- `addon_group_items` (N:N grupo → item da biblioteca): `group_id`, `item_id`, `position`, `price_override` (opcional)
-- `product_addon_groups` (N:N produto → grupo): `product_id`, `group_id`, `position`
-- `addon_options` continua existindo para compatibilidade dos grupos antigos (leitura)
-- Bucket de storage `product-images` já existe — reutilizo para fotos dos adicionais
-- RLS: dono da loja gerencia, leitura pública (igual aos produtos)
+5. Função `enforce_subscription_grace()` SECURITY DEFINER
+   - varre `monthly_invoices` com `status='overdue'` e `due_date + 5d < now()`
+   - atualiza `stores.lifecycle_status = 'blocked'`
+   - reativa quando fatura quitada
 
-### Migração de dados existentes
-Para cada `addon_group` antigo: copio para o novo formato vinculando ao `store_id` do produto e criando os `addon_items` correspondentes a partir dos `addon_options`. Mantém tudo funcionando sem perda.
+## Edge functions
 
-### Frontend
+1. **`subscription-create`** (refatorar)
+   - aceitar `billing_model: 'fixed_plus_per_order' | 'commission'`
+   - Modelo A: cria Asaas subscription MONTHLY valor R$150 (cobrança fixa)
+   - Modelo B: NÃO cria subscription recorrente — apenas cliente Asaas. Faturas serão criadas mensalmente como `payments` avulsos
+   - persiste billing_model/per_order_fee/commission_percent em `store_subscriptions`
 
-- Nova aba "Adicionais" em `MenuTab` (ou nova `AddonsTab` chamada por `MenuTab`)
-- Componentes novos:
-  - `AddonItemsLibrary` — CRUD dos itens (com upload de foto)
-  - `AddonGroupsManager` — CRUD de grupos + selecionar itens da biblioteca
-  - `AddonGroupsLinker` — usado dentro do `ProductFormModal` para marcar grupos do produto (substitui o `AddonGroupsEditor` atual para produtos novos; o antigo continua editável para produtos legados)
-- `useStores.ts` ajustado para carregar adicionais via o novo modelo (grupos vinculados ao produto + itens da biblioteca)
-- `ProductModal` / `Product.tsx` ganham foto miniatura e estado "esgotado" nas opções
+2. **`monthly-invoice-cron`** (nova, agendada dia 1)
+   - para cada loja com sub ativa: chama `generate_monthly_invoice` para mês anterior
+   - Modelo A: cria `payment` adicional no Asaas = (per_order_fee × pedidos) [a mensalidade já vem pela subscription]
+   - Modelo B: cria `payment` no Asaas com total da comissão
+   - vencimento +5 dias úteis; salva `asaas_payment_id` e `due_date`
 
-### Compatibilidade
-Produtos antigos seguem mostrando seus adicionais sem mudança. O lojista pode migrar manualmente quando quiser (botão "Mover para biblioteca" no grupo antigo).
+3. **`subscription-grace-cron`** (nova, diária)
+   - chama `enforce_subscription_grace()` → bloqueia/desbloqueia lojas
 
-## Entrega
+4. **`asaas-webhook`** (ajustar)
+   - quando `PAYMENT_RECEIVED/CONFIRMED` de uma `monthly_invoice`: marca paga + reativa loja se estava bloqueada
+   - quando `PAYMENT_OVERDUE`: marca overdue + seta `grace_until`
 
-1. Migração do banco (tabelas + RLS + grants + cópia dos dados)
-2. UI da biblioteca de adicionais
-3. UI de grupos + vínculo a produtos
-4. Ajustes na tela do cliente (foto + esgotado)
-5. Teste do fluxo ponta a ponta
+## Frontend
 
-Posso seguir?
+1. **`SubscriptionPaywall.tsx`** — nova tela de escolha:
+   - Dois cards lado a lado (Modelo A / Modelo B) com bullets, exemplos, CTA "Escolher"
+   - Após escolha → fluxo atual de CPF/CNPJ + método (PIX/Cartão) → chama `subscription-create` com `billing_model`
+
+2. **`Admin` financeiro**: nova aba "Faturas" listando `monthly_invoices` com status e link de pagamento.
+
+3. **`MasterSubscriptions`**: mostrar billing_model e total acumulado do mês corrente.
+
+## Bloqueio de loja
+- `Store.tsx` (página pública) e listagem do marketplace já filtram por `lifecycle_status`. Validar e adicionar filtro `!= 'blocked'` se faltar.
+
+## Resumo técnico
+- 1 migração (schema + função + seed planos)
+- 3 edge functions (1 refatorada + 2 novas + ajuste no webhook)
+- 2-3 arquivos de UI alterados
+- Crons agendados via `pg_cron` ou chamada externa (instruirei a configurar)
+
+Confirmo e começo pela migração?
