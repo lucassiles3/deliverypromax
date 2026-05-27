@@ -131,5 +131,5 @@ export const StoreCard = memo(({ store, index = 0, distanceKm = null, inRange, i
       </article>
     </Wrapper>
   );
-
-};
+});
+StoreCard.displayName = "StoreCard";
