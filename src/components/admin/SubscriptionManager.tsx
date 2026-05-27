@@ -42,6 +42,7 @@ type Invoice = {
   due_date: string | null;
   paid_at: string | null;
   invoice_url: string | null;
+  asaas_payment_id: string | null;
 };
 
 const fmt = (n: number) =>
