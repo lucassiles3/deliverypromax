@@ -523,7 +523,7 @@ const Index = () => {
       <footer className="border-t bg-card">
         <div className="container py-6 text-center text-xs text-muted-foreground">
           <p className="font-display text-base font-bold text-foreground">Itchat Brasil</p>
-          <p className="mt-1">A máquina de vendas para restaurantes</p>
+          <p className="mt-1">As lojas da sua cidade, em um só lugar!</p>
         </div>
       </footer>
     </div>
