@@ -248,17 +248,17 @@ export const SubscriptionPaywall = ({ storeId, onActive }: PaywallProps) => {
                 <p className="text-3xl font-bold">
                   10%<span className="text-base font-medium text-muted-foreground"> por pedido</span>
                 </p>
-                <p className="text-sm text-muted-foreground">Sem mensalidade fixa</p>
+                <p className="text-sm text-muted-foreground">+ R$ 1,00 por pedido entregue • Sem mensalidade</p>
               </div>
               <ul className="mb-4 space-y-2 text-sm">
                 <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-success" /> Sem mensalidade — entrada sem custo</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-success" /> ~10% sobre cada pedido entregue</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-success" /> 10% sobre cada pedido entregue</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-success" /> + R$ 1,00 por pedido entregue</li>
                 <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-success" /> Fatura mensal automática</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-success" /> Pagamento proporcional às vendas</li>
               </ul>
               <div className="mb-4 rounded-xl bg-muted/40 p-3 text-xs">
-                <p className="font-semibold">Exemplo (R$ 5.000 em vendas):</p>
-                <p className="text-muted-foreground">10% = <strong className="text-foreground">R$ 500 total</strong></p>
+                <p className="font-semibold">Exemplo (100 pedidos, R$ 5.000):</p>
+                <p className="text-muted-foreground">10% (R$ 500) + R$ 100 = <strong className="text-foreground">R$ 600 total</strong></p>
               </div>
               <Button onClick={() => setBillingModel("commission")} size="lg" variant="outline" className="w-full">
                 Escolher este plano
