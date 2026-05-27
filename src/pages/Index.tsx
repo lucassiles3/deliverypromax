@@ -251,58 +251,101 @@ const Index = () => {
     });
   };
 
+  const navigate = useNavigate();
+  const { setOpen: openCart, count: cartCount } = useCart();
+
   return (
-    <div className="min-h-screen bg-background pb-24 md:pb-0">
+    <div className="min-h-screen bg-background pb-28 md:pb-0">
       <LocationGate
         hasCoords={!!coords}
         requesting={requesting}
         onUseGps={requestGps}
         onManual={setManual}
       />
-      <Header />
 
+      {/* Hero premium — estilo iOS marketplace */}
+      <section className="relative overflow-hidden">
+        {/* Glow de fundo */}
+        <div className="pointer-events-none absolute -top-32 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -top-20 right-0 h-[320px] w-[320px] rounded-full bg-secondary/15 blur-3xl" />
 
-      {/* Hero personalizado */}
-      <section className="border-b border-border/40 bg-gradient-to-b from-muted/40 to-transparent">
-        <div className="container py-6 md:py-8">
-          <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h1 className="font-display text-2xl font-bold md:text-3xl">
-                {greeting}{firstName ? `, ${firstName}` : ""} 👋
-              </h1>
-              <button
-                onClick={() => (user ? window.location.assign("/enderecos") : window.location.assign("/auth"))}
-                className="mt-1 inline-flex items-center gap-1.5 text-left text-sm text-muted-foreground hover:text-foreground"
-              >
-                <MapPin className="h-4 w-4 text-primary" />
-                <span className="font-medium">{addressLabel}</span>
-                <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                  Trocar
+        <div className="container relative pt-6 pb-8">
+          {/* Topo: localização + ações glass */}
+          <div className="mb-6 flex items-start justify-between gap-3">
+            <button
+              onClick={() => (user ? navigate("/enderecos") : navigate("/auth"))}
+              className="flex items-center gap-3 text-left"
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl glass shadow-soft">
+                <MapPin className="h-5 w-5 text-primary" />
+              </span>
+              <span className="flex flex-col">
+                <span className="text-[11px] font-medium text-muted-foreground">Entrega em</span>
+                <span className="flex items-center gap-1 text-sm font-bold text-foreground">
+                  {defaultAddr?.city ?? "Itabuna, BA"}
+                  <span className="text-muted-foreground">▾</span>
                 </span>
+              </span>
+            </button>
+
+            <div className="flex items-center gap-2">
+              <Link
+                to="/notificacoes"
+                className="relative flex h-11 w-11 items-center justify-center rounded-2xl glass shadow-soft transition-bounce hover:scale-105"
+                aria-label="Notificações"
+              >
+                <Bell className="h-5 w-5 text-foreground" />
+                <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-secondary" />
+              </Link>
+              <button
+                onClick={() => openCart(true)}
+                className="relative flex h-11 w-11 items-center justify-center rounded-2xl glass shadow-soft transition-bounce hover:scale-105"
+                aria-label="Carrinho"
+              >
+                <ShoppingBag className="h-5 w-5 text-foreground" />
+                {cartCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-secondary px-1 text-[10px] font-bold text-secondary-foreground">
+                    {cartCount}
+                  </span>
+                )}
               </button>
             </div>
-
-            <button
-              onClick={requestGps}
-              disabled={requesting}
-              className="hidden items-center gap-2 self-start rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold transition-smooth hover:border-primary/30 md:inline-flex"
-              title="Usar localização atual"
-            >
-              {requesting ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Crosshair className="h-3.5 w-3.5 text-primary" />
-              )}
-              {coords?.source === "gps" ? "GPS ativo" : "Usar GPS"}
-            </button>
           </div>
 
-          <SmartSearch onCategoryPick={(c) => {
-            // map cuisine string to category key if any matches
-            const lc = c.toLowerCase();
-            const cat = CATEGORIES.find((cc) => cc.match.some((m) => lc.includes(m)));
-            setActiveCat(cat?.key ?? null);
-          }} />
+          {/* Saudação + cesta 3D */}
+          <div className="relative grid grid-cols-[1fr,auto] items-center gap-2">
+            <div>
+              <p className="text-base font-medium text-muted-foreground">{greeting},</p>
+              <h1 className="font-display text-4xl font-extrabold tracking-tight text-foreground md:text-5xl">
+                {firstName ?? "Bem-vindo"} <span className="inline-block animate-float-bob">👋</span>
+              </h1>
+            </div>
+            <div className="relative">
+              <img
+                src={heroBasket}
+                alt="Cesta de compras"
+                width={160}
+                height={160}
+                className="h-32 w-32 animate-float-bob object-contain drop-shadow-[0_18px_24px_hsl(226_60%_40%/0.25)] md:h-40 md:w-40"
+              />
+              <button
+                onClick={() => openCart(true)}
+                aria-label="Adicionar"
+                className="absolute -bottom-1 right-1 flex h-10 w-10 items-center justify-center rounded-full gradient-mint text-white shadow-glow transition-bounce hover:scale-110"
+              >
+                <Plus className="h-5 w-5" strokeWidth={3} />
+              </button>
+            </div>
+          </div>
+
+          {/* Busca premium */}
+          <div className="mt-6">
+            <SmartSearch onCategoryPick={(c) => {
+              const lc = c.toLowerCase();
+              const cat = CATEGORIES.find((cc) => cc.match.some((m) => lc.includes(m)));
+              setActiveCat(cat?.key ?? null);
+            }} />
+          </div>
 
           {denied && (
             <p className="mt-2 text-xs text-muted-foreground">
