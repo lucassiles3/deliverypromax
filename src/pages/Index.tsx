@@ -361,17 +361,12 @@ const Index = () => {
 
       {/* Categorias */}
       <section className="container py-6">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold md:text-xl">Categorias</h2>
-          <Link to="/categorias" className="text-xs font-semibold text-primary hover:underline">
-            Ver todas
-          </Link>
-        </div>
         <CategoryGrid
           availableCuisines={availableCuisines}
           active={activeCat}
           onPick={pickCategory}
         />
+
 
         {/* Subcategorias da categoria escolhida */}
         {activeCat && availableSubs.length > 0 && (
@@ -406,6 +401,13 @@ const Index = () => {
           </div>
         )}
       </section>
+
+      {/* Banners promocionais */}
+      <section className="container pb-2">
+        <HomeBannerCarousel />
+      </section>
+
+
 
 
       {/* Banner promocional premium */}
@@ -551,7 +553,7 @@ const Index = () => {
       ) : (
         // Modo descoberta: rails
         <div className="container pb-12 pt-2">
-          <HomeBannerCarousel />
+
 
           {externalListings.length > 0 && (
             <section className="mb-8">
