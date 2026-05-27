@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle2, Clock, AlertTriangle, Loader2, RefreshCw, XCircle,
-  Receipt, TrendingUp, Wallet, Calendar, ExternalLink, Percent, ShoppingBag,
+  Receipt, TrendingUp, Wallet, Calendar, ExternalLink, Percent, ShoppingBag, Settings, Save,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SubscriptionPaywall } from "./SubscriptionPaywall";
