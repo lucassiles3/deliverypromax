@@ -580,9 +580,8 @@ const Admin = () => {
 
           {tab === "dashboard" && storeId && canAccessSection(currentRole, "dashboard") && <DashboardTab storeId={storeId} onNavigate={(t) => setTab(t as Tab)} />}
           {tab === "orders" && storeId && canAccessSection(currentRole, "orders") && <OrdersKanban storeId={storeId} />}
-          {tab === "pdv" && storeId && currentStore && canAccessSection(currentRole, "pdv") && toggles.pdv_enabled && (
-            <PDVTab storeId={storeId} storeName={currentStore.name} />
-          )}
+          {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
+
           {tab === "pdv" && storeId && !toggles.pdv_enabled && (
             <div className="rounded-2xl border-2 border-dashed border-border bg-card p-8 text-center">
               <h3 className="font-display text-lg font-bold">PDV desabilitado</h3>
@@ -591,26 +590,31 @@ const Admin = () => {
               </p>
             </div>
           )}
-          {tab === "tables" && storeId && canAccessSection(currentRole, "tables") && <TablesTab storeId={storeId} />}
-          {tab === "products" && storeId && canAccessSection(currentRole, "products") && <MenuTab storeId={storeId} />}
-          {tab === "stock" && storeId && canAccessSection(currentRole, "stock") && <StockTab storeId={storeId} />}
 
-          {tab === "customers" && storeId && canAccessSection(currentRole, "customers") && <CustomersTab storeId={storeId} />}
-          {tab === "couriers" && storeId && canAccessSection(currentRole, "couriers") && <CouriersTab storeId={storeId} />}
-          {tab === "marketing" && storeId && canAccessSection(currentRole, "marketing") && <MarketingTab storeId={storeId} />}
-          {tab === "financial" && storeId && currentStore && canAccessSection(currentRole, "financial") && (
-            <FinancialTab storeId={storeId} storeName={currentStore.name} />
-          )}
-          {tab === "reports" && storeId && currentStore && canAccessSection(currentRole, "reports") && (
-            <ReportsTab storeId={storeId} storeName={currentStore.name} />
-          )}
-          {tab === "history" && storeId && canAccessSection(currentRole, "history") && <HistoryTab storeId={storeId} />}
-          {tab === "store" && storeId && canAccessSection(currentRole, "store") && <StoreSettingsTab storeId={storeId} />}
-          {tab === "settings" && storeId && canAccessSection(currentRole, "settings") && <SettingsTab storeId={storeId} />}
-          {tab === "team" && storeId && canAccessSection(currentRole, "team") && <TeamTab storeId={storeId} />}
-          {tab === "integrations" && storeId && canAccessSection(currentRole, "integrations") && <IntegrationsTab storeId={storeId} />}
+          <Suspense fallback={<TabSkeleton />}>
+            {tab === "pdv" && storeId && currentStore && canAccessSection(currentRole, "pdv") && toggles.pdv_enabled && (
+              <PDVTab storeId={storeId} storeName={currentStore.name} />
+            )}
+            {tab === "tables" && storeId && canAccessSection(currentRole, "tables") && <TablesTab storeId={storeId} />}
+            {tab === "stock" && storeId && canAccessSection(currentRole, "stock") && <StockTab storeId={storeId} />}
+            {tab === "customers" && storeId && canAccessSection(currentRole, "customers") && <CustomersTab storeId={storeId} />}
+            {tab === "couriers" && storeId && canAccessSection(currentRole, "couriers") && <CouriersTab storeId={storeId} />}
+            {tab === "marketing" && storeId && canAccessSection(currentRole, "marketing") && <MarketingTab storeId={storeId} />}
+            {tab === "financial" && storeId && currentStore && canAccessSection(currentRole, "financial") && (
+              <FinancialTab storeId={storeId} storeName={currentStore.name} />
+            )}
+            {tab === "reports" && storeId && currentStore && canAccessSection(currentRole, "reports") && (
+              <ReportsTab storeId={storeId} storeName={currentStore.name} />
+            )}
+            {tab === "history" && storeId && canAccessSection(currentRole, "history") && <HistoryTab storeId={storeId} />}
+            {tab === "store" && storeId && canAccessSection(currentRole, "store") && <StoreSettingsTab storeId={storeId} />}
+            {tab === "settings" && storeId && canAccessSection(currentRole, "settings") && <SettingsTab storeId={storeId} />}
+            {tab === "team" && storeId && canAccessSection(currentRole, "team") && <TeamTab storeId={storeId} />}
+            {tab === "integrations" && storeId && canAccessSection(currentRole, "integrations") && <IntegrationsTab storeId={storeId} />}
+          </Suspense>
         </div>
       </div>
+
 
       {storeId && (
         <CustomerHistoryDrawer
