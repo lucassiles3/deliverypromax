@@ -63,6 +63,11 @@ const Checkout = () => {
 
   const [method, setMethod] = useState<Method>("delivery");
   const [payment, setPayment] = useState<PaymentMethod>("pix");
+  const [selectedCrypto, setSelectedCrypto] = useState<CryptoCoin | null>(null);
+  const [storePixInfo, setStorePixInfo] = useState<{
+    key: string; type: string; name: string; bank: string;
+  }>({ key: "", type: "random", name: "", bank: "" });
+  const [storeWallets, setStoreWallets] = useState<Record<string, string>>({});
   const [changeFor, setChangeFor] = useState("");
   const [address, setAddress] = useState({
     cep: "",
