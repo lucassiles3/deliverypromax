@@ -699,6 +699,38 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
 
   return (
     <div className="space-y-5">
+      <Card title="Formas de recebimento aceitas" icon={Truck}>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Escolha quais opções aparecem para o cliente no checkout. Pelo menos uma deve ficar ativa.
+        </p>
+        <div className="space-y-2">
+          <ToggleRow
+            label="🛵 Entrega própria"
+            hint="A loja entrega no endereço do cliente com entregador próprio ou marketplace."
+            checked={form.delivery_enabled !== false}
+            onChange={(v) => setForm({ ...form, delivery_enabled: v })}
+          />
+          <ToggleRow
+            label="🏪 Retirada no local"
+            hint="O cliente vai até a loja buscar o pedido."
+            checked={!!form.pickup_enabled}
+            onChange={(v) => setForm({ ...form, pickup_enabled: v })}
+          />
+          <ToggleRow
+            label="📦 Retirada por app de logística"
+            hint="Cliente chama Uber/Lalamove/99 e cola o link de rastreio."
+            checked={!!form.logistics_pickup_enabled}
+            onChange={(v) => setForm({ ...form, logistics_pickup_enabled: v })}
+          />
+        </div>
+        {form.delivery_enabled === false && !form.pickup_enabled && !form.logistics_pickup_enabled && (
+          <p className="mt-3 rounded-lg border-2 border-dashed border-destructive/40 bg-destructive/5 p-2 text-xs font-bold text-destructive">
+            ⚠️ Nenhuma forma de recebimento ativa — os clientes não conseguirão finalizar pedido.
+          </p>
+        )}
+      </Card>
+
+      {form.delivery_enabled !== false && (
       <Card title="Modo de entrega" icon={Truck}>
         <div className="grid gap-2 sm:grid-cols-2">
           {([
