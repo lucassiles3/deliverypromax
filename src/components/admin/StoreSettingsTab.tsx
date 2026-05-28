@@ -959,7 +959,11 @@ const PaymentSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
   const { data: store } = useQuery({
     queryKey: ["store-pix", storeId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("stores").select("pix_key").eq("id", storeId).maybeSingle();
+      const { data, error } = await supabase
+        .from("stores")
+        .select("pix_key, pix_key_type, pix_beneficiary_name, pix_beneficiary_bank, crypto_wallets")
+        .eq("id", storeId)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -975,8 +979,18 @@ const PaymentSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
   });
 
   const [pixKey, setPixKey] = useState("");
+  const [pixType, setPixType] = useState<string>("random");
+  const [pixName, setPixName] = useState("");
+  const [pixBank, setPixBank] = useState("");
+  const [wallets, setWallets] = useState<Record<string, string>>({});
+
   useEffect(() => {
-    if (store) setPixKey(store.pix_key ?? "");
+    if (!store) return;
+    setPixKey((store as any).pix_key ?? "");
+    setPixType((store as any).pix_key_type ?? "random");
+    setPixName((store as any).pix_beneficiary_name ?? "");
+    setPixBank((store as any).pix_beneficiary_bank ?? "");
+    setWallets(((store as any).crypto_wallets as Record<string, string>) ?? {});
   }, [store]);
 
   const map = useMemo(() => {
@@ -1000,21 +1014,91 @@ const PaymentSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
   };
 
   const savePix = async () => {
-    const { error } = await supabase.from("stores").update({ pix_key: pixKey || null }).eq("id", storeId);
+    const { error } = await supabase
+      .from("stores")
+      .update({
+        pix_key: pixKey || null,
+        pix_key_type: pixKey ? pixType : null,
+        pix_beneficiary_name: pixName || null,
+        pix_beneficiary_bank: pixBank || null,
+      } as any)
+      .eq("id", storeId);
     if (error) return toast.error(error.message);
-    toast.success("Chave Pix salva");
+    toast.success("Dados Pix salvos");
     qc.invalidateQueries({ queryKey: ["store-pix", storeId] });
   };
 
+  const saveWallets = async () => {
+    const cleaned: Record<string, string> = {};
+    Object.entries(wallets).forEach(([k, v]) => {
+      if (v && v.trim()) cleaned[k] = v.trim();
+    });
+    const { error } = await supabase
+      .from("stores")
+      .update({ crypto_wallets: cleaned } as any)
+      .eq("id", storeId);
+    if (error) return toast.error(error.message);
+    toast.success("Carteiras salvas");
+    qc.invalidateQueries({ queryKey: ["store-pix", storeId] });
+  };
+
+  const pixPlaceholder =
+    pixType === "cpf" ? "000.000.000-00" :
+    pixType === "cnpj" ? "00.000.000/0000-00" :
+    pixType === "email" ? "loja@exemplo.com" :
+    pixType === "phone" ? "+55 11 99999-9999" :
+    "Chave aleatória (UUID)";
+
   return (
     <div className="space-y-5">
-      <Card title="Chave Pix da loja" icon={CreditCard}>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Input value={pixKey} onChange={(e) => setPixKey(e.target.value)} placeholder="CPF, e-mail, telefone ou chave aleatória" />
-          <Button onClick={savePix} variant="outline">Salvar</Button>
+      <Card title="Dados Pix da loja" icon={CreditCard}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Tipo da chave">
+            <select
+              value={pixType}
+              onChange={(e) => setPixType(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              {PIX_KEY_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Chave Pix">
+            <Input value={pixKey} onChange={(e) => setPixKey(e.target.value)} placeholder={pixPlaceholder} />
+          </Field>
+          <Field label="Nome do beneficiário">
+            <Input value={pixName} onChange={(e) => setPixName(e.target.value)} placeholder="Como aparece no comprovante" />
+          </Field>
+          <Field label="Banco do beneficiário">
+            <Input value={pixBank} onChange={(e) => setPixBank(e.target.value)} placeholder="Ex.: Nubank, Itaú, Inter" />
+          </Field>
         </div>
+        <Button onClick={savePix} variant="outline" className="mt-3">Salvar dados Pix</Button>
         <p className="mt-2 text-xs text-muted-foreground">
-          Usada para gerar QR Code no checkout quando o cliente escolher Pix online.
+          Estas informações ficam visíveis ao cliente no checkout para que ele confirme antes de pagar.
+        </p>
+      </Card>
+
+      <Card title="Carteiras de criptomoedas" icon={CreditCard}>
+        <div className="space-y-3">
+          {CRYPTO_COINS.map((c) => (
+            <div key={c.id} className="grid gap-1.5 sm:grid-cols-[180px_1fr]">
+              <div>
+                <p className="text-sm font-bold">{c.label}</p>
+                <p className="text-[11px] text-muted-foreground">{c.network}</p>
+              </div>
+              <Input
+                value={wallets[c.id] ?? ""}
+                onChange={(e) => setWallets((w) => ({ ...w, [c.id]: e.target.value }))}
+                placeholder={`Endereço da carteira ${c.id.toUpperCase()}`}
+              />
+            </div>
+          ))}
+        </div>
+        <Button onClick={saveWallets} variant="outline" className="mt-3">Salvar carteiras</Button>
+        <p className="mt-2 text-xs text-muted-foreground">
+          O cliente verá apenas as moedas com carteira preenchida e poderá copiar o endereço para pagar.
         </p>
       </Card>
 
@@ -1023,13 +1107,17 @@ const PaymentSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
           {PAYMENT_METHODS.map((pm) => {
             const cur = map.get(pm.id);
             const enabled = cur?.enabled ?? false;
+            const hasAnyWallet = Object.values(wallets).some((v) => v && v.trim());
             return (
               <div key={pm.id} className="rounded-xl border bg-background p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-bold">{pm.label}</p>
-                    {pm.id === "pix_online" && !pixKey && enabled && (
+                    {pm.id === "pix" && !pixKey && enabled && (
                       <p className="text-xs text-amber-600">⚠ Cadastre uma chave Pix para ativar.</p>
+                    )}
+                    {pm.id === "crypto" && !hasAnyWallet && enabled && (
+                      <p className="text-xs text-amber-600">⚠ Cadastre ao menos uma carteira para ativar.</p>
                     )}
                     {"needsLink" in pm && pm.needsLink && enabled && !cur?.notes && (
                       <p className="text-xs text-amber-600">⚠ Cadastre o link de pagamento abaixo.</p>
