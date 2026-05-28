@@ -406,6 +406,7 @@ const Checkout = () => {
     credit: "Cartão de crédito (na entrega)",
     debit: "Cartão de débito (na entrega)",
     credit_link: "Cartão de crédito (link de pagamento)",
+    crypto: "Criptomoeda",
   };
 
   // Adiciona o valor formatado no final do link (ex: /12,50)
