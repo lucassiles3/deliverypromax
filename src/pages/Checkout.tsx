@@ -973,7 +973,7 @@ const Checkout = () => {
                         </div>
                       }
                     >
-                      <LocationPicker value={coords} onChange={setCoords} />
+                      <LocationPicker value={coords} onChange={handlePinChange} />
                     </Suspense>
                   </div>
                 </section>
