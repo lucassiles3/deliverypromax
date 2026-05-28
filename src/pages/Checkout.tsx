@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, lazy, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -109,21 +109,37 @@ const Checkout = () => {
     return () => { cancelled = true; };
   }, [store?.id]);
 
-  // Detecta se a loja também aceita "retirada por app de logística"
+  // Métodos de recebimento habilitados pela loja
+  const [deliveryEnabled, setDeliveryEnabled] = useState(true);
+  const [pickupEnabled, setPickupEnabled] = useState(true);
   const [logisticsEnabled, setLogisticsEnabled] = useState(false);
   useEffect(() => {
     if (!store?.id) return;
     let cancelled = false;
     supabase
       .from("stores")
-      .select("logistics_pickup_enabled")
+      .select("delivery_enabled, pickup_enabled, logistics_pickup_enabled")
       .eq("id", store.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (!cancelled) setLogisticsEnabled(!!(data as any)?.logistics_pickup_enabled);
+        if (cancelled || !data) return;
+        const d = data as any;
+        setDeliveryEnabled(d.delivery_enabled !== false);
+        setPickupEnabled(d.pickup_enabled !== false);
+        setLogisticsEnabled(!!d.logistics_pickup_enabled);
       });
     return () => { cancelled = true; };
   }, [store?.id]);
+
+  // Garante que o método selecionado esteja habilitado pela loja
+  useEffect(() => {
+    const available: Method[] = [];
+    if (deliveryEnabled) available.push("delivery");
+    if (pickupEnabled) available.push("pickup");
+    if (logisticsEnabled) available.push("logistics");
+    if (available.length === 0) return;
+    if (!available.includes(method)) setMethod(available[0]);
+  }, [deliveryEnabled, pickupEnabled, logisticsEnabled, method]);
 
   const creditLinkTemplate = enabledMethods["credit_link"]?.notes ?? null;
   const creditLinkEnabled = !!enabledMethods["credit_link"]?.enabled && !!creditLinkTemplate;
