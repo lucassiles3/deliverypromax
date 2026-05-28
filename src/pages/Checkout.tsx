@@ -212,6 +212,65 @@ const Checkout = () => {
     };
   }, [address.cep]);
 
+  // Sincronização bidirecional pino <-> campos de endereço.
+  // syncRef garante que uma atualização programática de um lado
+  // não dispare a sincronização reversa no outro (evita loop).
+  const syncRef = useRef<"none" | "pin" | "address">("none");
+
+  const applyReverseToAddress = async (lat: number, lng: number) => {
+    const rev = await reverseGeocode(lat, lng);
+    if (!rev) return;
+    syncRef.current = "pin"; // suprime o forward-geocode disparado por esta atualização
+    setAddress((a) => ({
+      cep: rev.cep || a.cep,
+      street: rev.street || a.street,
+      number: rev.number || a.number,
+      complement: a.complement,
+      neighborhood: rev.neighborhood || a.neighborhood,
+      city: rev.city || a.city,
+    }));
+  };
+
+  // Handler para o LocationPicker — usuário arrastou o pino ou clicou no mapa
+  const handlePinChange = (c: { lat: number; lng: number }) => {
+    if (syncRef.current === "address") {
+      // mudança veio do forward-geocode; não reverter
+      syncRef.current = "none";
+      setCoords(c);
+      return;
+    }
+    syncRef.current = "pin";
+    setCoords(c);
+    void applyReverseToAddress(c.lat, c.lng);
+  };
+
+  // Forward-geocode com debounce quando o cliente edita os campos manualmente
+  useEffect(() => {
+    if (syncRef.current === "pin") {
+      // a atualização veio do reverse-geocode; consumir e ignorar
+      syncRef.current = "none";
+      return;
+    }
+    const street = address.street.trim();
+    const city = address.city.trim();
+    const neighborhood = address.neighborhood.trim();
+    if (!street || (!city && !neighborhood)) return;
+    const t = window.setTimeout(async () => {
+      const parts = [
+        address.number ? `${street}, ${address.number}` : street,
+        neighborhood,
+        city,
+        "Brasil",
+      ].filter(Boolean);
+      const c = await geocodeAddress(parts.join(", "));
+      if (c) {
+        syncRef.current = "address";
+        setCoords(c);
+      }
+    }, 700);
+    return () => window.clearTimeout(t);
+  }, [address.street, address.number, address.neighborhood, address.city]);
+
   const useMyLocation = () => {
     if (!navigator.geolocation) {
       toast.error("GPS não disponível neste navegador");
@@ -221,9 +280,11 @@ const Checkout = () => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        syncRef.current = "pin";
         setCoords(c);
         const rev = await reverseGeocode(c.lat, c.lng);
         if (rev) {
+          syncRef.current = "pin";
           setAddress((a) => ({
             cep: rev.cep || a.cep,
             street: rev.street || a.street,
