@@ -51,13 +51,29 @@ const defaultHours = (): HoursMap =>
   WEEK.reduce((acc, d) => ({ ...acc, [d.key]: defaultDay() }), {} as HoursMap);
 
 const PAYMENT_METHODS = [
-  { id: "pix_online", label: "Pix online (no app)", needsPix: true },
+  { id: "pix", label: "Pix", needsPix: true },
   { id: "pix_delivery", label: "Pix na entrega" },
   { id: "credit_online", label: "Crédito online", hasInstallments: true },
   { id: "credit_link", label: "Cartão de crédito — link de pagamento", needsLink: true },
-  { id: "credit_delivery", label: "Crédito (maquininha)" },
-  { id: "debit_delivery", label: "Débito (maquininha)" },
+  { id: "credit", label: "Crédito (maquininha)" },
+  { id: "debit", label: "Débito (maquininha)" },
   { id: "cash", label: "Dinheiro (com troco)" },
+  { id: "crypto", label: "Criptomoedas", needsCrypto: true },
+] as const;
+
+const PIX_KEY_TYPES = [
+  { value: "random", label: "Chave aleatória" },
+  { value: "cpf", label: "CPF" },
+  { value: "cnpj", label: "CNPJ" },
+  { value: "email", label: "E-mail" },
+  { value: "phone", label: "Celular" },
+] as const;
+
+const CRYPTO_COINS = [
+  { id: "btc", label: "Bitcoin (BTC)", network: "Bitcoin" },
+  { id: "eth", label: "Ethereum (ETH)", network: "ERC-20" },
+  { id: "usdc", label: "USDC", network: "ERC-20 / Polygon" },
+  { id: "usdt", label: "USDT (Tether)", network: "ERC-20 / TRC-20" },
 ] as const;
 
 export const StoreSettingsTab = ({ storeId }: { storeId: string }) => {
