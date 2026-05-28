@@ -520,6 +520,17 @@ const Checkout = () => {
         description: "A loja não configurou o link de pagamento. Escolha outra forma.",
       });
     }
+    if (payment === "crypto") {
+      if (!cryptoEnabled) {
+        return toast.error("Cripto indisponível", {
+          description: "A loja não cadastrou nenhuma carteira ativa.",
+        });
+      }
+      if (!selectedCrypto || !storeWallets[selectedCrypto]) {
+        return toast.error("Escolha a criptomoeda", {
+          description: "Selecione uma das criptomoedas disponíveis para continuar.",
+        });
+      }
     if (payment === "cash" && changeFor) {
       const v = parseFloat(changeFor.replace(",", "."));
       if (isNaN(v)) {
