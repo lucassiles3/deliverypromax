@@ -647,7 +647,7 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
       const { data, error } = await supabase
         .from("stores")
         .select(
-          "delivery_mode, delivery_radius_km, delivery_fee, delivery_fee_per_km, free_shipping_threshold, min_order, delivery_time, courier_mode, pickup_enabled, pickup_prep_time_min, logistics_pickup_enabled, logistics_pickup_release_when_ready, logistics_pickup_notify_customer, logistics_pickup_require_code, logistics_pickup_require_confirm, logistics_pickup_instructions, courier_gps_alert_min, courier_gps_reassign_min",
+          "delivery_mode, delivery_enabled, delivery_radius_km, delivery_fee, delivery_fee_per_km, free_shipping_threshold, min_order, delivery_time, courier_mode, pickup_enabled, pickup_prep_time_min, logistics_pickup_enabled, logistics_pickup_release_when_ready, logistics_pickup_notify_customer, logistics_pickup_require_code, logistics_pickup_require_confirm, logistics_pickup_instructions, courier_gps_alert_min, courier_gps_reassign_min",
         )
         .eq("id", storeId)
         .maybeSingle();
@@ -699,6 +699,38 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
 
   return (
     <div className="space-y-5">
+      <Card title="Formas de recebimento aceitas" icon={Truck}>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Escolha quais opções aparecem para o cliente no checkout. Pelo menos uma deve ficar ativa.
+        </p>
+        <div className="space-y-2">
+          <ToggleRow
+            label="🛵 Entrega própria"
+            hint="A loja entrega no endereço do cliente com entregador próprio ou marketplace."
+            checked={form.delivery_enabled !== false}
+            onChange={(v) => setForm({ ...form, delivery_enabled: v })}
+          />
+          <ToggleRow
+            label="🏪 Retirada no local"
+            hint="O cliente vai até a loja buscar o pedido."
+            checked={!!form.pickup_enabled}
+            onChange={(v) => setForm({ ...form, pickup_enabled: v })}
+          />
+          <ToggleRow
+            label="📦 Retirada por app de logística"
+            hint="Cliente chama Uber/Lalamove/99 e cola o link de rastreio."
+            checked={!!form.logistics_pickup_enabled}
+            onChange={(v) => setForm({ ...form, logistics_pickup_enabled: v })}
+          />
+        </div>
+        {form.delivery_enabled === false && !form.pickup_enabled && !form.logistics_pickup_enabled && (
+          <p className="mt-3 rounded-lg border-2 border-dashed border-destructive/40 bg-destructive/5 p-2 text-xs font-bold text-destructive">
+            ⚠️ Nenhuma forma de recebimento ativa — os clientes não conseguirão finalizar pedido.
+          </p>
+        )}
+      </Card>
+
+      {form.delivery_enabled !== false && (<>
       <Card title="Modo de entrega" icon={Truck}>
         <div className="grid gap-2 sm:grid-cols-2">
           {([
@@ -802,96 +834,78 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
         </div>
       </Card>
 
-      <Card title="Entregador & retirada" icon={Truck}>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border bg-background p-3">
-            <p className="mb-2 text-sm font-bold">Quem entrega?</p>
-            <div className="flex gap-2">
-              {(["own", "marketplace"] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setForm({ ...form, courier_mode: m })}
-                  className={`flex-1 rounded-lg border-2 px-3 py-2 text-xs font-bold transition-smooth ${
-                    form.courier_mode === m ? "border-primary bg-primary/10 text-primary" : "border-border"
-                  }`}
-                >
-                  {m === "own" ? "Entrega própria" : "Marketplace"}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-xl border bg-background p-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-bold">Retirada no local</p>
-              <Switch checked={!!form.pickup_enabled} onCheckedChange={(v) => setForm({ ...form, pickup_enabled: v })} />
-            </div>
-            {form.pickup_enabled && (
-              <div className="mt-2">
-                <Label className="text-xs">Tempo de preparo (min)</Label>
-                <Input
-                  type="number"
-                  value={form.pickup_prep_time_min ?? ""}
-                  onChange={(e) => setForm({ ...form, pickup_prep_time_min: Number(e.target.value) })}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-bold">📦 Retirada por app de logística</p>
-              <p className="text-[11px] text-muted-foreground">
-                Cliente faz o pedido, a loja prepara e o cliente chama um entregador no app que preferir
-                (Uber, Lalamove, 99, iFood Pegue&amp;Leve). O cliente cola o link de rastreio e a loja acompanha a rota.
-              </p>
-            </div>
-            <Switch
-              checked={!!form.logistics_pickup_enabled}
-              onCheckedChange={(v) => setForm({ ...form, logistics_pickup_enabled: v })}
-            />
-          </div>
-
-          {form.logistics_pickup_enabled && (
-            <div className="mt-3 space-y-2 border-t border-primary/10 pt-3">
-              <ToggleRow
-                label="Liberar retirada somente quando o pedido estiver pronto"
-                hint="Cliente só vê os botões de chamar Uber/99 após o status virar 'Pronto'."
-                checked={!!form.logistics_pickup_release_when_ready}
-                onChange={(v) => setForm({ ...form, logistics_pickup_release_when_ready: v })}
-              />
-              <ToggleRow
-                label="Enviar notificação automática ao cliente"
-                hint="Avisa o cliente assim que o pedido ficar pronto para retirada."
-                checked={!!form.logistics_pickup_notify_customer}
-                onChange={(v) => setForm({ ...form, logistics_pickup_notify_customer: v })}
-              />
-              <ToggleRow
-                label="Exigir código de retirada"
-                hint="Gera um código de 4 dígitos que o motorista deve informar no balcão."
-                checked={!!form.logistics_pickup_require_code}
-                onChange={(v) => setForm({ ...form, logistics_pickup_require_code: v })}
-              />
-              <ToggleRow
-                label="Solicitar confirmação da loja antes da entrega"
-                hint="A loja precisa confirmar a entrega ao motorista antes de o pedido sair."
-                checked={!!form.logistics_pickup_require_confirm}
-                onChange={(v) => setForm({ ...form, logistics_pickup_require_confirm: v })}
-              />
-              <Field label="Instruções personalizadas para o cliente (opcional)">
-                <textarea
-                  rows={3}
-                  placeholder="Ex.: Retirada no balcão de entregas dos fundos. Motorista deve informar o nome do cliente."
-                  value={form.logistics_pickup_instructions ?? ""}
-                  onChange={(e) => setForm({ ...form, logistics_pickup_instructions: e.target.value })}
-                  className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
-                />
-              </Field>
-            </div>
-          )}
+      <Card title="Quem entrega?" icon={Truck}>
+        <div className="flex gap-2">
+          {(["own", "marketplace"] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setForm({ ...form, courier_mode: m })}
+              className={`flex-1 rounded-lg border-2 px-3 py-2 text-xs font-bold transition-smooth ${
+                form.courier_mode === m ? "border-primary bg-primary/10 text-primary" : "border-border"
+              }`}
+            >
+              {m === "own" ? "Entrega própria" : "Marketplace"}
+            </button>
+          ))}
         </div>
       </Card>
+      </>)}
+
+      {form.pickup_enabled && (
+        <Card title="Retirada no local" icon={StoreIcon}>
+          <Field label="Tempo de preparo (min)">
+            <Input
+              type="number"
+              value={form.pickup_prep_time_min ?? ""}
+              onChange={(e) => setForm({ ...form, pickup_prep_time_min: Number(e.target.value) })}
+            />
+          </Field>
+        </Card>
+      )}
+
+      {form.logistics_pickup_enabled && (
+        <Card title="Retirada por app de logística" icon={Truck}>
+          <p className="mb-3 text-[11px] text-muted-foreground">
+            Cliente faz o pedido, a loja prepara e o cliente chama um entregador no app que preferir
+            (Uber, Lalamove, 99, iFood Pegue&amp;Leve). O cliente cola o link de rastreio e a loja acompanha a rota.
+          </p>
+          <div className="space-y-2">
+            <ToggleRow
+              label="Liberar retirada somente quando o pedido estiver pronto"
+              hint="Cliente só vê os botões de chamar Uber/99 após o status virar 'Pronto'."
+              checked={!!form.logistics_pickup_release_when_ready}
+              onChange={(v) => setForm({ ...form, logistics_pickup_release_when_ready: v })}
+            />
+            <ToggleRow
+              label="Enviar notificação automática ao cliente"
+              hint="Avisa o cliente assim que o pedido ficar pronto para retirada."
+              checked={!!form.logistics_pickup_notify_customer}
+              onChange={(v) => setForm({ ...form, logistics_pickup_notify_customer: v })}
+            />
+            <ToggleRow
+              label="Exigir código de retirada"
+              hint="Gera um código de 4 dígitos que o motorista deve informar no balcão."
+              checked={!!form.logistics_pickup_require_code}
+              onChange={(v) => setForm({ ...form, logistics_pickup_require_code: v })}
+            />
+            <ToggleRow
+              label="Solicitar confirmação da loja antes da entrega"
+              hint="A loja precisa confirmar a entrega ao motorista antes de o pedido sair."
+              checked={!!form.logistics_pickup_require_confirm}
+              onChange={(v) => setForm({ ...form, logistics_pickup_require_confirm: v })}
+            />
+            <Field label="Instruções personalizadas para o cliente (opcional)">
+              <textarea
+                rows={3}
+                placeholder="Ex.: Retirada no balcão de entregas dos fundos. Motorista deve informar o nome do cliente."
+                value={form.logistics_pickup_instructions ?? ""}
+                onChange={(e) => setForm({ ...form, logistics_pickup_instructions: e.target.value })}
+                className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
+              />
+            </Field>
+          </div>
+        </Card>
+      )}
 
       <Card title="Monitoramento de GPS dos entregadores" icon={MapPin}>
         <p className="mb-3 text-xs text-muted-foreground">

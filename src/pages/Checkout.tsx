@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, lazy, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -109,21 +109,37 @@ const Checkout = () => {
     return () => { cancelled = true; };
   }, [store?.id]);
 
-  // Detecta se a loja também aceita "retirada por app de logística"
+  // Métodos de recebimento habilitados pela loja
+  const [deliveryEnabled, setDeliveryEnabled] = useState(true);
+  const [pickupEnabled, setPickupEnabled] = useState(true);
   const [logisticsEnabled, setLogisticsEnabled] = useState(false);
   useEffect(() => {
     if (!store?.id) return;
     let cancelled = false;
     supabase
       .from("stores")
-      .select("logistics_pickup_enabled")
+      .select("delivery_enabled, pickup_enabled, logistics_pickup_enabled")
       .eq("id", store.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (!cancelled) setLogisticsEnabled(!!(data as any)?.logistics_pickup_enabled);
+        if (cancelled || !data) return;
+        const d = data as any;
+        setDeliveryEnabled(d.delivery_enabled !== false);
+        setPickupEnabled(d.pickup_enabled !== false);
+        setLogisticsEnabled(!!d.logistics_pickup_enabled);
       });
     return () => { cancelled = true; };
   }, [store?.id]);
+
+  // Garante que o método selecionado esteja habilitado pela loja
+  useEffect(() => {
+    const available: Method[] = [];
+    if (deliveryEnabled) available.push("delivery");
+    if (pickupEnabled) available.push("pickup");
+    if (logisticsEnabled) available.push("logistics");
+    if (available.length === 0) return;
+    if (!available.includes(method)) setMethod(available[0]);
+  }, [deliveryEnabled, pickupEnabled, logisticsEnabled, method]);
 
   const creditLinkTemplate = enabledMethods["credit_link"]?.notes ?? null;
   const creditLinkEnabled = !!enabledMethods["credit_link"]?.enabled && !!creditLinkTemplate;
@@ -179,6 +195,7 @@ const Checkout = () => {
         toast.error("CEP não encontrado");
         return;
       }
+      syncRef.current = "pin"; // suprime o forward-geocode disparado pela atualização abaixo
       setAddress((a) => ({
         ...a,
         street: res.street || a.street,
@@ -196,6 +213,65 @@ const Checkout = () => {
     };
   }, [address.cep]);
 
+  // Sincronização bidirecional pino <-> campos de endereço.
+  // syncRef garante que uma atualização programática de um lado
+  // não dispare a sincronização reversa no outro (evita loop).
+  const syncRef = useRef<"none" | "pin" | "address">("none");
+
+  const applyReverseToAddress = async (lat: number, lng: number) => {
+    const rev = await reverseGeocode(lat, lng);
+    if (!rev) return;
+    syncRef.current = "pin"; // suprime o forward-geocode disparado por esta atualização
+    setAddress((a) => ({
+      cep: rev.cep || a.cep,
+      street: rev.street || a.street,
+      number: rev.number || a.number,
+      complement: a.complement,
+      neighborhood: rev.neighborhood || a.neighborhood,
+      city: rev.city || a.city,
+    }));
+  };
+
+  // Handler para o LocationPicker — usuário arrastou o pino ou clicou no mapa
+  const handlePinChange = (c: { lat: number; lng: number }) => {
+    if (syncRef.current === "address") {
+      // mudança veio do forward-geocode; não reverter
+      syncRef.current = "none";
+      setCoords(c);
+      return;
+    }
+    syncRef.current = "pin";
+    setCoords(c);
+    void applyReverseToAddress(c.lat, c.lng);
+  };
+
+  // Forward-geocode com debounce quando o cliente edita os campos manualmente
+  useEffect(() => {
+    if (syncRef.current === "pin") {
+      // a atualização veio do reverse-geocode; consumir e ignorar
+      syncRef.current = "none";
+      return;
+    }
+    const street = address.street.trim();
+    const city = address.city.trim();
+    const neighborhood = address.neighborhood.trim();
+    if (!street || (!city && !neighborhood)) return;
+    const t = window.setTimeout(async () => {
+      const parts = [
+        address.number ? `${street}, ${address.number}` : street,
+        neighborhood,
+        city,
+        "Brasil",
+      ].filter(Boolean);
+      const c = await geocodeAddress(parts.join(", "));
+      if (c) {
+        syncRef.current = "address";
+        setCoords(c);
+      }
+    }, 700);
+    return () => window.clearTimeout(t);
+  }, [address.street, address.number, address.neighborhood, address.city]);
+
   const useMyLocation = () => {
     if (!navigator.geolocation) {
       toast.error("GPS não disponível neste navegador");
@@ -205,9 +281,11 @@ const Checkout = () => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        syncRef.current = "pin";
         setCoords(c);
         const rev = await reverseGeocode(c.lat, c.lng);
         if (rev) {
+          syncRef.current = "pin";
           setAddress((a) => ({
             cep: rev.cep || a.cep,
             street: rev.street || a.street,
@@ -714,40 +792,57 @@ const Checkout = () => {
               {/* Method */}
               <section className="rounded-2xl bg-card p-5 shadow-soft">
                 <h2 className="mb-3 font-display text-lg font-bold">Como você quer receber?</h2>
-                <div className={`grid gap-2 ${logisticsEnabled ? "grid-cols-3" : "grid-cols-2"}`}>
-                  <button
-                    onClick={() => setMethod("delivery")}
-                    className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
-                      method === "delivery" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    <Bike className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-bold">Entrega</span>
-                    <span className="text-xs text-muted-foreground">{store.deliveryTime}</span>
-                  </button>
-                  <button
-                    onClick={() => setMethod("pickup")}
-                    className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
-                      method === "pickup" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    <StoreIcon className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-bold">Retirar na loja</span>
-                    <span className="text-xs text-success">Sem taxa</span>
-                  </button>
-                  {logisticsEnabled && (
-                    <button
-                      onClick={() => setMethod("logistics")}
-                      className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
-                        method === "logistics" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                      }`}
-                    >
-                      <Bike className="h-5 w-5 text-primary" />
-                      <span className="text-center text-sm font-bold leading-tight">Retirada por app</span>
-                      <span className="text-[10px] text-muted-foreground">Uber/Lalamove/99</span>
-                    </button>
-                  )}
-                </div>
+                {(() => {
+                  const enabledCount = (deliveryEnabled ? 1 : 0) + (pickupEnabled ? 1 : 0) + (logisticsEnabled ? 1 : 0);
+                  if (enabledCount === 0) {
+                    return (
+                      <p className="rounded-xl border-2 border-dashed border-border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
+                        A loja não habilitou nenhuma forma de recebimento no momento.
+                      </p>
+                    );
+                  }
+                  const gridCls = enabledCount === 3 ? "grid-cols-3" : enabledCount === 2 ? "grid-cols-2" : "grid-cols-1";
+                  return (
+                    <div className={`grid gap-2 ${gridCls}`}>
+                      {deliveryEnabled && (
+                        <button
+                          onClick={() => setMethod("delivery")}
+                          className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
+                            method === "delivery" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                          }`}
+                        >
+                          <Bike className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-bold">Entrega</span>
+                          <span className="text-xs text-muted-foreground">{store.deliveryTime}</span>
+                        </button>
+                      )}
+                      {pickupEnabled && (
+                        <button
+                          onClick={() => setMethod("pickup")}
+                          className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
+                            method === "pickup" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                          }`}
+                        >
+                          <StoreIcon className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-bold">Retirar na loja</span>
+                          <span className="text-xs text-success">Sem taxa</span>
+                        </button>
+                      )}
+                      {logisticsEnabled && (
+                        <button
+                          onClick={() => setMethod("logistics")}
+                          className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
+                            method === "logistics" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                          }`}
+                        >
+                          <Bike className="h-5 w-5 text-primary" />
+                          <span className="text-center text-sm font-bold leading-tight">Retirada por app</span>
+                          <span className="text-[10px] text-muted-foreground">Uber/Lalamove/99</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
                 {method === "logistics" && (
                   <p className="mt-3 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-3 text-xs text-foreground">
                     📦 Você fará o pedido normalmente. Quando a loja marcar como <strong>pronto</strong>, você
@@ -895,7 +990,7 @@ const Checkout = () => {
                         </div>
                       }
                     >
-                      <LocationPicker value={coords} onChange={setCoords} />
+                      <LocationPicker value={coords} onChange={handlePinChange} />
                     </Suspense>
                   </div>
                 </section>
