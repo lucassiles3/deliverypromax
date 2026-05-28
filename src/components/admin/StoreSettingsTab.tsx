@@ -647,7 +647,7 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
       const { data, error } = await supabase
         .from("stores")
         .select(
-          "delivery_mode, delivery_radius_km, delivery_fee, delivery_fee_per_km, free_shipping_threshold, min_order, delivery_time, courier_mode, pickup_enabled, pickup_prep_time_min, logistics_pickup_enabled, logistics_pickup_release_when_ready, logistics_pickup_notify_customer, logistics_pickup_require_code, logistics_pickup_require_confirm, logistics_pickup_instructions, courier_gps_alert_min, courier_gps_reassign_min",
+          "delivery_mode, delivery_enabled, delivery_radius_km, delivery_fee, delivery_fee_per_km, free_shipping_threshold, min_order, delivery_time, courier_mode, pickup_enabled, pickup_prep_time_min, logistics_pickup_enabled, logistics_pickup_release_when_ready, logistics_pickup_notify_customer, logistics_pickup_require_code, logistics_pickup_require_confirm, logistics_pickup_instructions, courier_gps_alert_min, courier_gps_reassign_min",
         )
         .eq("id", storeId)
         .maybeSingle();
