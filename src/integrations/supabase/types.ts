@@ -3205,6 +3205,7 @@ export type Database = {
           cover_url: string | null
           created_at: string
           cuisine: string | null
+          delivery_enabled: boolean
           delivery_fee: number | null
           delivery_fee_per_km: number | null
           delivery_mode: string
@@ -3281,6 +3282,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           cuisine?: string | null
+          delivery_enabled?: boolean
           delivery_fee?: number | null
           delivery_fee_per_km?: number | null
           delivery_mode?: string
@@ -3357,6 +3359,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           cuisine?: string | null
+          delivery_enabled?: boolean
           delivery_fee?: number | null
           delivery_fee_per_km?: number | null
           delivery_mode?: string
