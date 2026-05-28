@@ -3204,6 +3204,7 @@ export type Database = {
           courier_mode: string
           cover_url: string | null
           created_at: string
+          crypto_wallets: Json
           cuisine: string | null
           delivery_enabled: boolean
           delivery_fee: number | null
@@ -3237,7 +3238,10 @@ export type Database = {
           phone: string | null
           pickup_enabled: boolean
           pickup_prep_time_min: number | null
+          pix_beneficiary_bank: string | null
+          pix_beneficiary_name: string | null
           pix_key: string | null
+          pix_key_type: string | null
           preorder_minutes: number | null
           print_format: string
           promo: string | null
@@ -3281,6 +3285,7 @@ export type Database = {
           courier_mode?: string
           cover_url?: string | null
           created_at?: string
+          crypto_wallets?: Json
           cuisine?: string | null
           delivery_enabled?: boolean
           delivery_fee?: number | null
@@ -3314,7 +3319,10 @@ export type Database = {
           phone?: string | null
           pickup_enabled?: boolean
           pickup_prep_time_min?: number | null
+          pix_beneficiary_bank?: string | null
+          pix_beneficiary_name?: string | null
           pix_key?: string | null
+          pix_key_type?: string | null
           preorder_minutes?: number | null
           print_format?: string
           promo?: string | null
@@ -3358,6 +3366,7 @@ export type Database = {
           courier_mode?: string
           cover_url?: string | null
           created_at?: string
+          crypto_wallets?: Json
           cuisine?: string | null
           delivery_enabled?: boolean
           delivery_fee?: number | null
@@ -3391,7 +3400,10 @@ export type Database = {
           phone?: string | null
           pickup_enabled?: boolean
           pickup_prep_time_min?: number | null
+          pix_beneficiary_bank?: string | null
+          pix_beneficiary_name?: string | null
           pix_key?: string | null
+          pix_key_type?: string | null
           preorder_minutes?: number | null
           print_format?: string
           promo?: string | null
@@ -4417,7 +4429,7 @@ export type Database = {
         | "out_for_delivery"
         | "delivered"
         | "cancelled"
-      payment_method: "pix" | "cash" | "credit" | "debit"
+      payment_method: "pix" | "cash" | "credit" | "debit" | "crypto"
       payout_status: "scheduled" | "processing" | "paid"
       reservation_status:
         | "pending"
@@ -4597,7 +4609,7 @@ export const Constants = {
         "delivered",
         "cancelled",
       ],
-      payment_method: ["pix", "cash", "credit", "debit"],
+      payment_method: ["pix", "cash", "credit", "debit", "crypto"],
       payout_status: ["scheduled", "processing", "paid"],
       reservation_status: [
         "pending",
