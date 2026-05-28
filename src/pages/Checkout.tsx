@@ -530,7 +530,7 @@ const Checkout = () => {
         return toast.error("Escolha a criptomoeda", {
           description: "Selecione uma das criptomoedas disponíveis para continuar.",
         });
-      }
+    }
     if (payment === "cash" && changeFor) {
       const v = parseFloat(changeFor.replace(",", "."));
       if (isNaN(v)) {
