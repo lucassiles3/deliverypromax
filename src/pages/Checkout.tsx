@@ -195,6 +195,7 @@ const Checkout = () => {
         toast.error("CEP não encontrado");
         return;
       }
+      syncRef.current = "pin"; // suprime o forward-geocode disparado pela atualização abaixo
       setAddress((a) => ({
         ...a,
         street: res.street || a.street,
