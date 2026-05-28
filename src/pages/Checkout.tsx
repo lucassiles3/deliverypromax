@@ -34,7 +34,23 @@ import { distanceKm, formatDistance } from "@/lib/distance";
 import { toast } from "sonner";
 
 type Method = "delivery" | "pickup" | "logistics";
-type PaymentMethod = "pix" | "cash" | "credit" | "debit" | "credit_link";
+type PaymentMethod = "pix" | "cash" | "credit" | "debit" | "credit_link" | "crypto";
+type CryptoCoin = "btc" | "eth" | "usdc" | "usdt";
+
+const CRYPTO_COIN_META: Record<CryptoCoin, { label: string; network: string }> = {
+  btc: { label: "Bitcoin (BTC)", network: "Bitcoin" },
+  eth: { label: "Ethereum (ETH)", network: "ERC-20" },
+  usdc: { label: "USDC", network: "ERC-20 / Polygon" },
+  usdt: { label: "USDT (Tether)", network: "ERC-20 / TRC-20" },
+};
+
+const PIX_TYPE_LABEL: Record<string, string> = {
+  cpf: "CPF",
+  cnpj: "CNPJ",
+  email: "E-mail",
+  phone: "Celular",
+  random: "Chave aleatória",
+};
 
 const Checkout = () => {
   const { items, subtotal, storeSlug, clear } = useCart();
@@ -47,6 +63,11 @@ const Checkout = () => {
 
   const [method, setMethod] = useState<Method>("delivery");
   const [payment, setPayment] = useState<PaymentMethod>("pix");
+  const [selectedCrypto, setSelectedCrypto] = useState<CryptoCoin | null>(null);
+  const [storePixInfo, setStorePixInfo] = useState<{
+    key: string; type: string; name: string; bank: string;
+  }>({ key: "", type: "random", name: "", bank: "" });
+  const [storeWallets, setStoreWallets] = useState<Record<string, string>>({});
   const [changeFor, setChangeFor] = useState("");
   const [address, setAddress] = useState({
     cep: "",
@@ -88,6 +109,33 @@ const Checkout = () => {
     return () => {
       cancelled = true;
     };
+  }, [store?.id]);
+
+  // Dados Pix estruturados + carteiras de cripto da loja (mostrados ao cliente)
+  useEffect(() => {
+    if (!store?.id) return;
+    let cancelled = false;
+    supabase
+      .from("stores")
+      .select("pix_key, pix_key_type, pix_beneficiary_name, pix_beneficiary_bank, crypto_wallets")
+      .eq("id", store.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const d: any = data;
+        setStorePixInfo({
+          key: d.pix_key ?? "",
+          type: d.pix_key_type ?? "random",
+          name: d.pix_beneficiary_name ?? "",
+          bank: d.pix_beneficiary_bank ?? "",
+        });
+        const w = (d.crypto_wallets ?? {}) as Record<string, string>;
+        setStoreWallets(w);
+        // pré-seleciona a primeira cripto disponível
+        const firstCoin = (["btc", "eth", "usdc", "usdt"] as const).find((c) => w[c]);
+        if (firstCoin) setSelectedCrypto(firstCoin);
+      });
+    return () => { cancelled = true; };
   }, [store?.id]);
 
   // Verifica se a loja tem gateway PIX ativo (Mercado Pago / Asaas).
@@ -144,6 +192,8 @@ const Checkout = () => {
   const creditLinkTemplate = enabledMethods["credit_link"]?.notes ?? null;
   const creditLinkEnabled = !!enabledMethods["credit_link"]?.enabled && !!creditLinkTemplate;
 
+  const cryptoEnabled = !!enabledMethods["crypto"]?.enabled && Object.values(storeWallets).some((v) => !!v);
+
   // Se o método selecionado não estiver habilitado pela loja, seleciona o primeiro disponível
   useEffect(() => {
     const keys = Object.keys(enabledMethods);
@@ -152,10 +202,11 @@ const Checkout = () => {
       (k) => enabledMethods[k]?.enabled
     );
     if (creditLinkEnabled) available.push("credit_link");
+    if (cryptoEnabled) available.push("crypto");
     if (available.length > 0 && !available.includes(payment)) {
       setPayment(available[0]);
     }
-  }, [enabledMethods, creditLinkEnabled, payment]);
+  }, [enabledMethods, creditLinkEnabled, cryptoEnabled, payment]);
 
   useEffect(() => {
     document.title = "Checkout • Itchat Brasil";
@@ -358,6 +409,7 @@ const Checkout = () => {
     credit: "Cartão de crédito (na entrega)",
     debit: "Cartão de débito (na entrega)",
     credit_link: "Cartão de crédito (link de pagamento)",
+    crypto: "Criptomoeda",
   };
 
   // Adiciona o valor formatado no final do link (ex: /12,50)
@@ -468,6 +520,18 @@ const Checkout = () => {
         description: "A loja não configurou o link de pagamento. Escolha outra forma.",
       });
     }
+    if (payment === "crypto") {
+      if (!cryptoEnabled) {
+        return toast.error("Cripto indisponível", {
+          description: "A loja não cadastrou nenhuma carteira ativa.",
+        });
+      }
+      if (!selectedCrypto || !storeWallets[selectedCrypto]) {
+        return toast.error("Escolha a criptomoeda", {
+          description: "Selecione uma das criptomoedas disponíveis para continuar.",
+        });
+      }
+    }
     if (payment === "cash" && changeFor) {
       const v = parseFloat(changeFor.replace(",", "."));
       if (isNaN(v)) {
@@ -548,12 +612,16 @@ const Checkout = () => {
     try {
       // Para "credit_link" persistimos como "credit" (enum do banco) e marcamos via notes.
       const paymentLink = payment === "credit_link" ? buildPaymentLink(total) : null;
-      const dbPaymentMethod: "pix" | "cash" | "credit" | "debit" =
+      const dbPaymentMethod: "pix" | "cash" | "credit" | "debit" | "crypto" =
         payment === "credit_link" ? "credit" : payment;
+      const cryptoNote =
+        payment === "crypto" && selectedCrypto
+          ? `[CRYPTO ${selectedCrypto.toUpperCase()}] ${storeWallets[selectedCrypto] ?? ""}`
+          : null;
       const orderNotes =
         payment === "credit_link" && paymentLink
           ? `[LINK_PAGAMENTO] ${paymentLink}`
-          : null;
+          : cryptoNote;
 
       const { data: order, error: orderErr } = await supabase
         .from("orders")
@@ -1011,6 +1079,7 @@ const Checkout = () => {
                       { v: "credit" as const, label: "Crédito", icon: CreditCard, hint: "Maquininha", show: isOn("credit") },
                       { v: "debit" as const, label: "Débito", icon: CreditCard, hint: "Maquininha", show: isOn("debit") },
                       { v: "credit_link" as const, label: "Crédito (link)", icon: CreditCard, hint: "Pague online agora", show: creditLinkEnabled },
+                      { v: "crypto" as const, label: "Cripto", icon: Copy, hint: "BTC, ETH, USDC, USDT", show: cryptoEnabled },
                     ].filter((o) => o.show);
                     if (items.length === 0) {
                       return (
@@ -1054,7 +1123,107 @@ const Checkout = () => {
                     />
                   </div>
                 )}
+
+                {payment === "pix" && storePixInfo.key && (
+                  <div className="mt-4 rounded-xl border-2 border-primary/30 bg-primary/5 p-4">
+                    <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-primary">
+                      <QrCode className="h-4 w-4" /> Dados do beneficiário Pix
+                    </p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-[11px] uppercase text-muted-foreground">
+                            Chave {PIX_TYPE_LABEL[storePixInfo.type] ?? ""}
+                          </p>
+                          <p className="truncate font-mono font-bold text-foreground">{storePixInfo.key}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(storePixInfo.key);
+                            toast.success("Chave Pix copiada!");
+                          }}
+                          className="flex shrink-0 items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90"
+                        >
+                          <Copy className="h-3.5 w-3.5" /> Copiar
+                        </button>
+                      </div>
+                      {storePixInfo.name && (
+                        <div>
+                          <p className="text-[11px] uppercase text-muted-foreground">Beneficiário</p>
+                          <p className="font-semibold text-foreground">{storePixInfo.name}</p>
+                        </div>
+                      )}
+                      {storePixInfo.bank && (
+                        <div>
+                          <p className="text-[11px] uppercase text-muted-foreground">Banco</p>
+                          <p className="font-semibold text-foreground">{storePixInfo.bank}</p>
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-3 text-[11px] text-muted-foreground">
+                      Confira os dados antes de pagar. Após confirmar o pedido, envie o comprovante para a loja.
+                    </p>
+                  </div>
+                )}
+
+                {payment === "crypto" && cryptoEnabled && (
+                  <div className="mt-4 rounded-xl border-2 border-primary/30 bg-primary/5 p-4">
+                    <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-primary">
+                      <Copy className="h-4 w-4" /> Pagamento em criptomoeda
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {(["btc", "eth", "usdc", "usdt"] as const)
+                        .filter((c) => !!storeWallets[c])
+                        .map((c) => {
+                          const active = selectedCrypto === c;
+                          return (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => setSelectedCrypto(c)}
+                              className={`rounded-xl border-2 p-2 text-xs font-bold transition-smooth ${
+                                active ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/30"
+                              }`}
+                            >
+                              {c.toUpperCase()}
+                            </button>
+                          );
+                        })}
+                    </div>
+                    {selectedCrypto && storeWallets[selectedCrypto] && (
+                      <div className="mt-3 space-y-2">
+                        <div>
+                          <p className="text-[11px] uppercase text-muted-foreground">
+                            {CRYPTO_COIN_META[selectedCrypto].label}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Rede: {CRYPTO_COIN_META[selectedCrypto].network}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 rounded-lg bg-background p-2">
+                          <p className="min-w-0 break-all font-mono text-xs">{storeWallets[selectedCrypto]}</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(storeWallets[selectedCrypto]!);
+                              toast.success("Endereço copiado!");
+                            }}
+                            className="flex shrink-0 items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90"
+                          >
+                            <Copy className="h-3.5 w-3.5" /> Copiar
+                          </button>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          Envie o valor equivalente a <strong>R$ {total.toFixed(2).replace(".", ",")}</strong> para a carteira acima
+                          usando a rede correta. Após confirmar, envie o hash da transação para a loja.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </section>
+
 
               {/* Coupon */}
               <section className="rounded-2xl bg-card p-5 shadow-soft">

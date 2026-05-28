@@ -6,12 +6,17 @@ import { formatHoursList, isStoreOpen, nextOpeningLabel } from "@/lib/storeHours
 import type { Store } from "@/data/stores";
 
 const METHOD_LABELS: Record<string, string> = {
+  pix: "Pix",
   pix_online: "Pix (online)",
   pix_delivery: "Pix (na entrega)",
   credit_online: "Cartão de crédito (online)",
+  credit: "Cartão de crédito (maquininha)",
   credit_link: "Cartão (link de pagamento)",
+  debit: "Cartão de débito (maquininha)",
   debit_delivery: "Cartão de débito (na entrega)",
+  cash: "Dinheiro",
   cash_delivery: "Dinheiro (na entrega)",
+  crypto: "Criptomoedas (BTC, ETH, USDC, USDT)",
 };
 
 const formatCnpj = (v?: string) => {
