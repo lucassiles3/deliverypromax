@@ -1067,6 +1067,7 @@ const Checkout = () => {
                       { v: "credit" as const, label: "Crédito", icon: CreditCard, hint: "Maquininha", show: isOn("credit") },
                       { v: "debit" as const, label: "Débito", icon: CreditCard, hint: "Maquininha", show: isOn("debit") },
                       { v: "credit_link" as const, label: "Crédito (link)", icon: CreditCard, hint: "Pague online agora", show: creditLinkEnabled },
+                      { v: "crypto" as const, label: "Cripto", icon: Copy, hint: "BTC, ETH, USDC, USDT", show: cryptoEnabled },
                     ].filter((o) => o.show);
                     if (items.length === 0) {
                       return (
