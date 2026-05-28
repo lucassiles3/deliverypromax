@@ -792,40 +792,57 @@ const Checkout = () => {
               {/* Method */}
               <section className="rounded-2xl bg-card p-5 shadow-soft">
                 <h2 className="mb-3 font-display text-lg font-bold">Como você quer receber?</h2>
-                <div className={`grid gap-2 ${logisticsEnabled ? "grid-cols-3" : "grid-cols-2"}`}>
-                  <button
-                    onClick={() => setMethod("delivery")}
-                    className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
-                      method === "delivery" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    <Bike className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-bold">Entrega</span>
-                    <span className="text-xs text-muted-foreground">{store.deliveryTime}</span>
-                  </button>
-                  <button
-                    onClick={() => setMethod("pickup")}
-                    className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
-                      method === "pickup" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    <StoreIcon className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-bold">Retirar na loja</span>
-                    <span className="text-xs text-success">Sem taxa</span>
-                  </button>
-                  {logisticsEnabled && (
-                    <button
-                      onClick={() => setMethod("logistics")}
-                      className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
-                        method === "logistics" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                      }`}
-                    >
-                      <Bike className="h-5 w-5 text-primary" />
-                      <span className="text-center text-sm font-bold leading-tight">Retirada por app</span>
-                      <span className="text-[10px] text-muted-foreground">Uber/Lalamove/99</span>
-                    </button>
-                  )}
-                </div>
+                {(() => {
+                  const enabledCount = (deliveryEnabled ? 1 : 0) + (pickupEnabled ? 1 : 0) + (logisticsEnabled ? 1 : 0);
+                  if (enabledCount === 0) {
+                    return (
+                      <p className="rounded-xl border-2 border-dashed border-border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
+                        A loja não habilitou nenhuma forma de recebimento no momento.
+                      </p>
+                    );
+                  }
+                  const gridCls = enabledCount === 3 ? "grid-cols-3" : enabledCount === 2 ? "grid-cols-2" : "grid-cols-1";
+                  return (
+                    <div className={`grid gap-2 ${gridCls}`}>
+                      {deliveryEnabled && (
+                        <button
+                          onClick={() => setMethod("delivery")}
+                          className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
+                            method === "delivery" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                          }`}
+                        >
+                          <Bike className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-bold">Entrega</span>
+                          <span className="text-xs text-muted-foreground">{store.deliveryTime}</span>
+                        </button>
+                      )}
+                      {pickupEnabled && (
+                        <button
+                          onClick={() => setMethod("pickup")}
+                          className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
+                            method === "pickup" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                          }`}
+                        >
+                          <StoreIcon className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-bold">Retirar na loja</span>
+                          <span className="text-xs text-success">Sem taxa</span>
+                        </button>
+                      )}
+                      {logisticsEnabled && (
+                        <button
+                          onClick={() => setMethod("logistics")}
+                          className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-smooth ${
+                            method === "logistics" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                          }`}
+                        >
+                          <Bike className="h-5 w-5 text-primary" />
+                          <span className="text-center text-sm font-bold leading-tight">Retirada por app</span>
+                          <span className="text-[10px] text-muted-foreground">Uber/Lalamove/99</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
                 {method === "logistics" && (
                   <p className="mt-3 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-3 text-xs text-foreground">
                     📦 Você fará o pedido normalmente. Quando a loja marcar como <strong>pronto</strong>, você
