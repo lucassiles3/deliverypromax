@@ -34,7 +34,23 @@ import { distanceKm, formatDistance } from "@/lib/distance";
 import { toast } from "sonner";
 
 type Method = "delivery" | "pickup" | "logistics";
-type PaymentMethod = "pix" | "cash" | "credit" | "debit" | "credit_link";
+type PaymentMethod = "pix" | "cash" | "credit" | "debit" | "credit_link" | "crypto";
+type CryptoCoin = "btc" | "eth" | "usdc" | "usdt";
+
+const CRYPTO_COIN_META: Record<CryptoCoin, { label: string; network: string }> = {
+  btc: { label: "Bitcoin (BTC)", network: "Bitcoin" },
+  eth: { label: "Ethereum (ETH)", network: "ERC-20" },
+  usdc: { label: "USDC", network: "ERC-20 / Polygon" },
+  usdt: { label: "USDT (Tether)", network: "ERC-20 / TRC-20" },
+};
+
+const PIX_TYPE_LABEL: Record<string, string> = {
+  cpf: "CPF",
+  cnpj: "CNPJ",
+  email: "E-mail",
+  phone: "Celular",
+  random: "Chave aleatória",
+};
 
 const Checkout = () => {
   const { items, subtotal, storeSlug, clear } = useCart();
