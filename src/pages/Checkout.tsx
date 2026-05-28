@@ -1111,7 +1111,107 @@ const Checkout = () => {
                     />
                   </div>
                 )}
+
+                {payment === "pix" && storePixInfo.key && (
+                  <div className="mt-4 rounded-xl border-2 border-primary/30 bg-primary/5 p-4">
+                    <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-primary">
+                      <QrCode className="h-4 w-4" /> Dados do beneficiário Pix
+                    </p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-[11px] uppercase text-muted-foreground">
+                            Chave {PIX_TYPE_LABEL[storePixInfo.type] ?? ""}
+                          </p>
+                          <p className="truncate font-mono font-bold text-foreground">{storePixInfo.key}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(storePixInfo.key);
+                            toast.success("Chave Pix copiada!");
+                          }}
+                          className="flex shrink-0 items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90"
+                        >
+                          <Copy className="h-3.5 w-3.5" /> Copiar
+                        </button>
+                      </div>
+                      {storePixInfo.name && (
+                        <div>
+                          <p className="text-[11px] uppercase text-muted-foreground">Beneficiário</p>
+                          <p className="font-semibold text-foreground">{storePixInfo.name}</p>
+                        </div>
+                      )}
+                      {storePixInfo.bank && (
+                        <div>
+                          <p className="text-[11px] uppercase text-muted-foreground">Banco</p>
+                          <p className="font-semibold text-foreground">{storePixInfo.bank}</p>
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-3 text-[11px] text-muted-foreground">
+                      Confira os dados antes de pagar. Após confirmar o pedido, envie o comprovante para a loja.
+                    </p>
+                  </div>
+                )}
+
+                {payment === "crypto" && cryptoEnabled && (
+                  <div className="mt-4 rounded-xl border-2 border-primary/30 bg-primary/5 p-4">
+                    <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-primary">
+                      <Copy className="h-4 w-4" /> Pagamento em criptomoeda
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {(["btc", "eth", "usdc", "usdt"] as const)
+                        .filter((c) => !!storeWallets[c])
+                        .map((c) => {
+                          const active = selectedCrypto === c;
+                          return (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => setSelectedCrypto(c)}
+                              className={`rounded-xl border-2 p-2 text-xs font-bold transition-smooth ${
+                                active ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/30"
+                              }`}
+                            >
+                              {c.toUpperCase()}
+                            </button>
+                          );
+                        })}
+                    </div>
+                    {selectedCrypto && storeWallets[selectedCrypto] && (
+                      <div className="mt-3 space-y-2">
+                        <div>
+                          <p className="text-[11px] uppercase text-muted-foreground">
+                            {CRYPTO_COIN_META[selectedCrypto].label}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Rede: {CRYPTO_COIN_META[selectedCrypto].network}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 rounded-lg bg-background p-2">
+                          <p className="min-w-0 break-all font-mono text-xs">{storeWallets[selectedCrypto]}</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(storeWallets[selectedCrypto]!);
+                              toast.success("Endereço copiado!");
+                            }}
+                            className="flex shrink-0 items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90"
+                          >
+                            <Copy className="h-3.5 w-3.5" /> Copiar
+                          </button>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          Envie o valor equivalente a <strong>R$ {total.toFixed(2).replace(".", ",")}</strong> para a carteira acima
+                          usando a rede correta. Após confirmar, envie o hash da transação para a loja.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </section>
+
 
               {/* Coupon */}
               <section className="rounded-2xl bg-card p-5 shadow-soft">
