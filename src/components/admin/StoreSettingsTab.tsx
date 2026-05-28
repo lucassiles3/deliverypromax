@@ -730,7 +730,7 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
         )}
       </Card>
 
-      {form.delivery_enabled !== false && (
+      {form.delivery_enabled !== false && (<>
       <Card title="Modo de entrega" icon={Truck}>
         <div className="grid gap-2 sm:grid-cols-2">
           {([
@@ -849,7 +849,7 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
           ))}
         </div>
       </Card>
-      )}
+      </>)}
 
       {form.pickup_enabled && (
         <Card title="Retirada no local" icon={StoreIcon}>
