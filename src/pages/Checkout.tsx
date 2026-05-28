@@ -192,6 +192,8 @@ const Checkout = () => {
   const creditLinkTemplate = enabledMethods["credit_link"]?.notes ?? null;
   const creditLinkEnabled = !!enabledMethods["credit_link"]?.enabled && !!creditLinkTemplate;
 
+  const cryptoEnabled = !!enabledMethods["crypto"]?.enabled && Object.values(storeWallets).some((v) => !!v);
+
   // Se o método selecionado não estiver habilitado pela loja, seleciona o primeiro disponível
   useEffect(() => {
     const keys = Object.keys(enabledMethods);
@@ -200,10 +202,11 @@ const Checkout = () => {
       (k) => enabledMethods[k]?.enabled
     );
     if (creditLinkEnabled) available.push("credit_link");
+    if (cryptoEnabled) available.push("crypto");
     if (available.length > 0 && !available.includes(payment)) {
       setPayment(available[0]);
     }
-  }, [enabledMethods, creditLinkEnabled, payment]);
+  }, [enabledMethods, creditLinkEnabled, cryptoEnabled, payment]);
 
   useEffect(() => {
     document.title = "Checkout • Itchat Brasil";
