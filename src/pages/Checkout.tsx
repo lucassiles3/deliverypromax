@@ -111,6 +111,33 @@ const Checkout = () => {
     };
   }, [store?.id]);
 
+  // Dados Pix estruturados + carteiras de cripto da loja (mostrados ao cliente)
+  useEffect(() => {
+    if (!store?.id) return;
+    let cancelled = false;
+    supabase
+      .from("stores")
+      .select("pix_key, pix_key_type, pix_beneficiary_name, pix_beneficiary_bank, crypto_wallets")
+      .eq("id", store.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const d: any = data;
+        setStorePixInfo({
+          key: d.pix_key ?? "",
+          type: d.pix_key_type ?? "random",
+          name: d.pix_beneficiary_name ?? "",
+          bank: d.pix_beneficiary_bank ?? "",
+        });
+        const w = (d.crypto_wallets ?? {}) as Record<string, string>;
+        setStoreWallets(w);
+        // pré-seleciona a primeira cripto disponível
+        const firstCoin = (["btc", "eth", "usdc", "usdt"] as const).find((c) => w[c]);
+        if (firstCoin) setSelectedCrypto(firstCoin);
+      });
+    return () => { cancelled = true; };
+  }, [store?.id]);
+
   // Verifica se a loja tem gateway PIX ativo (Mercado Pago / Asaas).
   // Se NÃO houver gateway, o PIX é manual: o pedido cai direto em "received".
   const [pixGatewayActive, setPixGatewayActive] = useState(false);
