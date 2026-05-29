@@ -705,8 +705,10 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
     .filter(Boolean)
     .join("\n");
 
-  // Deep links Uber (pickup = loja, dropoff = cliente)
-  const uberUrl = (() => {
+  // Deep links Uber (pickup = loja, dropoff = cliente).
+  // Geramos dois links — Moto (até 10kg) e Carro (>10kg) — sinalizando a
+  // preferência de veículo no parâmetro product_id quando suportado pelo app.
+  const buildUber = (vehicle: "moto" | "car"): string | null => {
     if (store.lat == null || store.lng == null) return null;
     const params = new URLSearchParams({
       action: "setPickup",
@@ -724,8 +726,11 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
         .join(" • ");
       if (addrLabel) params.set("dropoff[formatted_address]", addrLabel);
     }
+    if (vehicle === "moto") params.set("product_id", "uber-moto");
     return `https://m.uber.com/ul/?${params.toString()}`;
-  })();
+  };
+  const uberMotoUrl = buildUber("moto");
+  const uberCarUrl = buildUber("car");
 
   const shareWhatsApp = () => {
     const text = encodeURIComponent(summary);
@@ -856,29 +861,45 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
 
       {/* Botões inteligentes */}
       {pickupUnlocked && (
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => copy(summary, "Informações da retirada")}
-            className="flex h-11 items-center justify-center gap-1.5 rounded-xl border-2 border-border bg-background text-xs font-bold hover:border-primary"
-          >
-            <Copy className="h-3.5 w-3.5" /> Copiar tudo
-          </button>
-          <button
-            onClick={shareWhatsApp}
-            className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#25D366] text-xs font-bold text-white hover:opacity-90"
-          >
-            <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
-          </button>
-          {uberUrl && (
-            <a
-              href={uberUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-foreground text-xs font-bold text-background hover:opacity-90"
+        <div className="space-y-2">
+          <div className="rounded-xl border border-dashed border-primary/40 bg-primary/5 p-3 text-xs">
+            🛵 <strong>Uber Moto</strong> para pedidos/itens de até <strong>10&nbsp;kg</strong>.
+            🚗 <strong>Uber Carro</strong> para volumes acima de 10&nbsp;kg.
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => copy(summary, "Informações da retirada")}
+              className="flex h-11 items-center justify-center gap-1.5 rounded-xl border-2 border-border bg-background text-xs font-bold hover:border-primary"
             >
-              🚗 Abrir Uber
-            </a>
-          )}
+              <Copy className="h-3.5 w-3.5" /> Copiar tudo
+            </button>
+            <button
+              onClick={shareWhatsApp}
+              className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#25D366] text-xs font-bold text-white hover:opacity-90"
+            >
+              <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+            </button>
+            {uberMotoUrl && (
+              <a
+                href={uberMotoUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-foreground text-xs font-bold text-background hover:opacity-90"
+              >
+                🛵 Uber Moto · ≤10kg
+              </a>
+            )}
+            {uberCarUrl && (
+              <a
+                href={uberCarUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-foreground text-xs font-bold text-background hover:opacity-90"
+              >
+                🚗 Uber Carro · &gt;10kg
+              </a>
+            )}
+          </div>
         </div>
       )}
 

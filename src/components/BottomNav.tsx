@@ -11,12 +11,16 @@ const items = [
 ];
 
 const HIDE_ON = ["/auth", "/reset-password", "/admin", "/pdv", "/checkout"];
+// Esconde também na tela de produto (.../produto/...) para liberar o CTA fixo
+// "Adicionar ao carrinho", que ficava atrás da navbar.
+const HIDE_PATTERNS = [/^\/loja\/[^/]+\/produto\//];
 
 export const BottomNav = () => {
   const { pathname } = useLocation();
   const { count, setOpen } = useCart();
 
   if (HIDE_ON.some((p) => pathname.startsWith(p))) return null;
+  if (HIDE_PATTERNS.some((r) => r.test(pathname))) return null;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-2 md:hidden">

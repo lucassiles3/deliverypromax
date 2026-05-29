@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AdBanner } from "@/components/AdBanner";
 
-type DbStatus = "pending_payment" | "received" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
+type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
 
 const steps: { key: DbStatus; label: string; icon: typeof Clock }[] = [
   { key: "received", label: "Recebido", icon: Clock },
@@ -15,8 +15,15 @@ const steps: { key: DbStatus; label: string; icon: typeof Clock }[] = [
   { key: "delivered", label: "Entregue", icon: CheckCircle2 },
 ];
 
+const pickupSteps: { key: DbStatus; label: string; icon: typeof Clock }[] = [
+  { key: "received", label: "Recebido", icon: Clock },
+  { key: "preparing", label: "Em preparo", icon: Package },
+  { key: "ready", label: "Pronto p/ retirar", icon: CheckCircle2 },
+  { key: "delivered", label: "Retirado", icon: CheckCircle2 },
+];
+
 const statusIndex = (s: DbStatus) => {
-  const order: DbStatus[] = ["pending_payment", "received", "preparing", "out_for_delivery", "delivered"];
+  const order: DbStatus[] = ["pending_payment", "received", "preparing", "ready", "out_for_delivery", "delivered"];
   return order.indexOf(s);
 };
 
@@ -32,7 +39,7 @@ const MyOrders = () => {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, total, status, method, created_at, store_id, stores(name, logo, phone, whatsapp_phone), order_items(id, product_name, quantity)",
+          "id, total, status, method, created_at, store_id, address, delivery_lat, delivery_lng, pickup_code, stores(name, logo, phone, whatsapp_phone, lat, lng, address_street, address_number, address_neighborhood, city), order_items(id, product_name, quantity)",
         )
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
@@ -111,7 +118,18 @@ const MyOrders = () => {
                 product_name: string;
                 quantity: number;
               }>;
-              const store = o.stores as { name: string; logo: string | null; phone: string | null; whatsapp_phone: string | null } | null;
+              const store = o.stores as {
+                name: string;
+                logo: string | null;
+                phone: string | null;
+                whatsapp_phone: string | null;
+                lat: number | null;
+                lng: number | null;
+                address_street: string | null;
+                address_number: string | null;
+                address_neighborhood: string | null;
+                city: string | null;
+              } | null;
               const wppDigits = (store?.whatsapp_phone || store?.phone || "").replace(/\D/g, "");
               const wppLink = wppDigits
                 ? `https://wa.me/55${wppDigits}?text=${encodeURIComponent(`Olá! Tenho uma dúvida sobre meu pedido #${o.id.slice(0, 6).toUpperCase()}`)}`
@@ -122,6 +140,43 @@ const MyOrders = () => {
                 hour: "2-digit",
                 minute: "2-digit",
               });
+
+              const isPickup = o.method === "pickup";
+              const isLogistics = o.method === "logistics";
+              const isReady = status === "ready";
+              const activeSteps = isPickup || isLogistics ? pickupSteps : steps;
+
+              const buildUberUrl = (vehicle: "moto" | "car") => {
+                if (store?.lat == null || store?.lng == null) return null;
+                const storeAddr = [
+                  store.address_street && `${store.address_street}, ${store.address_number ?? ""}`,
+                  store.address_neighborhood,
+                  store.city,
+                ]
+                  .filter(Boolean)
+                  .join(" • ");
+                const params = new URLSearchParams({
+                  action: "setPickup",
+                  "pickup[latitude]": String(store.lat),
+                  "pickup[longitude]": String(store.lng),
+                  "pickup[nickname]": store.name ?? "Loja",
+                  "pickup[formatted_address]": storeAddr,
+                });
+                if (o.delivery_lat != null && o.delivery_lng != null) {
+                  params.set("dropoff[latitude]", String(o.delivery_lat));
+                  params.set("dropoff[longitude]", String(o.delivery_lng));
+                  const addr = (o.address as any) ?? {};
+                  const lbl = [addr.street && `${addr.street}, ${addr.number ?? ""}`, addr.neighborhood, addr.city]
+                    .filter(Boolean)
+                    .join(" • ");
+                  if (lbl) params.set("dropoff[formatted_address]", lbl);
+                }
+                // Sinaliza preferência de veículo no link (Uber Moto x carro).
+                if (vehicle === "moto") params.set("product_id", "uber-moto");
+                return `https://m.uber.com/ul/?${params.toString()}`;
+              };
+              const uberMoto = buildUberUrl("moto");
+              const uberCar = buildUberUrl("car");
 
               return (
                 <article key={o.id} className="overflow-hidden rounded-2xl bg-card shadow-soft">
@@ -140,7 +195,11 @@ const MyOrders = () => {
                       <h3 className="font-display text-lg font-bold">{store?.name ?? "Loja"}</h3>
                       <p className="text-xs text-muted-foreground">
                         Pedido #{o.id.slice(0, 6).toUpperCase()} • {date} •{" "}
-                        {o.method === "delivery" ? "🛵 Entrega" : "🏪 Retirada"}
+                        {o.method === "delivery"
+                          ? "🛵 Entrega"
+                          : o.method === "logistics"
+                            ? "📦 Retirada por app"
+                            : "🏪 Retirada"}
                       </p>
                     </div>
                     <div className="text-right">
@@ -159,7 +218,7 @@ const MyOrders = () => {
                       </div>
                     ) : (
                       <div className="flex items-center justify-between">
-                        {steps.map((step, i) => {
+                        {activeSteps.map((step, i) => {
                           const reached = currentIdx >= statusIndex(step.key);
                           const isCurrent = currentIdx === statusIndex(step.key);
                           const Icon = step.icon;
@@ -183,7 +242,7 @@ const MyOrders = () => {
                                   {step.label}
                                 </span>
                               </div>
-                              {i < steps.length - 1 && (
+                              {i < activeSteps.length - 1 && (
                                 <div
                                   className={`mx-1 h-0.5 flex-1 ${
                                     currentIdx > statusIndex(step.key) ? "bg-primary" : "bg-muted"
@@ -193,6 +252,66 @@ const MyOrders = () => {
                             </div>
                           );
                         })}
+                      </div>
+                    )}
+
+                    {/* Aviso: pronto para retirada */}
+                    {isPickup && isReady && (
+                      <div className="mt-4 flex items-start gap-2 rounded-xl border-2 border-success/30 bg-success/10 p-3 text-sm text-success">
+                        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+                        <div>
+                          <p className="font-bold">Disponível para retirada!</p>
+                          <p className="text-xs opacity-90">
+                            Vá até a loja para retirar seu pedido.
+                            {o.pickup_code && (
+                              <>
+                                {" "}Código: <strong>#{o.pickup_code}</strong>
+                              </>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Aviso: pronto para chamar logística */}
+                    {isLogistics && isReady && (
+                      <div className="mt-4 rounded-xl border-2 border-primary/30 bg-primary/5 p-3 text-sm">
+                        <div className="flex items-start gap-2">
+                          <Truck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                          <div className="flex-1">
+                            <p className="font-bold text-foreground">
+                              Pedido pronto — chame um motorista
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              Use <strong>moto</strong> para itens de até <strong>10&nbsp;kg</strong> ou{" "}
+                              <strong>carro</strong> para volumes maiores.
+                            </p>
+                          </div>
+                        </div>
+                        {(uberMoto || uberCar) && (
+                          <div className="mt-3 grid grid-cols-2 gap-2">
+                            {uberMoto && (
+                              <a
+                                href={uberMoto}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex h-10 items-center justify-center gap-1.5 rounded-lg bg-foreground text-xs font-bold text-background hover:opacity-90"
+                              >
+                                🛵 Uber Moto · ≤10kg
+                              </a>
+                            )}
+                            {uberCar && (
+                              <a
+                                href={uberCar}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex h-10 items-center justify-center gap-1.5 rounded-lg bg-foreground text-xs font-bold text-background hover:opacity-90"
+                              >
+                                🚗 Uber Carro · &gt;10kg
+                              </a>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
 
