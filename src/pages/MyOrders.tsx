@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AdBanner } from "@/components/AdBanner";
 
-type DbStatus = "pending_payment" | "received" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
+type DbStatus = "pending_payment" | "received" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
 
 const steps: { key: DbStatus; label: string; icon: typeof Clock }[] = [
   { key: "received", label: "Recebido", icon: Clock },
@@ -15,8 +15,15 @@ const steps: { key: DbStatus; label: string; icon: typeof Clock }[] = [
   { key: "delivered", label: "Entregue", icon: CheckCircle2 },
 ];
 
+const pickupSteps: { key: DbStatus; label: string; icon: typeof Clock }[] = [
+  { key: "received", label: "Recebido", icon: Clock },
+  { key: "preparing", label: "Em preparo", icon: Package },
+  { key: "ready", label: "Pronto p/ retirar", icon: CheckCircle2 },
+  { key: "delivered", label: "Retirado", icon: CheckCircle2 },
+];
+
 const statusIndex = (s: DbStatus) => {
-  const order: DbStatus[] = ["pending_payment", "received", "preparing", "out_for_delivery", "delivered"];
+  const order: DbStatus[] = ["pending_payment", "received", "preparing", "ready", "out_for_delivery", "delivered"];
   return order.indexOf(s);
 };
 
@@ -32,7 +39,7 @@ const MyOrders = () => {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, total, status, method, created_at, store_id, stores(name, logo, phone, whatsapp_phone), order_items(id, product_name, quantity)",
+          "id, total, status, method, created_at, store_id, address, delivery_lat, delivery_lng, pickup_code, stores(name, logo, phone, whatsapp_phone, lat, lng, address_street, address_number, address_neighborhood, city), order_items(id, product_name, quantity)",
         )
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
