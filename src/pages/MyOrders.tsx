@@ -242,7 +242,7 @@ const MyOrders = () => {
                                   {step.label}
                                 </span>
                               </div>
-                              {i < steps.length - 1 && (
+                              {i < activeSteps.length - 1 && (
                                 <div
                                   className={`mx-1 h-0.5 flex-1 ${
                                     currentIdx > statusIndex(step.key) ? "bg-primary" : "bg-muted"
@@ -252,6 +252,66 @@ const MyOrders = () => {
                             </div>
                           );
                         })}
+                      </div>
+                    )}
+
+                    {/* Aviso: pronto para retirada */}
+                    {isPickup && isReady && (
+                      <div className="mt-4 flex items-start gap-2 rounded-xl border-2 border-success/30 bg-success/10 p-3 text-sm text-success">
+                        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+                        <div>
+                          <p className="font-bold">Disponível para retirada!</p>
+                          <p className="text-xs opacity-90">
+                            Vá até a loja para retirar seu pedido.
+                            {o.pickup_code && (
+                              <>
+                                {" "}Código: <strong>#{o.pickup_code}</strong>
+                              </>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Aviso: pronto para chamar logística */}
+                    {isLogistics && isReady && (
+                      <div className="mt-4 rounded-xl border-2 border-primary/30 bg-primary/5 p-3 text-sm">
+                        <div className="flex items-start gap-2">
+                          <Truck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                          <div className="flex-1">
+                            <p className="font-bold text-foreground">
+                              Pedido pronto — chame um motorista
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              Use <strong>moto</strong> para itens de até <strong>10&nbsp;kg</strong> ou{" "}
+                              <strong>carro</strong> para volumes maiores.
+                            </p>
+                          </div>
+                        </div>
+                        {(uberMoto || uberCar) && (
+                          <div className="mt-3 grid grid-cols-2 gap-2">
+                            {uberMoto && (
+                              <a
+                                href={uberMoto}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex h-10 items-center justify-center gap-1.5 rounded-lg bg-foreground text-xs font-bold text-background hover:opacity-90"
+                              >
+                                🛵 Uber Moto · ≤10kg
+                              </a>
+                            )}
+                            {uberCar && (
+                              <a
+                                href={uberCar}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex h-10 items-center justify-center gap-1.5 rounded-lg bg-foreground text-xs font-bold text-background hover:opacity-90"
+                              >
+                                🚗 Uber Carro · &gt;10kg
+                              </a>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
 
