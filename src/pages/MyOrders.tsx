@@ -118,7 +118,18 @@ const MyOrders = () => {
                 product_name: string;
                 quantity: number;
               }>;
-              const store = o.stores as { name: string; logo: string | null; phone: string | null; whatsapp_phone: string | null } | null;
+              const store = o.stores as {
+                name: string;
+                logo: string | null;
+                phone: string | null;
+                whatsapp_phone: string | null;
+                lat: number | null;
+                lng: number | null;
+                address_street: string | null;
+                address_number: string | null;
+                address_neighborhood: string | null;
+                city: string | null;
+              } | null;
               const wppDigits = (store?.whatsapp_phone || store?.phone || "").replace(/\D/g, "");
               const wppLink = wppDigits
                 ? `https://wa.me/55${wppDigits}?text=${encodeURIComponent(`Olá! Tenho uma dúvida sobre meu pedido #${o.id.slice(0, 6).toUpperCase()}`)}`
@@ -129,6 +140,43 @@ const MyOrders = () => {
                 hour: "2-digit",
                 minute: "2-digit",
               });
+
+              const isPickup = o.method === "pickup";
+              const isLogistics = o.method === "logistics";
+              const isReady = status === "ready";
+              const activeSteps = isPickup || isLogistics ? pickupSteps : steps;
+
+              const buildUberUrl = (vehicle: "moto" | "car") => {
+                if (store?.lat == null || store?.lng == null) return null;
+                const storeAddr = [
+                  store.address_street && `${store.address_street}, ${store.address_number ?? ""}`,
+                  store.address_neighborhood,
+                  store.city,
+                ]
+                  .filter(Boolean)
+                  .join(" • ");
+                const params = new URLSearchParams({
+                  action: "setPickup",
+                  "pickup[latitude]": String(store.lat),
+                  "pickup[longitude]": String(store.lng),
+                  "pickup[nickname]": store.name ?? "Loja",
+                  "pickup[formatted_address]": storeAddr,
+                });
+                if (o.delivery_lat != null && o.delivery_lng != null) {
+                  params.set("dropoff[latitude]", String(o.delivery_lat));
+                  params.set("dropoff[longitude]", String(o.delivery_lng));
+                  const addr = (o.address as any) ?? {};
+                  const lbl = [addr.street && `${addr.street}, ${addr.number ?? ""}`, addr.neighborhood, addr.city]
+                    .filter(Boolean)
+                    .join(" • ");
+                  if (lbl) params.set("dropoff[formatted_address]", lbl);
+                }
+                // Sinaliza preferência de veículo no link (Uber Moto x carro).
+                if (vehicle === "moto") params.set("product_id", "uber-moto");
+                return `https://m.uber.com/ul/?${params.toString()}`;
+              };
+              const uberMoto = buildUberUrl("moto");
+              const uberCar = buildUberUrl("car");
 
               return (
                 <article key={o.id} className="overflow-hidden rounded-2xl bg-card shadow-soft">
@@ -147,7 +195,11 @@ const MyOrders = () => {
                       <h3 className="font-display text-lg font-bold">{store?.name ?? "Loja"}</h3>
                       <p className="text-xs text-muted-foreground">
                         Pedido #{o.id.slice(0, 6).toUpperCase()} • {date} •{" "}
-                        {o.method === "delivery" ? "🛵 Entrega" : "🏪 Retirada"}
+                        {o.method === "delivery"
+                          ? "🛵 Entrega"
+                          : o.method === "logistics"
+                            ? "📦 Retirada por app"
+                            : "🏪 Retirada"}
                       </p>
                     </div>
                     <div className="text-right">
@@ -166,7 +218,7 @@ const MyOrders = () => {
                       </div>
                     ) : (
                       <div className="flex items-center justify-between">
-                        {steps.map((step, i) => {
+                        {activeSteps.map((step, i) => {
                           const reached = currentIdx >= statusIndex(step.key);
                           const isCurrent = currentIdx === statusIndex(step.key);
                           const Icon = step.icon;
