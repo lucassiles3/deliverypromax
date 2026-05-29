@@ -26,6 +26,33 @@ export const lookupCep = async (rawCep: string): Promise<CepResult | null> => {
   }
 };
 
+// Busca um CEP a partir de UF + cidade + parte do nome da rua.
+// Útil porque o Nominatim quase nunca devolve postcode em endereços brasileiros.
+export const cepByAddress = async (
+  uf: string,
+  city: string,
+  street: string,
+): Promise<string | null> => {
+  const ufClean = uf?.trim().toUpperCase();
+  const cityClean = city?.trim();
+  // viacep exige rua com >= 3 caracteres
+  const streetClean = street?.trim().replace(/^(rua|av\.?|avenida|travessa|tv\.?|alameda|al\.?|rodovia|rod\.?)\s+/i, "");
+  if (!ufClean || ufClean.length !== 2 || !cityClean || !streetClean || streetClean.length < 3) {
+    return null;
+  }
+  try {
+    const url = `https://viacep.com.br/ws/${ufClean}/${encodeURIComponent(cityClean)}/${encodeURIComponent(streetClean)}/json/`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const arr = await res.json();
+    if (!Array.isArray(arr) || arr.length === 0) return null;
+    const cep: string = arr[0].cep ?? "";
+    return cep || null;
+  } catch {
+    return null;
+  }
+};
+
 export const geocodeAddress = async (
   query: string,
 ): Promise<{ lat: number; lng: number } | null> => {

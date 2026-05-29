@@ -29,7 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { isStoreOpen } from "@/lib/storeHours";
-import { lookupCep, geocodeAddress, formatCep, reverseGeocode } from "@/lib/cep";
+import { lookupCep, geocodeAddress, formatCep, reverseGeocode, cepByAddress } from "@/lib/cep";
 import { distanceKm, formatDistance } from "@/lib/distance";
 import { toast } from "sonner";
 
@@ -272,9 +272,15 @@ const Checkout = () => {
   const applyReverseToAddress = async (lat: number, lng: number) => {
     const rev = await reverseGeocode(lat, lng);
     if (!rev) return;
+    // Nominatim raramente devolve CEP no Brasil — tenta resolver pela rua via ViaCEP.
+    let cep = rev.cep;
+    if (!cep && rev.street && rev.city && rev.state) {
+      const fallback = await cepByAddress(rev.state, rev.city, rev.street);
+      if (fallback) cep = fallback;
+    }
     syncRef.current = "pin"; // suprime o forward-geocode disparado por esta atualização
     setAddress((a) => ({
-      cep: rev.cep || a.cep,
+      cep: cep || a.cep,
       street: rev.street || a.street,
       number: rev.number || a.number,
       complement: a.complement,
@@ -336,9 +342,14 @@ const Checkout = () => {
         setCoords(c);
         const rev = await reverseGeocode(c.lat, c.lng);
         if (rev) {
+          let cep = rev.cep;
+          if (!cep && rev.street && rev.city && rev.state) {
+            const fallback = await cepByAddress(rev.state, rev.city, rev.street);
+            if (fallback) cep = fallback;
+          }
           syncRef.current = "pin";
           setAddress((a) => ({
-            cep: rev.cep || a.cep,
+            cep: cep || a.cep,
             street: rev.street || a.street,
             number: rev.number || a.number,
             complement: a.complement,
