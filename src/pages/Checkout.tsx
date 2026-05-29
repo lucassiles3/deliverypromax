@@ -927,6 +927,11 @@ const Checkout = () => {
                     📦 Você fará o pedido normalmente. Quando a loja marcar como <strong>pronto</strong>, você
                     chama um entregador no aplicativo de logística que preferir e cola o link de rastreio
                     na tela do pedido para a loja acompanhar.
+                    <br />
+                    <span className="mt-1 inline-block">
+                      🛵 Solicite <strong>moto</strong> para itens de até <strong>10&nbsp;kg</strong> · 🚗{" "}
+                      <strong>carro</strong> para volumes maiores.
+                    </span>
                   </p>
                 )}
               </section>
