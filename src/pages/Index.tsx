@@ -533,10 +533,10 @@ const Index = () => {
         <div className="container pb-12 pt-2">
 
 
-          {externalListings.length > 0 && (
+          {(storesData.length > 0 || externalListings.length > 0) && (
             <section className="mb-8">
               <div className="flex flex-col gap-3 md:grid md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
-                {(externalListings as any[])
+                {[...storesData, ...(externalListings as any[])]
                   .slice()
                   .sort((a, b) => {
                     const aOpen = enriched.find((e: any) => e.id === a.id)?._open ?? true;
@@ -552,6 +552,7 @@ const Index = () => {
                         index={i}
                         distanceKm={enrichedItem?._distance ?? null}
                         isOpen={enrichedItem?._open ?? true}
+                        inRange={coords ? enrichedItem?._inRange : undefined}
                       />
                     );
                   })}
