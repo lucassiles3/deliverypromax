@@ -381,7 +381,7 @@ const Admin = () => {
             </SheetTrigger>
             <SheetContent side="left" className="flex w-[85vw] max-w-sm flex-col p-0">
               <SheetHeader className="border-b p-4 text-left">
-                <SheetTitle className="font-display text-lg">Painel do dono</SheetTitle>
+                <SheetTitle className="font-display text-lg">Menu</SheetTitle>
               </SheetHeader>
 
               <div className="border-b p-4">
@@ -391,11 +391,15 @@ const Admin = () => {
                   onChange={(e) => setStoreId(e.target.value)}
                   className="mt-1 w-full rounded-xl border-2 border-border bg-card px-3 py-2 text-sm font-semibold outline-none focus:border-primary"
                 >
-                  {stores.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.logo} {s.name}
-                    </option>
-                  ))}
+                  {stores.map((s) => {
+                    const isUrl = typeof s.logo === "string" && /^https?:\/\//i.test(s.logo);
+                    const badge = !s.logo || isUrl ? "🏪" : s.logo;
+                    return (
+                      <option key={s.id} value={s.id}>
+                        {badge} {s.name}
+                      </option>
+                    );
+                  })}
                 </select>
                 <div className="mt-3">
                   <StoreOpenToggle storeId={storeId} variant="inline" className="w-full justify-center" />
@@ -473,8 +477,6 @@ const Admin = () => {
           <Link to="/" className="hidden items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground md:flex">
             <ArrowLeft className="h-4 w-4" /> App
           </Link>
-          <span className="hidden text-border md:inline">|</span>
-          <h1 className="hidden font-display text-xl font-bold md:block">Painel do dono</h1>
 
           {/* Mobile: nome da seção atual */}
           <div className="flex min-w-0 flex-1 items-center gap-2 md:hidden">
@@ -526,11 +528,15 @@ const Admin = () => {
               onChange={(e) => setStoreId(e.target.value)}
               className="rounded-xl border-2 border-border bg-card px-3 py-1.5 text-sm font-semibold outline-none focus:border-primary"
             >
-              {stores.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.logo} {s.name}
-                </option>
-              ))}
+              {stores.map((s) => {
+                const isUrl = typeof s.logo === "string" && /^https?:\/\//i.test(s.logo);
+                const badge = !s.logo || isUrl ? "🏪" : s.logo;
+                return (
+                  <option key={s.id} value={s.id}>
+                    {badge} {s.name}
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>

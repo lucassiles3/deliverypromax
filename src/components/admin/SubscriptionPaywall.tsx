@@ -37,6 +37,12 @@ export const SubscriptionPaywall = ({ storeId, onActive }: PaywallProps) => {
   const [billingModel, setBillingModel] = useState<BillingModel | null>(null);
   const [pix, setPix] = useState<{ encodedImage: string; payload: string; invoiceUrl?: string } | null>(null);
 
+  // Pede CPF/CNPJ logo ao entrar na tela de confirmação para evitar
+  // o "primeiro clique" só para descobrir que o backend precisa do documento.
+  useEffect(() => {
+    if (billingModel) setNeedsCpf(true);
+  }, [billingModel]);
+
   const { data: state, refetch } = useQuery({
     queryKey: ["subscription-state", storeId],
     queryFn: async (): Promise<State> => {

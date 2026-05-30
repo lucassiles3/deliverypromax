@@ -62,6 +62,22 @@ const paymentLabel: Record<string, string> = {
   cash: "Dinheiro",
   credit: "Cartão de crédito",
   debit: "Cartão de débito",
+  crypto: "Criptomoeda",
+};
+
+const pixKeyTypeLabel: Record<string, string> = {
+  cpf: "CPF",
+  cnpj: "CNPJ",
+  email: "E-mail",
+  phone: "Celular",
+  random: "Chave aleatória",
+};
+
+const cryptoLabel: Record<string, string> = {
+  btc: "Bitcoin (BTC)",
+  eth: "Ethereum (ETH)",
+  usdc: "USDC",
+  usdt: "USDT",
 };
 
 const OrderDetails = () => {
@@ -84,7 +100,7 @@ const OrderDetails = () => {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "id, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, cashback_earned, change_for, status, method, payment_method, address, delivery_lat, delivery_lng, notes, customer_name, customer_phone, created_at, accepted_at, updated_at, store_id, table_number, courier_id, courier_tracking_url, courier_tracking_notes, courier_tracking_provider, pickup_code, pickup_handler_name, pickup_confirmed_at, couriers:courier_id(id, name, phone, vehicle_type, vehicle_plate, photo_url), stores(name, logo, phone, whatsapp_phone, slug, lat, lng, address_cep, address_street, address_number, address_complement, address_neighborhood, city, pickup_prep_time_min, opening_hours, logistics_pickup_release_when_ready, logistics_pickup_require_code, logistics_pickup_require_confirm, logistics_pickup_instructions), order_items(id, product_id, product_name, quantity, unit_price, notes, customizations)",
+          "id, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, cashback_earned, change_for, status, method, payment_method, address, delivery_lat, delivery_lng, notes, customer_name, customer_phone, created_at, accepted_at, updated_at, store_id, table_number, courier_id, courier_tracking_url, courier_tracking_notes, courier_tracking_provider, pickup_code, pickup_handler_name, pickup_confirmed_at, couriers:courier_id(id, name, phone, vehicle_type, vehicle_plate, photo_url), stores(name, logo, phone, whatsapp_phone, slug, lat, lng, address_cep, address_street, address_number, address_complement, address_neighborhood, city, pickup_prep_time_min, opening_hours, logistics_pickup_release_when_ready, logistics_pickup_require_code, logistics_pickup_require_confirm, logistics_pickup_instructions, pix_key, pix_key_type, pix_beneficiary_name, pix_beneficiary_bank, crypto_wallets), order_items(id, product_id, product_name, quantity, unit_price, notes, customizations)",
         )
         .eq("id", id!)
         .eq("user_id", user!.id)
@@ -187,6 +203,24 @@ const OrderDetails = () => {
 
   const paymentLinkMatch = order.notes?.match(/\[LINK_PAGAMENTO\]\s*(\S+)/);
   const paymentLink = paymentLinkMatch?.[1];
+  const cryptoMatch = order.notes?.match(/\[CRYPTO\s+([A-Z]+)\]\s*(\S+)/);
+  const cryptoCoin = cryptoMatch?.[1]?.toLowerCase();
+  const cryptoAddress = cryptoMatch?.[2];
+  const storeAny = (order.stores ?? {}) as any;
+  const pixKey: string | undefined = storeAny.pix_key || undefined;
+  const pixKeyType: string | undefined = storeAny.pix_key_type || undefined;
+  const pixName: string | undefined = storeAny.pix_beneficiary_name || undefined;
+  const pixBank: string | undefined = storeAny.pix_beneficiary_bank || undefined;
+  const isUnpaid = status === "pending_payment" || status === "received";
+  const showPaymentCTA =
+    isUnpaid &&
+    ((order.payment_method === "pix" && !!pixKey) ||
+      !!paymentLink ||
+      (order.payment_method === "crypto" && !!cryptoAddress));
+  const copy = (txt: string, msg = "Copiado") => {
+    navigator.clipboard.writeText(txt);
+    toast.success(msg);
+  };
 
   return (
     <div className="min-h-screen bg-muted/40 pb-24">
@@ -403,15 +437,96 @@ const OrderDetails = () => {
               <span className="text-muted-foreground"> • Troco para {brl(Number(order.change_for))}</span>
             )}
           </p>
-          {paymentLink && (
-            <a
-              href={paymentLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-            >
-              <CreditCard className="h-4 w-4" /> Abrir link de pagamento
-            </a>
+
+          {showPaymentCTA && (
+            <div className="mt-4 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 p-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-primary">Falta pagar</p>
+              <p className="mt-1 font-display text-2xl font-bold">{brl(Number(order.total))}</p>
+
+              {/* PIX */}
+              {order.payment_method === "pix" && pixKey && (
+                <div className="mt-4 space-y-3">
+                  <div className="grid gap-2 text-xs sm:grid-cols-2">
+                    {pixKeyType && (
+                      <div>
+                        <p className="font-bold uppercase tracking-wider text-muted-foreground">Tipo de chave</p>
+                        <p className="text-sm font-semibold">{pixKeyTypeLabel[pixKeyType] ?? pixKeyType}</p>
+                      </div>
+                    )}
+                    {pixName && (
+                      <div>
+                        <p className="font-bold uppercase tracking-wider text-muted-foreground">Beneficiário</p>
+                        <p className="text-sm font-semibold">{pixName}</p>
+                      </div>
+                    )}
+                    {pixBank && (
+                      <div className="sm:col-span-2">
+                        <p className="font-bold uppercase tracking-wider text-muted-foreground">Banco</p>
+                        <p className="text-sm font-semibold">{pixBank}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Chave Pix</p>
+                    <div className="mt-1 flex items-center gap-2 rounded-xl bg-background p-2">
+                      <code className="flex-1 truncate text-xs font-mono">{pixKey}</code>
+                      <Button size="sm" variant="ghost" onClick={() => copy(pixKey, "Chave Pix copiada")}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => copy(pixKey, "Chave Pix copiada — cole no app do seu banco")}
+                    className="h-12 w-full rounded-xl gradient-primary text-sm font-bold shadow-glow"
+                  >
+                    <Copy className="mr-2 h-4 w-4" /> Copiar chave e pagar
+                  </Button>
+                </div>
+              )}
+
+              {/* Link de pagamento */}
+              {paymentLink && (
+                <a
+                  href={paymentLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl gradient-primary text-sm font-bold text-primary-foreground shadow-glow"
+                >
+                  <CreditCard className="h-4 w-4" /> Pagar agora
+                </a>
+              )}
+
+              {/* Cripto */}
+              {order.payment_method === "crypto" && cryptoAddress && (
+                <div className="mt-4 space-y-3">
+                  {cryptoCoin && (
+                    <p className="text-sm">
+                      <span className="font-bold uppercase tracking-wider text-muted-foreground text-xs">Moeda: </span>
+                      <strong>{cryptoLabel[cryptoCoin] ?? cryptoCoin.toUpperCase()}</strong>
+                    </p>
+                  )}
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Endereço da carteira</p>
+                    <div className="mt-1 flex items-center gap-2 rounded-xl bg-background p-2">
+                      <code className="flex-1 truncate text-xs font-mono">{cryptoAddress}</code>
+                      <Button size="sm" variant="ghost" onClick={() => copy(cryptoAddress, "Endereço copiado")}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => copy(cryptoAddress, "Endereço copiado — envie o valor em " + (cryptoCoin?.toUpperCase() ?? "cripto"))}
+                    className="h-12 w-full rounded-xl gradient-primary text-sm font-bold shadow-glow"
+                  >
+                    <Copy className="mr-2 h-4 w-4" /> Copiar endereço e pagar
+                  </Button>
+                </div>
+              )}
+
+              <p className="mt-3 text-[11px] text-muted-foreground">
+                Após pagar, envie o comprovante no WhatsApp da loja para confirmação.
+              </p>
+            </div>
           )}
         </section>
 
