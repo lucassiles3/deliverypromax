@@ -437,15 +437,96 @@ const OrderDetails = () => {
               <span className="text-muted-foreground"> • Troco para {brl(Number(order.change_for))}</span>
             )}
           </p>
-          {paymentLink && (
-            <a
-              href={paymentLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-            >
-              <CreditCard className="h-4 w-4" /> Abrir link de pagamento
-            </a>
+
+          {showPaymentCTA && (
+            <div className="mt-4 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 p-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-primary">Falta pagar</p>
+              <p className="mt-1 font-display text-2xl font-bold">{brl(Number(order.total))}</p>
+
+              {/* PIX */}
+              {order.payment_method === "pix" && pixKey && (
+                <div className="mt-4 space-y-3">
+                  <div className="grid gap-2 text-xs sm:grid-cols-2">
+                    {pixKeyType && (
+                      <div>
+                        <p className="font-bold uppercase tracking-wider text-muted-foreground">Tipo de chave</p>
+                        <p className="text-sm font-semibold">{pixKeyTypeLabel[pixKeyType] ?? pixKeyType}</p>
+                      </div>
+                    )}
+                    {pixName && (
+                      <div>
+                        <p className="font-bold uppercase tracking-wider text-muted-foreground">Beneficiário</p>
+                        <p className="text-sm font-semibold">{pixName}</p>
+                      </div>
+                    )}
+                    {pixBank && (
+                      <div className="sm:col-span-2">
+                        <p className="font-bold uppercase tracking-wider text-muted-foreground">Banco</p>
+                        <p className="text-sm font-semibold">{pixBank}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Chave Pix</p>
+                    <div className="mt-1 flex items-center gap-2 rounded-xl bg-background p-2">
+                      <code className="flex-1 truncate text-xs font-mono">{pixKey}</code>
+                      <Button size="sm" variant="ghost" onClick={() => copy(pixKey, "Chave Pix copiada")}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => copy(pixKey, "Chave Pix copiada — cole no app do seu banco")}
+                    className="h-12 w-full rounded-xl gradient-primary text-sm font-bold shadow-glow"
+                  >
+                    <Copy className="mr-2 h-4 w-4" /> Copiar chave e pagar
+                  </Button>
+                </div>
+              )}
+
+              {/* Link de pagamento */}
+              {paymentLink && (
+                <a
+                  href={paymentLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl gradient-primary text-sm font-bold text-primary-foreground shadow-glow"
+                >
+                  <CreditCard className="h-4 w-4" /> Pagar agora
+                </a>
+              )}
+
+              {/* Cripto */}
+              {order.payment_method === "crypto" && cryptoAddress && (
+                <div className="mt-4 space-y-3">
+                  {cryptoCoin && (
+                    <p className="text-sm">
+                      <span className="font-bold uppercase tracking-wider text-muted-foreground text-xs">Moeda: </span>
+                      <strong>{cryptoLabel[cryptoCoin] ?? cryptoCoin.toUpperCase()}</strong>
+                    </p>
+                  )}
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Endereço da carteira</p>
+                    <div className="mt-1 flex items-center gap-2 rounded-xl bg-background p-2">
+                      <code className="flex-1 truncate text-xs font-mono">{cryptoAddress}</code>
+                      <Button size="sm" variant="ghost" onClick={() => copy(cryptoAddress, "Endereço copiado")}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => copy(cryptoAddress, "Endereço copiado — envie o valor em " + (cryptoCoin?.toUpperCase() ?? "cripto"))}
+                    className="h-12 w-full rounded-xl gradient-primary text-sm font-bold shadow-glow"
+                  >
+                    <Copy className="mr-2 h-4 w-4" /> Copiar endereço e pagar
+                  </Button>
+                </div>
+              )}
+
+              <p className="mt-3 text-[11px] text-muted-foreground">
+                Após pagar, envie o comprovante no WhatsApp da loja para confirmação.
+              </p>
+            </div>
           )}
         </section>
 
