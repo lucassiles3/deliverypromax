@@ -203,6 +203,24 @@ const OrderDetails = () => {
 
   const paymentLinkMatch = order.notes?.match(/\[LINK_PAGAMENTO\]\s*(\S+)/);
   const paymentLink = paymentLinkMatch?.[1];
+  const cryptoMatch = order.notes?.match(/\[CRYPTO\s+([A-Z]+)\]\s*(\S+)/);
+  const cryptoCoin = cryptoMatch?.[1]?.toLowerCase();
+  const cryptoAddress = cryptoMatch?.[2];
+  const storeAny = (order.stores ?? {}) as any;
+  const pixKey: string | undefined = storeAny.pix_key || undefined;
+  const pixKeyType: string | undefined = storeAny.pix_key_type || undefined;
+  const pixName: string | undefined = storeAny.pix_beneficiary_name || undefined;
+  const pixBank: string | undefined = storeAny.pix_beneficiary_bank || undefined;
+  const isUnpaid = status === "pending_payment" || status === "received";
+  const showPaymentCTA =
+    isUnpaid &&
+    ((order.payment_method === "pix" && !!pixKey) ||
+      !!paymentLink ||
+      (order.payment_method === "crypto" && !!cryptoAddress));
+  const copy = (txt: string, msg = "Copiado") => {
+    navigator.clipboard.writeText(txt);
+    toast.success(msg);
+  };
 
   return (
     <div className="min-h-screen bg-muted/40 pb-24">
