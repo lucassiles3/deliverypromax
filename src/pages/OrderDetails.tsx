@@ -914,18 +914,48 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
 
       {/* Dados do estabelecimento */}
       <div className="rounded-xl border-2 border-dashed bg-muted/40 p-3">
-        <p className="mb-2 text-[11px] font-bold uppercase text-muted-foreground">Estabelecimento</p>
+        <p className="mb-2 text-[11px] font-bold uppercase text-muted-foreground">Endereço da retirada</p>
         <p className="text-sm font-bold">{store.name}</p>
-        {fullAddress && <p className="mt-0.5 text-sm">{fullAddress}</p>}
-        {store.phone && <p className="mt-0.5 text-xs text-muted-foreground">📞 {store.phone}</p>}
+        {(store.address_street || store.address_number) && (
+          <p className="mt-0.5 text-sm">
+            {store.address_street}
+            {store.address_number ? `, ${store.address_number}` : ""}
+            {store.address_complement ? ` — ${store.address_complement}` : ""}
+          </p>
+        )}
+        {(store.address_neighborhood || store.city) && (
+          <p className="text-xs text-muted-foreground">
+            {[store.address_neighborhood, store.city].filter(Boolean).join(" - ")}
+          </p>
+        )}
+        {store.address_cep && (
+          <p className="text-xs font-medium text-muted-foreground">CEP: {store.address_cep}</p>
+        )}
+        {store.phone && <p className="mt-1 text-xs text-muted-foreground">📞 {store.phone}</p>}
         {todayHours && (
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             🕒 Hoje {todayHours.open}–{todayHours.close}
           </p>
         )}
+
+        {/* Mapa com alfinete da loja */}
+        {store.lat != null && store.lng != null && (
+          <div className="mt-3 overflow-hidden rounded-xl">
+            <CourierMap
+              storeLat={Number(store.lat)}
+              storeLng={Number(store.lng)}
+              storeLabel={store.name ?? "Loja"}
+              courierLat={null}
+              courierLng={null}
+              recenterOnCourier={false}
+              height={200}
+            />
+          </div>
+        )}
+
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button
-            onClick={() => copy(fullAddress, "Endereço")}
+            onClick={() => copy(storeAddressBlock, "Endereço")}
             className="flex h-10 items-center justify-center gap-1.5 rounded-xl border-2 border-border bg-background text-xs font-bold hover:border-primary"
           >
             <Copy className="h-3.5 w-3.5" /> Copiar endereço
@@ -937,6 +967,16 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
             >
               <Phone className="h-3.5 w-3.5" /> Copiar telefone
             </button>
+          )}
+          {store.lat != null && store.lng != null && (
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}`}
+              target="_blank"
+              rel="noreferrer"
+              className="col-span-2 flex h-10 items-center justify-center gap-1.5 rounded-xl bg-primary text-xs font-bold text-primary-foreground hover:opacity-90"
+            >
+              <MapPin className="h-3.5 w-3.5" /> Abrir rota no Google Maps
+            </a>
           )}
         </div>
       </div>
