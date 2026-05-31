@@ -13,7 +13,7 @@ export const useNotifications = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("notifications")
-        .select("*")
+        .select("*, stores:store_id(name, logo)")
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
