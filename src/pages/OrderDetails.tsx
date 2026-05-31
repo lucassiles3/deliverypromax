@@ -19,7 +19,6 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LazyCourierMap as CourierMap } from "@/components/LazyCourierMap";
 import { formatOrderCode } from "@/lib/format";
 import {
   Dialog,
