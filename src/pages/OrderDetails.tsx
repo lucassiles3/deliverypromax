@@ -19,6 +19,8 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { LazyCourierMap as CourierMap } from "@/components/LazyCourierMap";
+import { formatOrderCode } from "@/lib/format";
 import {
   Dialog,
   DialogContent,
@@ -251,10 +253,10 @@ const OrderDetails = () => {
               Pedido <button
                 className="font-mono font-bold text-foreground hover:underline"
                 onClick={() => {
-                  navigator.clipboard.writeText(order.id);
-                  toast.success("ID copiado");
+                  navigator.clipboard.writeText(formatOrderCode(order.id));
+                  toast.success("Código copiado");
                 }}
-              >#{order.id.slice(0, 8).toUpperCase()}</button> • {date}
+              >#{formatOrderCode(order.id)}</button> • {date}
             </p>
           </div>
           <div className="text-right">
