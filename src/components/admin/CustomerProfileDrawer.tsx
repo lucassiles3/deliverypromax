@@ -234,7 +234,7 @@ export const CustomerProfileDrawer = ({
                   <div key={o.id} className="rounded-xl border bg-card p-3">
                     <div className="flex items-center justify-between gap-2">
                       <div>
-                        <div className="font-mono text-xs font-bold">#{o.id.slice(0, 8)}</div>
+                        <div className="font-mono text-xs font-bold">#{o.id.slice(0, 6).toUpperCase()}</div>
                         <div className="text-xs text-muted-foreground">{fmtDT(o.created_at)}</div>
                       </div>
                       <div className="text-right">

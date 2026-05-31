@@ -147,7 +147,7 @@ export const FinancialTab = ({ storeId, storeName }: { storeId: string; storeNam
       const liq = +(bruto - taxa).toFixed(2);
       return [
         new Date(o.created_at).toISOString(),
-        `#${o.id.slice(0, 8)}`,
+        `#${o.id.slice(0, 6).toUpperCase()}`,
         (o.customer_name ?? "").replace(/[,;\n]/g, " "),
         o.payment_method,
         finStatus(o.status),
@@ -196,7 +196,7 @@ export const FinancialTab = ({ storeId, storeName }: { storeId: string; storeNam
         const bruto = Number(o.total);
         const taxa = +(bruto * feePct / 100).toFixed(2);
         const liq = +(bruto - taxa).toFixed(2);
-        return `<tr><td>${fmtDT(o.created_at)}</td><td>#${o.id.slice(0, 8)}</td><td>${o.customer_name ?? ""}</td><td>${o.payment_method}</td><td>${finStatus(o.status)}</td><td>${fmt(bruto)}</td><td>${feePct.toFixed(1)}%</td><td>${fmt(liq)}</td></tr>`;
+        return `<tr><td>${fmtDT(o.created_at)}</td><td>#${o.id.slice(0, 6).toUpperCase()}</td><td>${o.customer_name ?? ""}</td><td>${o.payment_method}</td><td>${finStatus(o.status)}</td><td>${fmt(bruto)}</td><td>${feePct.toFixed(1)}%</td><td>${fmt(liq)}</td></tr>`;
       })
       .join("");
     const totGross = filteredTx.reduce((s, o) => s + Number(o.total), 0);
@@ -208,7 +208,7 @@ export const FinancialTab = ({ storeId, storeName }: { storeId: string; storeNam
   };
 
   const exportPayoutReceipt = (p: any) => {
-    exportPDF(`Comprovante de repasse #${p.id.slice(0, 8)}`, [
+    exportPDF(`Comprovante de repasse #${p.id.slice(0, 6).toUpperCase()}`, [
       `<table><tbody>
         <tr><th>Período</th><td>${fmtDate(p.period_start)} a ${fmtDate(p.period_end)}</td></tr>
         <tr><th>Pedidos inclusos</th><td>${p.orders_count}</td></tr>
@@ -225,7 +225,7 @@ export const FinancialTab = ({ storeId, storeName }: { storeId: string; storeNam
   const exportInvoice = (o: any) => {
     const bruto = Number(o.total);
     const taxa = +(bruto * feePct / 100).toFixed(2);
-    exportPDF(`Recibo do pedido #${o.id.slice(0, 8)}`, [
+    exportPDF(`Recibo do pedido #${o.id.slice(0, 6).toUpperCase()}`, [
       `<table><tbody>
         <tr><th>Cliente</th><td>${o.customer_name ?? ""}</td></tr>
         <tr><th>Data</th><td>${fmtDT(o.created_at)}</td></tr>
@@ -359,7 +359,7 @@ export const FinancialTab = ({ storeId, storeName }: { storeId: string; storeNam
                 return (
                   <tr key={o.id} className="border-t hover:bg-muted/30">
                     <td className="px-4 py-2.5 text-muted-foreground">{fmtDT(o.created_at)}</td>
-                    <td className="px-4 py-2.5 font-mono text-xs font-bold">#{o.id.slice(0, 8)}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs font-bold">#{o.id.slice(0, 6).toUpperCase()}</td>
                     <td className="px-4 py-2.5 capitalize">{o.payment_method}</td>
                     <td className="px-4 py-2.5">
                       <span
