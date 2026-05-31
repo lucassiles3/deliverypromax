@@ -276,10 +276,8 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
                     {CATEGORIES.map((cat) => {
                       const subs = SUBCATEGORIES[cat.key] ?? [];
                       return (
-                        <div key={cat.key}>
-                          <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                            {cat.label}
-                          </div>
+                        <SelectGroup key={cat.key}>
+                          <SelectLabel>{cat.label}</SelectLabel>
                           {subs.length === 0 ? (
                             <SelectItem value={cat.label}>{cat.label}</SelectItem>
                           ) : (
@@ -289,7 +287,7 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
                               </SelectItem>
                             ))
                           )}
-                        </div>
+                        </SelectGroup>
                       );
                     })}
                   </SelectContent>
