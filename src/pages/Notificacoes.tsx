@@ -55,6 +55,11 @@ const Notificacoes = () => {
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-1">
+                    {(n as any).stores?.name && (
+                      <p className="mb-1 flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-primary">
+                        🏪 {(n as any).stores.name}
+                      </p>
+                    )}
                     {n.link ? (
                       <Link
                         to={n.link}

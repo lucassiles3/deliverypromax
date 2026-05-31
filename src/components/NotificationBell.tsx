@@ -57,6 +57,11 @@ export const NotificationBell = () => {
                 <li key={n.id} className={`group p-3 ${!n.read ? "bg-primary/5" : ""}`}>
                   <div className="flex items-start gap-2">
                     <div className="flex-1">
+                      {(n as any).stores?.name && (
+                        <p className="mb-0.5 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-primary">
+                          🏪 {(n as any).stores.name}
+                        </p>
+                      )}
                       {n.link ? (
                         <Link to={n.link} onClick={() => !n.read && markRead.mutate(n.id)}>
                           <p className="text-sm font-semibold leading-tight">{n.title}</p>
