@@ -807,7 +807,16 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
   const todayHours = (store.opening_hours as any)?.[today];
 
   // Resumo formatado para copiar / compartilhar
-  const orderShort = String(order.id).slice(0, 6).toUpperCase();
+  const orderShort = formatOrderCode(order.id);
+  // Endereço só do estabelecimento (sem dados sensíveis) — usado no botão
+  // "Copiar endereço" e enviado ao motorista do app de logística.
+  const storeAddressBlock = [
+    store.name,
+    [store.address_street && `${store.address_street}${store.address_number ? `, ${store.address_number}` : ""}`,
+     store.address_complement].filter(Boolean).join(" "),
+    [store.address_neighborhood, store.city].filter(Boolean).join(" - "),
+    store.address_cep && `CEP: ${store.address_cep}`,
+  ].filter(Boolean).join("\n");
   const summary = [
     `🏪 ${store.name ?? "Loja"}`,
     fullAddress && `📍 ${fullAddress}`,
