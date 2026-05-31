@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { ChatbotSection } from "./ChatbotSection";
+import { CATEGORIES, SUBCATEGORIES } from "@/components/CategoryGrid";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Section = "profile" | "hours" | "delivery" | "payment" | "chatbot";
 
@@ -235,12 +237,16 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
                 onChange={(e) => setForm({ ...form, short_description: e.target.value })}
               />
             </Field>
-            <Field label="Categorias (Enter para adicionar)" full>
-              <div className="flex flex-wrap gap-1.5 rounded-md border bg-background p-2">
+            <Field label="Categorias da loja" full>
+              <p className="mb-2 text-[11px] text-muted-foreground">
+                Escolha uma categoria da lista ou digite uma personalizada e pressione Enter.
+              </p>
+              <div className="mb-2 flex flex-wrap gap-1.5">
                 {(form.categories ?? []).map((c: string) => (
                   <span key={c} className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
                     {c}
                     <button
+                      type="button"
                       onClick={() =>
                         setForm({ ...form, categories: form.categories.filter((x: string) => x !== c) })
                       }
@@ -250,6 +256,44 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
                     </button>
                   </span>
                 ))}
+                {(form.categories ?? []).length === 0 && (
+                  <span className="text-xs italic text-muted-foreground">Nenhuma categoria adicionada</span>
+                )}
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Select
+                  value=""
+                  onValueChange={(v) => {
+                    if (v && !(form.categories ?? []).includes(v)) {
+                      setForm({ ...form, categories: [...(form.categories ?? []), v] });
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="➕ Adicionar das categorias do app…" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {CATEGORIES.map((cat) => {
+                      const subs = SUBCATEGORIES[cat.key] ?? [];
+                      return (
+                        <div key={cat.key}>
+                          <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                            {cat.label}
+                          </div>
+                          {subs.length === 0 ? (
+                            <SelectItem value={cat.label}>{cat.label}</SelectItem>
+                          ) : (
+                            subs.map((s) => (
+                              <SelectItem key={`${cat.key}-${s.key}`} value={s.label}>
+                                {s.emoji} {s.label}
+                              </SelectItem>
+                            ))
+                          )}
+                        </div>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
                 <input
                   value={cuisineInput}
                   onChange={(e) => setCuisineInput(e.target.value)}
@@ -263,8 +307,8 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
                       setCuisineInput("");
                     }
                   }}
-                  placeholder="Ex: Hamburgueria"
-                  className="flex-1 bg-transparent text-sm outline-none"
+                  placeholder="Ou digite uma personalizada + Enter"
+                  className="rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             </Field>
