@@ -768,32 +768,60 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
       </Card>
 
       {form.delivery_mode === "radius" ? (
-        <Card title="Raio e taxa" icon={MapPin}>
+        <Card title="Raio e taxa de entrega" icon={MapPin}>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Personalize livremente sua cobrança de frete. O valor final é calculado como{" "}
+            <strong>Preço base + (km × Valor por km)</strong> respeitando o raio máximo.
+          </p>
           <div className="grid gap-3 sm:grid-cols-3">
-            <Field label="Raio (km)">
+            <Field label="Raio máximo (km)">
               <Input
                 type="number"
                 step="0.5"
+                min="0"
                 value={form.delivery_radius_km ?? ""}
                 onChange={(e) => setForm({ ...form, delivery_radius_km: Number(e.target.value) })}
+                placeholder="Ex: 5"
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">Distância máxima atendida</p>
             </Field>
-            <Field label="Taxa fixa (R$)">
+            <Field label="Preço base do frete (R$)">
               <Input
                 type="number"
                 step="0.5"
+                min="0"
                 value={form.delivery_fee ?? ""}
                 onChange={(e) => setForm({ ...form, delivery_fee: Number(e.target.value) })}
+                placeholder="Ex: 4,00"
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Cobrado em qualquer pedido dentro do raio
+              </p>
             </Field>
-            <Field label="Taxa por km extra (R$)">
+            <Field label="Valor por km (R$)">
               <Input
                 type="number"
                 step="0.5"
+                min="0"
                 value={form.delivery_fee_per_km ?? ""}
                 onChange={(e) => setForm({ ...form, delivery_fee_per_km: Number(e.target.value) })}
+                placeholder="Ex: 1,50"
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Adicionado a cada km até o cliente
+              </p>
             </Field>
+          </div>
+          <div className="mt-3 rounded-lg border border-dashed bg-muted/30 p-3 text-xs">
+            <p className="font-bold text-foreground">💡 Exemplo</p>
+            <p className="mt-1 text-muted-foreground">
+              Preço base R$ {Number(form.delivery_fee ?? 0).toFixed(2)} + 3 km × R${" "}
+              {Number(form.delivery_fee_per_km ?? 0).toFixed(2)} ={" "}
+              <strong className="text-foreground">
+                R$ {(Number(form.delivery_fee ?? 0) + 3 * Number(form.delivery_fee_per_km ?? 0)).toFixed(2)}
+              </strong>{" "}
+              para uma entrega de 3 km.
+            </p>
           </div>
         </Card>
       ) : (
