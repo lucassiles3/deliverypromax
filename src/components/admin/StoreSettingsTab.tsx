@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { ChatbotSection } from "./ChatbotSection";
+import { CATEGORIES, SUBCATEGORIES } from "@/components/CategoryGrid";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Section = "profile" | "hours" | "delivery" | "payment" | "chatbot";
 
@@ -235,12 +237,16 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
                 onChange={(e) => setForm({ ...form, short_description: e.target.value })}
               />
             </Field>
-            <Field label="Categorias (Enter para adicionar)" full>
-              <div className="flex flex-wrap gap-1.5 rounded-md border bg-background p-2">
+            <Field label="Categorias da loja" full>
+              <p className="mb-2 text-[11px] text-muted-foreground">
+                Escolha uma categoria da lista ou digite uma personalizada e pressione Enter.
+              </p>
+              <div className="mb-2 flex flex-wrap gap-1.5">
                 {(form.categories ?? []).map((c: string) => (
                   <span key={c} className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
                     {c}
                     <button
+                      type="button"
                       onClick={() =>
                         setForm({ ...form, categories: form.categories.filter((x: string) => x !== c) })
                       }
@@ -250,6 +256,42 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
                     </button>
                   </span>
                 ))}
+                {(form.categories ?? []).length === 0 && (
+                  <span className="text-xs italic text-muted-foreground">Nenhuma categoria adicionada</span>
+                )}
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Select
+                  value=""
+                  onValueChange={(v) => {
+                    if (v && !(form.categories ?? []).includes(v)) {
+                      setForm({ ...form, categories: [...(form.categories ?? []), v] });
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="➕ Adicionar das categorias do app…" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {CATEGORIES.map((cat) => {
+                      const subs = SUBCATEGORIES[cat.key] ?? [];
+                      return (
+                        <SelectGroup key={cat.key}>
+                          <SelectLabel>{cat.label}</SelectLabel>
+                          {subs.length === 0 ? (
+                            <SelectItem value={cat.label}>{cat.label}</SelectItem>
+                          ) : (
+                            subs.map((s) => (
+                              <SelectItem key={`${cat.key}-${s.key}`} value={s.label}>
+                                {s.emoji} {s.label}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectGroup>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
                 <input
                   value={cuisineInput}
                   onChange={(e) => setCuisineInput(e.target.value)}
@@ -263,8 +305,8 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
                       setCuisineInput("");
                     }
                   }}
-                  placeholder="Ex: Hamburgueria"
-                  className="flex-1 bg-transparent text-sm outline-none"
+                  placeholder="Ou digite uma personalizada + Enter"
+                  className="rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             </Field>
@@ -768,32 +810,60 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
       </Card>
 
       {form.delivery_mode === "radius" ? (
-        <Card title="Raio e taxa" icon={MapPin}>
+        <Card title="Raio e taxa de entrega" icon={MapPin}>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Personalize livremente sua cobrança de frete. O valor final é calculado como{" "}
+            <strong>Preço base + (km × Valor por km)</strong> respeitando o raio máximo.
+          </p>
           <div className="grid gap-3 sm:grid-cols-3">
-            <Field label="Raio (km)">
+            <Field label="Raio máximo (km)">
               <Input
                 type="number"
                 step="0.5"
+                min="0"
                 value={form.delivery_radius_km ?? ""}
                 onChange={(e) => setForm({ ...form, delivery_radius_km: Number(e.target.value) })}
+                placeholder="Ex: 5"
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">Distância máxima atendida</p>
             </Field>
-            <Field label="Taxa fixa (R$)">
+            <Field label="Preço base do frete (R$)">
               <Input
                 type="number"
                 step="0.5"
+                min="0"
                 value={form.delivery_fee ?? ""}
                 onChange={(e) => setForm({ ...form, delivery_fee: Number(e.target.value) })}
+                placeholder="Ex: 4,00"
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Cobrado em qualquer pedido dentro do raio
+              </p>
             </Field>
-            <Field label="Taxa por km extra (R$)">
+            <Field label="Valor por km (R$)">
               <Input
                 type="number"
                 step="0.5"
+                min="0"
                 value={form.delivery_fee_per_km ?? ""}
                 onChange={(e) => setForm({ ...form, delivery_fee_per_km: Number(e.target.value) })}
+                placeholder="Ex: 1,50"
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Adicionado a cada km até o cliente
+              </p>
             </Field>
+          </div>
+          <div className="mt-3 rounded-lg border border-dashed bg-muted/30 p-3 text-xs">
+            <p className="font-bold text-foreground">💡 Exemplo</p>
+            <p className="mt-1 text-muted-foreground">
+              Preço base R$ {Number(form.delivery_fee ?? 0).toFixed(2)} + 3 km × R${" "}
+              {Number(form.delivery_fee_per_km ?? 0).toFixed(2)} ={" "}
+              <strong className="text-foreground">
+                R$ {(Number(form.delivery_fee ?? 0) + 3 * Number(form.delivery_fee_per_km ?? 0)).toFixed(2)}
+              </strong>{" "}
+              para uma entrega de 3 km.
+            </p>
           </div>
         </Card>
       ) : (

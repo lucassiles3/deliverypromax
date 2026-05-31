@@ -572,7 +572,7 @@ const Checkout = () => {
     if (!waPhone) return null;
     const lines: string[] = [];
     lines.push(`*🛵 Novo pedido — ${store.name}*`);
-    lines.push(`Pedido #${orderId.slice(0, 8).toUpperCase()}`);
+    lines.push(`Pedido #${orderId.slice(0, 6).toUpperCase()}`);
     lines.push("");
     lines.push(`*Cliente:* ${name}`);
     lines.push(`*WhatsApp:* ${phone}`);
