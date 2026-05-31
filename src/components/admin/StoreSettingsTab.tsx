@@ -29,7 +29,7 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import { ChatbotSection } from "./ChatbotSection";
 import { CATEGORIES, SUBCATEGORIES } from "@/components/CategoryGrid";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Section = "profile" | "hours" | "delivery" | "payment" | "chatbot";
 
