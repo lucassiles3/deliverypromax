@@ -210,6 +210,70 @@ const Store = () => {
           variant="leaderboard"
           label="Banner loja — antes do cardápio"
         />
+
+        {/* Destaques (rail horizontal) */}
+        {(() => {
+          const featured = store.products.filter(
+            (p) => p.bestseller || p.promo || (p.oldPrice && p.oldPrice > p.price),
+          );
+          if (featured.length === 0) return null;
+          return (
+            <section aria-label="Destaques" className="-mx-4 px-4">
+              <h2 className="mb-3 font-display text-xl font-bold md:text-2xl">Destaques</h2>
+              <div className="scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2">
+                {featured.map((p) => {
+                  const badge = p.bestseller
+                    ? { label: "MAIS PEDIDO", cls: "bg-accent/15 text-accent" }
+                    : p.oldPrice && p.oldPrice > p.price
+                      ? { label: "EDIÇÃO LIMITADA", cls: "bg-secondary/15 text-secondary" }
+                      : p.promo
+                        ? { label: "PROMO", cls: "bg-primary/15 text-primary" }
+                        : null;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => navigate(`/loja/${store.slug}/produto/${p.id}`)}
+                      className="group flex w-44 shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-card text-left shadow-soft transition-smooth hover:shadow-card md:w-52"
+                    >
+                      <div className="aspect-square w-full overflow-hidden bg-muted">
+                        <img
+                          src={p.image}
+                          alt={p.name}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition-bounce group-hover:scale-105"
+                        />
+                      </div>
+                      <div className="flex flex-1 flex-col gap-1 p-3">
+                        {badge && (
+                          <span className={`w-fit rounded px-1.5 py-0.5 text-[10px] font-bold ${badge.cls}`}>
+                            {badge.label}
+                          </span>
+                        )}
+                        <h3 className="line-clamp-2 font-display text-sm font-bold leading-tight">
+                          {p.name}
+                        </h3>
+                        <p className="line-clamp-2 text-xs text-muted-foreground">
+                          {p.description}
+                        </p>
+                        <div className="mt-auto flex items-baseline gap-2 pt-1">
+                          <span className="font-display text-base font-bold text-success">
+                            R$ {p.price.toFixed(2).replace(".", ",")}
+                          </span>
+                          {p.oldPrice && p.oldPrice > p.price && (
+                            <span className="text-xs text-muted-foreground line-through">
+                              R$ {p.oldPrice.toFixed(2).replace(".", ",")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })()}
+
         {categoryList.map((c) => {
           const list = grouped[c] ?? [];
           if (list.length === 0) return null;
