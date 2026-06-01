@@ -108,6 +108,7 @@ export const CourierMap = ({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <InvalidateOnMount />
         {path && path.length >= 2 && (
           <Polyline
             positions={path}
