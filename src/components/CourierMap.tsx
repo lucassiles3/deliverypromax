@@ -2,6 +2,27 @@ import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 
+// Garante que o Leaflet recalcule o tamanho após o container montar/redimensionar.
+// Sem isso os tiles ficam "cortados" / desalinhados quando o mapa é renderizado
+// dentro de um card que mudou de tamanho depois do mount.
+const InvalidateOnMount = () => {
+  const map = useMap();
+  useEffect(() => {
+    const fix = () => map.invalidateSize();
+    const t1 = setTimeout(fix, 50);
+    const t2 = setTimeout(fix, 250);
+    const t3 = setTimeout(fix, 800);
+    window.addEventListener("resize", fix);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      window.removeEventListener("resize", fix);
+    };
+  }, [map]);
+  return null;
+};
+
 const courierIcon = L.divIcon({
   html: `<div style="background:hsl(var(--primary));color:hsl(var(--primary-foreground));width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.25);font-size:18px;border:3px solid white">🛵</div>`,
   className: "",
