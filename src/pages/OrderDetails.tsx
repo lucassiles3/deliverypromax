@@ -774,7 +774,51 @@ const LiveCourierTracking = ({
  * =======================================================================*/
 const LogisticsPickupSection = ({ order }: { order: any }) => {
   const qc = useQueryClient();
-  const store = order.stores ?? {};
+  const storeRaw = order.stores ?? {};
+
+  // Fallback: se a loja não preencheu o endereço (street/number/bairro/cep),
+  // tentamos reverse-geocode a partir da lat/lng cadastrada para que o cliente
+  // veja o endereço real (e não só "Cidade").
+  const [resolvedAddr, setResolvedAddr] = useState<{
+    street?: string;
+    number?: string;
+    neighborhood?: string;
+    city?: string;
+    cep?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const needs = !storeRaw.address_street && !storeRaw.address_neighborhood && !storeRaw.address_cep;
+    if (!needs) return;
+    if (storeRaw.lat == null || storeRaw.lng == null) return;
+    let cancelled = false;
+    (async () => {
+      const { reverseGeocode } = await import("@/lib/cep");
+      const r = await reverseGeocode(Number(storeRaw.lat), Number(storeRaw.lng));
+      if (!cancelled && r) {
+        setResolvedAddr({
+          street: r.street || undefined,
+          number: r.number || undefined,
+          neighborhood: r.neighborhood || undefined,
+          city: r.city || undefined,
+          cep: r.cep || undefined,
+        });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [storeRaw.lat, storeRaw.lng, storeRaw.address_street, storeRaw.address_neighborhood, storeRaw.address_cep]);
+
+  const store = {
+    ...storeRaw,
+    address_street: storeRaw.address_street || resolvedAddr?.street || "",
+    address_number: storeRaw.address_number || resolvedAddr?.number || "",
+    address_neighborhood: storeRaw.address_neighborhood || resolvedAddr?.neighborhood || "",
+    address_cep: storeRaw.address_cep || resolvedAddr?.cep || "",
+    city: storeRaw.city || resolvedAddr?.city || "",
+  };
+
   const fullAddress = [
     store.address_street && `${store.address_street}${store.address_number ? `, ${store.address_number}` : ""}`,
     store.address_complement,
@@ -784,6 +828,7 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
   ]
     .filter(Boolean)
     .join(" • ");
+
 
   const copy = (text: string, label: string) => {
     if (!text) return;
