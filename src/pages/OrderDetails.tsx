@@ -856,12 +856,11 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
   // Endereço só do estabelecimento (sem dados sensíveis) — usado no botão
   // "Copiar endereço" e enviado ao motorista do app de logística.
   const storeAddressBlock = [
-    store.name,
     [store.address_street && `${store.address_street}${store.address_number ? `, ${store.address_number}` : ""}`,
      store.address_complement].filter(Boolean).join(" "),
     [store.address_neighborhood, store.city].filter(Boolean).join(" - "),
     store.address_cep && `CEP: ${store.address_cep}`,
-  ].filter(Boolean).join("\n");
+  ].filter(Boolean).join(", ");
   const summary = [
     `🏪 ${store.name ?? "Loja"}`,
     fullAddress && `📍 ${fullAddress}`,
