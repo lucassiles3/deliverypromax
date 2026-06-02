@@ -81,7 +81,7 @@ const mapStore = (s: DbStore, products: Product[] = []): Store => ({
 const STORE_LIST_COLUMNS =
   "id, slug, name, tagline, cuisine, logo, cover_url, city, rating, reviews, " +
   "delivery_time, delivery_fee, free_shipping_threshold, min_order, open, promo, " +
-  "categories, lat, lng, delivery_radius_km";
+  "categories, lat, lng, delivery_radius_km, opening_hours";
 
 export const useStores = () =>
   useQuery({

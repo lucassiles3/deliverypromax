@@ -24,6 +24,7 @@ import heroBasket from "@/assets/hero-basket-3d.png";
 import promoBasket from "@/assets/promo-basket-3d.png";
 
 import { distanceKm, formatDistance } from "@/lib/distance";
+import { isStoreOpen } from "@/lib/storeHours";
 import {
   Loader2,
   MapPin,
@@ -160,13 +161,19 @@ const Index = () => {
   // Enrich with distance + open + inRange
   const enriched = useMemo(() => {
     return stores.map((s: any) => {
-      const open = s.open !== false;
+      // Loja externa já traz `open` calculado pelo isOpenNow.
+      // Loja normal: respeita toggle s.open E horário de funcionamento.
+      const manualOpen = s.open !== false;
+      const scheduleOpen = s._external
+        ? s.open !== false
+        : isStoreOpen(s.openingHours);
+      const open = manualOpen && scheduleOpen;
       let distance: number | null = null;
       if (coords && s.lat && s.lng) {
         distance = distanceKm(coords, { lat: Number(s.lat), lng: Number(s.lng) });
       }
       const radius = s.deliveryRadiusKm ?? null;
-      // Se não temos coords do usuário OU loja não tem raio definido => assume "no raio"
+      // Sem coords OU sem raio definido => considera "dentro do raio"
       const inRange = distance === null || radius === null ? true : distance <= radius;
       return {
         ...s,
@@ -185,12 +192,12 @@ const Index = () => {
 
   const showOutOfRange = false;
 
-  // Lojas no raio (sempre aplicado quando temos coords) — base para tudo
+  // Lojas no raio E abertas — base para tudo
   const inRangeStores = useMemo(
-    () => (coords ? enriched.filter((s) => s._inRange) : enriched),
+    () => enriched.filter((s) => (coords ? s._inRange : true) && s._open),
     [enriched, coords],
   );
-  const outOfRangeCount = enriched.length - inRangeStores.length;
+  const outOfRangeCount = enriched.filter((s) => coords && !s._inRange).length;
 
   // Fallback: se temos coords mas NENHUMA loja está no raio, mostra a mais próxima
   const nearestFallback = useMemo(() => {
