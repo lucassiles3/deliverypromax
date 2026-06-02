@@ -497,7 +497,13 @@ const ListingForm = ({
           <LocationPicker
             value={value.lat && value.lng ? { lat: value.lat, lng: value.lng } : null}
             onChange={(c) => onChange({ ...value, lat: c.lat, lng: c.lng })}
+            address={value.address}
+            onAddressChange={(addr) => onChange({ ...value, address: addr })}
           />
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Pesquise um endereço, CEP ou bairro — o mapa atualiza. Arraste o pino e o endereço é
+            preenchido automaticamente.
+          </p>
         </div>
 
         <div>
