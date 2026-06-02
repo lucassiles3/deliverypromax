@@ -4,8 +4,10 @@ import { Search, Store as StoreIcon, Package, Tag, Loader2, X, ExternalLink } fr
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAsset } from "@/lib/assetMap";
 import { brl } from "@/lib/format";
+import { isStoreOpen } from "@/lib/storeHours";
+import { isOpenNow } from "@/lib/openingHours";
 
-type StoreHit = { id: string; slug: string; name: string; cuisine: string | null; logo: string | null };
+type StoreHit = { id: string; slug: string; name: string; cuisine: string | null; logo: string | null; opening_hours?: any; open?: boolean };
 type ProductHit = {
   id: string;
   name: string;
@@ -19,6 +21,7 @@ type PartnerHit = {
   logo: string | null;
   catalog_url: string;
   category_key: string;
+  opening_hours?: any;
 };
 
 export const SmartSearch = ({
@@ -61,28 +64,40 @@ export const SmartSearch = ({
       const [{ data: ss }, { data: pp }, { data: ext }] = await Promise.all([
         supabase
           .from("stores")
-          .select("id, slug, name, cuisine, logo")
+          .select("id, slug, name, cuisine, logo, open, opening_hours")
           .not("owner_id", "is", null)
           .or(`name.ilike.${like},cuisine.ilike.${like}`)
-          .limit(5),
+          .limit(15),
         supabase
           .from("products")
-          .select("id, name, price, image_url, store:stores!inner(slug, name, owner_id)")
+          .select("id, name, price, image_url, store:stores!inner(slug, name, owner_id, open, opening_hours)")
           .ilike("name", like)
           .eq("active", true)
           .not("store.owner_id", "is", null)
-          .limit(6),
+          .limit(20),
         supabase
           .from("external_listings")
-          .select("id, name, logo, catalog_url, category_key")
+          .select("id, name, logo, catalog_url, category_key, opening_hours")
           .ilike("name", like)
           .eq("active", true)
-          .limit(5),
+          .limit(15),
       ]);
-      const sList = (ss ?? []) as StoreHit[];
+      // Filtra lojas fechadas (toggle manual ou fora do horário)
+      const sList = ((ss ?? []) as StoreHit[])
+        .filter((s) => s.open !== false && isStoreOpen(s.opening_hours))
+        .slice(0, 5);
+      const pList = ((pp ?? []) as any[])
+        .filter((p) => {
+          const st = p.store;
+          return !st || (st.open !== false && isStoreOpen(st.opening_hours));
+        })
+        .slice(0, 6);
+      const extList = ((ext ?? []) as PartnerHit[])
+        .filter((p) => isOpenNow(p.opening_hours))
+        .slice(0, 5);
       setStores(sList);
-      setProducts((pp ?? []) as unknown as ProductHit[]);
-      setPartners((ext ?? []) as unknown as PartnerHit[]);
+      setProducts(pList as unknown as ProductHit[]);
+      setPartners(extList);
       const uniqCui = Array.from(
         new Set(sList.map((s) => s.cuisine).filter((c): c is string => !!c)),
       ).slice(0, 4);
