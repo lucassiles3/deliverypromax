@@ -152,21 +152,25 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 3) Persiste assinatura local
+    // 3) Persiste assinatura local — após escolher um plano PRO, marcamos como
+    //    ativa por 30 dias para não pedir nova assinatura toda vez. Webhooks do
+    //    Asaas atualizam o período conforme os pagamentos forem confirmados.
+    const periodEnd = new Date(Date.now() + 30 * 86400_000).toISOString();
     const subPayload: Record<string, unknown> = {
       store_id: storeId,
       plan_id: plan?.id ?? null,
-      status: (sub?.status === "active" ? "active" : "trial"),
+      status: "active",
       monthly_amount: billingModel === "fixed_plus_per_order" ? FIXED_MONTHLY : 0,
       billing_model: billingModel,
-      per_order_fee: PER_ORDER_FEE, // R$1/pedido em AMBOS os modelos
+      per_order_fee: PER_ORDER_FEE,
       commission_percent: billingModel === "commission" ? COMMISSION_PCT : 0,
       gateway: "asaas",
       gateway_customer_id: customerId,
       gateway_subscription_id: subscriptionId,
       trial_ends_at: sub?.trial_ends_at ?? new Date(Date.now() + 7 * 86400_000).toISOString(),
-      current_period_start: sub?.current_period_start ?? new Date().toISOString(),
-      current_period_end: sub?.current_period_end ?? null,
+      current_period_start: new Date().toISOString(),
+      current_period_end: periodEnd,
+      cancelled_at: null,
     };
     if (sub) {
       await admin.from("store_subscriptions").update(subPayload).eq("store_id", storeId);
