@@ -275,7 +275,7 @@ const Index = () => {
 
 
       {/* Hero premium — estilo iOS marketplace */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-x-clip">
         {/* Glow de fundo */}
         <div className="pointer-events-none absolute -top-32 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
         <div className="pointer-events-none absolute -top-20 right-0 h-[320px] w-[320px] rounded-full bg-secondary/15 blur-3xl" />
