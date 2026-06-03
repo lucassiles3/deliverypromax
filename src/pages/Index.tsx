@@ -426,6 +426,17 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Destaques do mês — logos redondos */}
+      {featuredStores.length > 0 && (
+        <section className="container pb-2">
+          <StoreLogoRail
+            title="Destaques do mês"
+            subtitle="Os estabelecimentos mais amados pelos clientes"
+            stores={featuredStores as any}
+          />
+        </section>
+      )}
+
       {/* Mais visitadas do mês — carrossel de logos */}
       <TopVisitedRail />
 
