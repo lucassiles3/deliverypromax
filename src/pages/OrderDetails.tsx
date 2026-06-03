@@ -1124,12 +1124,25 @@ const LogisticsPickupSection = ({ order }: { order: any }) => {
             <p className="text-xs font-bold uppercase text-muted-foreground">
               {alreadySent ? "Atualizar entregador" : "Enviar link do entregador para a loja"}
             </p>
+            <details className="rounded-xl border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+              <summary className="cursor-pointer font-bold text-foreground">
+                📲 Como copiar o link de rastreio?
+              </summary>
+              <ol className="mt-2 list-decimal space-y-1 pl-4">
+                <li>Solicite a corrida normalmente no app (Uber, 99, etc.).</li>
+                <li>Após o motorista aceitar ou durante a viagem, deslize a tela para cima.</li>
+                <li>Toque em <strong>“Compartilhar status da viagem”</strong> ou <strong>“Compartilhar rota”</strong>.</li>
+                <li>Escolha um aplicativo (WhatsApp, Telegram, SMS, etc.) e envie para você mesmo.</li>
+                <li>Copie o link recebido e cole no campo abaixo — a loja poderá acompanhar a localização em tempo real.</li>
+              </ol>
+            </details>
             <input
               placeholder="Cole o link de rastreio (https://...)"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               className="w-full rounded-xl border-2 border-border bg-background p-3 text-sm outline-none focus:border-primary"
             />
+
             <Button onClick={submit} disabled={saving} className="h-12 w-full rounded-xl gradient-primary font-bold">
               {saving ? "Enviando..." : alreadySent ? "Atualizar link" : "Enviar link"}
             </Button>
