@@ -328,7 +328,7 @@ const Index = () => {
           </div>
 
           {/* Busca premium */}
-          <div className="mt-6">
+          <div className="relative z-[60] mt-6">
             <SmartSearch onCategoryPick={(c) => {
               const lc = c.toLowerCase();
               const cat = CATEGORIES.find((cc) => cc.match.some((m) => lc.includes(m)));
