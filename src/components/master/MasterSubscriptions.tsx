@@ -126,10 +126,35 @@ export default function MasterSubscriptions() {
                      s.trial_ends_at ? `Trial até ${new Date(s.trial_ends_at).toLocaleDateString("pt-BR")}` : "—"}
                   </td>
                   <td className="p-3 text-right">
-                    <Button size="sm" variant="outline" onClick={() => updateSub(s.id, {
-                      next_payment_at: new Date(Date.now() + 30*86400000).toISOString(),
-                      status: "active",
-                    } as any)}>Renovar 30d</Button>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <Button size="sm" variant="outline" onClick={() => updateSub(s.id, {
+                        next_payment_at: new Date(Date.now() + 30*86400000).toISOString(),
+                        status: "active",
+                      } as any)}>Renovar 30d</Button>
+                      <Button size="sm" variant="secondary" onClick={() => {
+                        if (!confirm("Liberar esta loja em modo FREE (sem cobranças)?")) return;
+                        updateSub(s.id, {
+                          status: "active",
+                          monthly_amount: 0,
+                          plan_id: null,
+                          next_payment_at: null,
+                          trial_ends_at: null,
+                          cancelled_at: null,
+                        } as any);
+                      }}>Modo Free</Button>
+                      <Button size="sm" onClick={() => {
+                        const plan = plans[0];
+                        if (!plan) return toast.error("Cadastre um plano primeiro");
+                        if (!confirm(`Religar cobrança com o plano "${plan.name}" (${fmt(plan.price_monthly)}/mês)?`)) return;
+                        updateSub(s.id, {
+                          status: "active",
+                          plan_id: plan.id,
+                          monthly_amount: plan.price_monthly,
+                          next_payment_at: new Date(Date.now() + 30*86400000).toISOString(),
+                          cancelled_at: null,
+                        } as any);
+                      }}>Religar cobrança</Button>
+                    </div>
                   </td>
                 </tr>
               ))}
