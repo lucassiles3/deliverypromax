@@ -56,6 +56,24 @@ const MinhaConta = () => {
           <ShortcutLink to="/notificacoes" icon={Bell} label="Notificações" />
         </div>
 
+        {isOwner && (
+          <button
+            onClick={() => navigate("/admin")}
+            className="flex w-full items-center gap-4 rounded-2xl bg-primary p-5 text-left shadow-lg shadow-primary/20 transition-transform active:scale-[0.98]"
+          >
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/20">
+              <Store className="h-7 w-7 text-primary-foreground" />
+            </div>
+            <div className="flex-1">
+              <p className="font-display text-lg font-bold text-primary-foreground">Modo Lojista</p>
+              <p className="text-sm text-primary-foreground/80">Acessar painel de administração da loja</p>
+            </div>
+            <div className="shrink-0 rounded-full bg-white/20 px-3 py-1.5 text-xs font-bold text-primary-foreground">
+              Ir
+            </div>
+          </button>
+        )}
+
         {/* Perfil */}
         <Card className="p-5">
           <div className="mb-4 flex items-center gap-4">
