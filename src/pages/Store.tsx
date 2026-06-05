@@ -78,6 +78,12 @@ const Store = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
+        <ShareButton
+          url={`${typeof window !== "undefined" ? window.location.origin : ""}/loja/${slug}`}
+          title={store?.name ?? "Itchat Brasil"}
+          text={`Confira ${store?.name ?? "esta loja"} no Itchat Brasil!`}
+          className="absolute right-4 top-4"
+        />
       </div>
 
       {/* Store info */}
