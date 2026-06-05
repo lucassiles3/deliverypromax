@@ -6,6 +6,7 @@ import { useStoreBySlug } from "@/hooks/useStores";
 import { useCart, type CartCustomization } from "@/context/CartContext";
 import type { AddonGroup, AddonOption } from "@/data/stores";
 import { FavoriteProductButton } from "@/components/FavoriteButton";
+import { ShareButton } from "@/components/ShareButton";
 
 const Product = () => {
   const { slug = "", productId = "" } = useParams();
@@ -78,7 +79,12 @@ const Product = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="absolute right-4 top-4">
+        <div className="absolute right-4 top-4 flex items-center gap-2">
+          <ShareButton
+            url={`${typeof window !== "undefined" ? window.location.origin : ""}/loja/${slug}/produto/${productId}`}
+            title={product.name}
+            text={`Confira ${product.name} na loja ${store.name}!`}
+          />
           <FavoriteProductButton productId={product.id} storeId={store.id} />
         </div>
         {product.bestseller && (
