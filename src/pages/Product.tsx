@@ -6,6 +6,7 @@ import { useStoreBySlug } from "@/hooks/useStores";
 import { useCart, type CartCustomization } from "@/context/CartContext";
 import type { AddonGroup, AddonOption } from "@/data/stores";
 import { FavoriteProductButton } from "@/components/FavoriteButton";
+import { ShareButton } from "@/components/ShareButton";
 
 const Product = () => {
   const { slug = "", productId = "" } = useParams();
