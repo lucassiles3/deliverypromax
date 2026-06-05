@@ -12,7 +12,8 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const MinhaConta = () => {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, isOwner } = useAuth();
+  const navigate = useNavigate();
   const { data: profile } = useProfile();
   const update = useUpdateProfile();
   const updatePw = useUpdatePassword();
