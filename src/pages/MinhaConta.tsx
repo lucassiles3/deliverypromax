@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Navigate, Link } from "react-router-dom";
-import { User, Lock, Phone, Mail, Save, MapPin, Heart, Bell, Receipt, LogOut, IdCard, Trophy, Cake } from "lucide-react";
+import { Navigate, Link, useNavigate } from "react-router-dom";
+import { User, Lock, Phone, Mail, Save, MapPin, Heart, Bell, Receipt, LogOut, IdCard, Trophy, Cake, Store } from "lucide-react";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
