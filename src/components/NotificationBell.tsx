@@ -1,4 +1,4 @@
-import { Bell, Check, Trash2 } from "lucide-react";
+import { Bell, BellOff, BellRing, Check, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,8 +9,10 @@ import {
   useMarkAllRead,
   useDeleteNotification,
 } from "@/hooks/useNotifications";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 
 export const NotificationBell = () => {
   const { data = [] } = useNotifications();
@@ -18,6 +20,28 @@ export const NotificationBell = () => {
   const markRead = useMarkRead();
   const markAll = useMarkAllRead();
   const del = useDeleteNotification();
+  const { permission, request } = usePushNotifications();
+
+  const handleEnablePush = async () => {
+    if (typeof Notification === "undefined") {
+      toast.error("Seu navegador não suporta notificações");
+      return;
+    }
+    if (Notification.permission === "denied") {
+      toast.error("Permissão bloqueada. Ative nas configurações do navegador (cadeado na barra de endereço).");
+      return;
+    }
+    const p = await request();
+    if (p === "granted") {
+      toast.success("Notificações ativadas! 🔔");
+      try {
+        new Notification("Notificações ativadas", { body: "Você receberá alertas em tempo real.", icon: "/favicon.ico" });
+      } catch { /* ignore */ }
+    } else {
+      toast.error("Permissão não concedida");
+    }
+  };
+
 
   return (
     <Popover>
@@ -46,6 +70,19 @@ export const NotificationBell = () => {
             </button>
           )}
         </div>
+        {permission !== "granted" && (
+          <button
+            onClick={handleEnablePush}
+            className="flex w-full items-center gap-2 border-b bg-primary/10 px-3 py-2 text-left text-xs font-semibold text-primary hover:bg-primary/15"
+          >
+            {permission === "denied" ? <BellOff className="h-4 w-4" /> : <BellRing className="h-4 w-4" />}
+            <span className="flex-1">
+              {permission === "denied"
+                ? "Notificações bloqueadas — toque para ver como ativar"
+                : "Ativar notificações push neste navegador"}
+            </span>
+          </button>
+        )}
         <ScrollArea className="h-80">
           {data.length === 0 ? (
             <div className="p-6 text-center text-sm text-muted-foreground">
