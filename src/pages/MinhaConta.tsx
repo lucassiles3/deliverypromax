@@ -19,7 +19,7 @@ const MinhaConta = () => {
   const update = useUpdateProfile();
   const updatePw = useUpdatePassword();
 
-  const [form, setForm] = useState({ display_name: "", phone: "", cpf: "", avatar_url: "", birthday: "" });
+  const [form, setForm] = useState({ display_name: "", phone: "", birthday: "" });
   const [pw, setPw] = useState("");
 
   useEffect(() => {
@@ -27,12 +27,16 @@ const MinhaConta = () => {
       setForm({
         display_name: profile.display_name ?? "",
         phone: profile.phone ?? "",
-        cpf: (profile as any).cpf ?? "",
-        avatar_url: profile.avatar_url ?? "",
         birthday: (profile as any).birthday ?? "",
       });
     }
   }, [profile]);
+
+  const hasUpper = /[A-Z]/.test(pw);
+  const hasLower = /[a-z]/.test(pw);
+  const hasNumber = /\d/.test(pw);
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>_+\-=\\[\\];'`~]/.test(pw);
+  const isPasswordStrong = pw.length >= 6 && hasUpper && hasLower && hasNumber && hasSpecial;
 
   if (loading) return <div className="min-h-screen" />;
   if (!user) return <Navigate to="/auth" replace />;
