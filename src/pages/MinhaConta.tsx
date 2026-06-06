@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Navigate, Link, useNavigate } from "react-router-dom";
-import { User, Lock, Phone, Mail, Save, MapPin, Heart, Bell, Receipt, LogOut, Trophy, Cake, Store } from "lucide-react";
+import { User, Lock, Phone, Mail, Save, MapPin, Heart, Bell, Receipt, LogOut, Trophy, Cake, Store, Eye, EyeOff } from "lucide-react";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +21,7 @@ const MinhaConta = () => {
 
   const [form, setForm] = useState({ display_name: "", phone: "", birthday: "" });
   const [pw, setPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -35,7 +36,7 @@ const MinhaConta = () => {
   const hasUpper = /[A-Z]/.test(pw);
   const hasLower = /[a-z]/.test(pw);
   const hasNumber = /\d/.test(pw);
-  const hasSpecial = /[!@#$%^&*(),.?":{}|<>_+\-=\\[\\];'`~]/.test(pw);
+  const hasSpecial = /[^A-Za-z0-9]/.test(pw);
   const isPasswordStrong = pw.length >= 6 && hasUpper && hasLower && hasNumber && hasSpecial;
 
   if (loading) return <div className="min-h-screen" />;
@@ -123,12 +124,23 @@ const MinhaConta = () => {
             <Lock className="h-4 w-4" /> Alterar senha
           </h2>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Input
-              type="password"
-              placeholder="Nova senha"
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
-            />
+            <div className="relative flex-1">
+              <Input
+                type={showPw ? "text" : "password"}
+                placeholder="Nova senha"
+                value={pw}
+                onChange={(e) => setPw(e.target.value)}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPw ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
             <Button
               onClick={() => {
                 if (!isPasswordStrong) return;
