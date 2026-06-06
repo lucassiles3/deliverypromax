@@ -36,7 +36,7 @@ const MinhaConta = () => {
   const hasUpper = /[A-Z]/.test(pw);
   const hasLower = /[a-z]/.test(pw);
   const hasNumber = /\d/.test(pw);
-  const hasSpecial = /[!@#$%^&*(),.?":{}|<>_+\-=\\[\\];'`~]/.test(pw);
+  const hasSpecial = /[^A-Za-z0-9]/.test(pw);
   const isPasswordStrong = pw.length >= 6 && hasUpper && hasLower && hasNumber && hasSpecial;
 
   if (loading) return <div className="min-h-screen" />;
