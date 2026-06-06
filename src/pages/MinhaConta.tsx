@@ -21,6 +21,7 @@ const MinhaConta = () => {
 
   const [form, setForm] = useState({ display_name: "", phone: "", birthday: "" });
   const [pw, setPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
 
   useEffect(() => {
     if (profile) {
