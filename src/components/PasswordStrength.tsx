@@ -10,7 +10,7 @@ export const PasswordStrength = ({ password }: Props) => {
     { label: "Uma letra maiúscula", test: (p: string) => /[A-Z]/.test(p) },
     { label: "Uma letra minúscula", test: (p: string) => /[a-z]/.test(p) },
     { label: "Um número", test: (p: string) => /\d/.test(p) },
-    { label: "Um caractere especial (!@#$...)", test: (p: string) => /[!@#$%^&*(),.?":{}|<>_+\-=\\[\\];'`~]/.test(p) },
+    { label: "Um caractere especial (!@#$...)", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
   ];
 
   const passed = rules.filter((r) => r.test(password)).length;
