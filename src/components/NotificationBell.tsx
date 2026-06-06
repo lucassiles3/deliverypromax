@@ -1,4 +1,4 @@
-import { Bell, Check, Trash2 } from "lucide-react";
+import { Bell, BellOff, BellRing, Check, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,8 +9,10 @@ import {
   useMarkAllRead,
   useDeleteNotification,
 } from "@/hooks/useNotifications";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 
 export const NotificationBell = () => {
   const { data = [] } = useNotifications();
@@ -18,6 +20,28 @@ export const NotificationBell = () => {
   const markRead = useMarkRead();
   const markAll = useMarkAllRead();
   const del = useDeleteNotification();
+  const { permission, request } = usePushNotifications();
+
+  const handleEnablePush = async () => {
+    if (typeof Notification === "undefined") {
+      toast.error("Seu navegador não suporta notificações");
+      return;
+    }
+    if (Notification.permission === "denied") {
+      toast.error("Permissão bloqueada. Ative nas configurações do navegador (cadeado na barra de endereço).");
+      return;
+    }
+    const p = await request();
+    if (p === "granted") {
+      toast.success("Notificações ativadas! 🔔");
+      try {
+        new Notification("Notificações ativadas", { body: "Você receberá alertas em tempo real.", icon: "/favicon.ico" });
+      } catch { /* ignore */ }
+    } else {
+      toast.error("Permissão não concedida");
+    }
+  };
+
 
   return (
     <Popover>
