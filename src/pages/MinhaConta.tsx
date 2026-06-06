@@ -124,12 +124,23 @@ const MinhaConta = () => {
             <Lock className="h-4 w-4" /> Alterar senha
           </h2>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Input
-              type="password"
-              placeholder="Nova senha"
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
-            />
+            <div className="relative flex-1">
+              <Input
+                type={showPw ? "text" : "password"}
+                placeholder="Nova senha"
+                value={pw}
+                onChange={(e) => setPw(e.target.value)}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPw ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
             <Button
               onClick={() => {
                 if (!isPasswordStrong) return;
