@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Navigate, Link, useNavigate } from "react-router-dom";
-import { User, Lock, Phone, Mail, Save, MapPin, Heart, Bell, Receipt, LogOut, IdCard, Trophy, Cake, Store } from "lucide-react";
+import { User, Lock, Phone, Mail, Save, MapPin, Heart, Bell, Receipt, LogOut, Trophy, Cake, Store } from "lucide-react";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PasswordStrength } from "@/components/PasswordStrength";
 
 const MinhaConta = () => {
   const { user, loading, signOut, isOwner } = useAuth();
