@@ -70,6 +70,19 @@ export const NotificationBell = () => {
             </button>
           )}
         </div>
+        {permission !== "granted" && (
+          <button
+            onClick={handleEnablePush}
+            className="flex w-full items-center gap-2 border-b bg-primary/10 px-3 py-2 text-left text-xs font-semibold text-primary hover:bg-primary/15"
+          >
+            {permission === "denied" ? <BellOff className="h-4 w-4" /> : <BellRing className="h-4 w-4" />}
+            <span className="flex-1">
+              {permission === "denied"
+                ? "Notificações bloqueadas — toque para ver como ativar"
+                : "Ativar notificações push neste navegador"}
+            </span>
+          </button>
+        )}
         <ScrollArea className="h-80">
           {data.length === 0 ? (
             <div className="p-6 text-center text-sm text-muted-foreground">
