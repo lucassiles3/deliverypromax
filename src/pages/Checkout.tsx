@@ -190,7 +190,25 @@ const Checkout = () => {
   }, [deliveryEnabled, pickupEnabled, logisticsEnabled, method]);
 
   const creditLinkTemplate = enabledMethods["credit_link"]?.notes ?? null;
-  const creditLinkEnabled = !!enabledMethods["credit_link"]?.enabled && !!creditLinkTemplate;
+  // Handle InfinitePay da loja (preferido). Se houver, geramos link via API.
+  const [infinitepayHandle, setInfinitepayHandle] = useState<string | null>(null);
+  useEffect(() => {
+    if (!store?.id) return;
+    let cancelled = false;
+    supabase
+      .from("stores")
+      .select("infinitepay_handle")
+      .eq("id", store.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const h = ((data as any)?.infinitepay_handle ?? "").trim();
+        setInfinitepayHandle(h || null);
+      });
+    return () => { cancelled = true; };
+  }, [store?.id]);
+  const creditLinkEnabled =
+    !!enabledMethods["credit_link"]?.enabled && (!!creditLinkTemplate || !!infinitepayHandle);
 
   const cryptoEnabled = !!enabledMethods["crypto"]?.enabled && Object.values(storeWallets).some((v) => !!v);
 
