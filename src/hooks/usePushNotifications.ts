@@ -38,7 +38,7 @@ export const usePushNotifications = () => {
   useEffect(() => {
     if (!user) return;
     const channel = supabase
-      .channel(`push-notif-${user.id}`)
+      .channel(`push-notif-${user.id}-${Math.random().toString(36).slice(2, 8)}`)
       .on(
         "postgres_changes",
         {
