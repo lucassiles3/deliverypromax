@@ -640,7 +640,37 @@ const Checkout = () => {
     setSubmitting(true);
     try {
       // Para "credit_link" persistimos como "credit" (enum do banco) e marcamos via notes.
-      const paymentLink = payment === "credit_link" ? buildPaymentLink(total) : null;
+      // Preferimos a API da InfinitePay (gera link dinâmico com valor exato);
+      // se não houver handle configurado, caímos no template estático {valor}.
+      let paymentLink: string | null = null;
+      if (payment === "credit_link") {
+        if (infinitepayHandle) {
+          try {
+            const { data: linkData, error: linkErr } = await supabase.functions.invoke(
+              "infinitepay-create-link",
+              {
+                body: {
+                  store_id: store.id,
+                  order_nsu: `${store.id.slice(0, 8)}-${Date.now()}`,
+                  items: items.map((it) => ({
+                    quantity: it.quantity,
+                    price: Math.round(it.unitPrice * 100), // centavos
+                    description: it.product.name,
+                  })),
+                  customer: { name, phone_number: phone },
+                  redirect_url: `${window.location.origin}/meus-pedidos`,
+                },
+              },
+            );
+            if (linkErr) throw linkErr;
+            paymentLink = (linkData as any)?.url ?? null;
+          } catch (e: any) {
+            console.error("[InfinitePay] falhou, usando template", e);
+            toast.error("Não foi possível gerar o link da InfinitePay. Tentando link alternativo.");
+          }
+        }
+        if (!paymentLink) paymentLink = buildPaymentLink(total);
+      }
       const dbPaymentMethod: "pix" | "cash" | "credit" | "debit" | "crypto" =
         payment === "credit_link" ? "credit" : payment;
       const cryptoNote =
