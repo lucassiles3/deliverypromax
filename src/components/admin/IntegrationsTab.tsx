@@ -16,6 +16,7 @@ export const IntegrationsTab = ({ storeId }: { storeId: string }) => {
       <div className="flex flex-wrap gap-2">
         {[
           { id: "pix" as const, label: "PIX / Gateways", icon: Wallet },
+          { id: "infinitepay" as const, label: "InfinitePay (Crédito)", icon: CreditCard },
           { id: "keys" as const, label: "API Keys", icon: Key },
           { id: "webhooks" as const, label: "Webhooks", icon: Webhook },
           { id: "deliveries" as const, label: "Entregas", icon: Activity },
@@ -34,6 +35,7 @@ export const IntegrationsTab = ({ storeId }: { storeId: string }) => {
         ))}
       </div>
       {section === "pix" && <PixGatewaySection storeId={storeId} />}
+      {section === "infinitepay" && <InfinitePaySection storeId={storeId} />}
       {section === "keys" && <KeysSection storeId={storeId} />}
       {section === "webhooks" && <WebhooksSection storeId={storeId} />}
       {section === "deliveries" && <DeliveriesSection storeId={storeId} />}
