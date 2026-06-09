@@ -189,21 +189,17 @@ export const InfinitePaySection = ({ storeId }: Props) => {
 
           <div>
             <Label className="text-sm">URL do webhook (notificações de pagamento)</Label>
-            <div className="mt-1 flex gap-2">
-              <Input
-                value={webhookUrl}
-                onChange={(e) => setWebhookUrl(e.target.value)}
-                placeholder={WEBHOOK_BASE}
-              />
-              <Button type="button" variant="outline" onClick={copyWebhook} title="Copiar URL padrão">
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
+            <Input
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+              placeholder="https://seu-webhook-da-infinitepay.com/notificacoes"
+              className="mt-1"
+            />
             <p className="mt-1 text-[11px] text-muted-foreground">
-              A InfinitePay chamará esta URL quando o pagamento for aprovado, atualizando seu pedido em tempo real.
-              Recomendado deixar o padrão acima.
+              Cole aqui a URL de webhook fornecida pela sua conta InfinitePay. A cada pagamento (crédito por link ou Pix) ela enviará um POST com o payload, atualizando o pedido em tempo real.
             </p>
           </div>
+
 
           <div className="flex flex-wrap gap-2 pt-1">
             <Button onClick={save} disabled={!dirty || saving} className="flex-1 min-w-[120px]">
