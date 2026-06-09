@@ -21,3 +21,7 @@ verify_jwt = false
 [functions.subscription-grace-cron]
 verify_jwt = false
 
+[functions.infinitepay-webhook]
+verify_jwt = false
+
+

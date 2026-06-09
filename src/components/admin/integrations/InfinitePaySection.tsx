@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CreditCard, ExternalLink, Save, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
+import { CreditCard, ExternalLink, Save, ChevronDown, ChevronUp, CheckCircle2, Copy, Zap, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -10,24 +10,34 @@ interface Props {
   storeId: string;
 }
 
+const WEBHOOK_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/infinitepay-webhook`;
+
 export const InfinitePaySection = ({ storeId }: Props) => {
   const [handle, setHandle] = useState("");
-  const [initial, setInitial] = useState("");
+  const [redirectUrl, setRedirectUrl] = useState("");
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [initial, setInitial] = useState({ handle: "", redirect: "", webhook: "" });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
     if (!storeId) return;
     supabase
       .from("stores")
-      .select("infinitepay_handle")
+      .select("infinitepay_handle, infinitepay_redirect_url, infinitepay_webhook_url")
       .eq("id", storeId)
       .maybeSingle()
       .then(({ data }) => {
-        const h = (data as any)?.infinitepay_handle ?? "";
+        const d: any = data || {};
+        const h = d.infinitepay_handle ?? "";
+        const r = d.infinitepay_redirect_url ?? "";
+        const w = d.infinitepay_webhook_url ?? WEBHOOK_BASE;
         setHandle(h);
-        setInitial(h);
+        setRedirectUrl(r);
+        setWebhookUrl(w);
+        setInitial({ handle: h, redirect: r, webhook: w });
         setLoading(false);
       });
   }, [storeId]);
@@ -37,20 +47,67 @@ export const InfinitePaySection = ({ storeId }: Props) => {
     const clean = handle.trim().replace(/^\$/, "");
     const { error } = await supabase
       .from("stores")
-      .update({ infinitepay_handle: clean || null } as any)
+      .update({
+        infinitepay_handle: clean || null,
+        infinitepay_redirect_url: redirectUrl.trim() || null,
+        infinitepay_webhook_url: webhookUrl.trim() || null,
+      } as any)
       .eq("id", storeId);
     setSaving(false);
     if (error) {
       toast.error("Erro ao salvar: " + error.message);
       return;
     }
-    setInitial(clean);
+    setInitial({ handle: clean, redirect: redirectUrl.trim(), webhook: webhookUrl.trim() });
     setHandle(clean);
-    toast.success("InfiniteTag salva com sucesso!");
+    toast.success("Configurações salvas!");
   };
 
-  const dirty = handle.trim().replace(/^\$/, "") !== initial;
-  const configured = !!initial;
+  const testLink = async () => {
+    if (!handle.trim()) {
+      toast.error("Configure e salve sua InfiniteTag antes de testar.");
+      return;
+    }
+    if (handle.trim() !== initial.handle) {
+      toast.error("Salve as alterações antes de testar.");
+      return;
+    }
+    setTesting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("infinitepay-create-link", {
+        body: {
+          store_id: storeId,
+          order_nsu: `test-${Date.now()}`,
+          items: [
+            { quantity: 1, price: 1000, description: "Pedido de teste" },
+          ],
+          customer: { name: "Cliente Teste", email: "teste@exemplo.com" },
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.url) {
+        window.open((data as any).url, "_blank", "noopener");
+        toast.success("Link gerado com sucesso!");
+      } else {
+        toast.error((data as any)?.error || "Falha ao gerar link de teste");
+      }
+    } catch (e: any) {
+      toast.error("Erro: " + (e?.message ?? e));
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const copyWebhook = async () => {
+    await navigator.clipboard.writeText(WEBHOOK_BASE);
+    toast.success("URL do webhook copiada!");
+  };
+
+  const dirty =
+    handle.trim().replace(/^\$/, "") !== initial.handle ||
+    redirectUrl.trim() !== initial.redirect ||
+    webhookUrl.trim() !== initial.webhook;
+  const configured = !!initial.handle;
 
   return (
     <section className="rounded-2xl bg-card p-5 shadow-soft">
@@ -88,13 +145,58 @@ export const InfinitePaySection = ({ storeId }: Props) => {
                   maxLength={60}
                 />
               </div>
-              <Button onClick={save} disabled={!dirty || saving}>
-                <Save className="mr-1 h-4 w-4" /> Salvar
-              </Button>
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
               Use seu nome de usuário do app InfinitePay, sem o símbolo <code className="rounded bg-muted px-1">$</code>.
             </p>
+          </div>
+
+          <div>
+            <Label className="text-sm">URL de redirecionamento (após pagamento)</Label>
+            <Input
+              value={redirectUrl}
+              onChange={(e) => setRedirectUrl(e.target.value)}
+              placeholder="https://sualoja.com/obrigado"
+              className="mt-1"
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Para onde o cliente é levado depois do pagamento aprovado. Deixe em branco para usar o padrão da InfinitePay.
+            </p>
+          </div>
+
+          <div>
+            <Label className="text-sm">URL do webhook (notificações de pagamento)</Label>
+            <div className="mt-1 flex gap-2">
+              <Input
+                value={webhookUrl}
+                onChange={(e) => setWebhookUrl(e.target.value)}
+                placeholder={WEBHOOK_BASE}
+              />
+              <Button type="button" variant="outline" onClick={copyWebhook} title="Copiar URL padrão">
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              A InfinitePay chamará esta URL quando o pagamento for aprovado, atualizando seu pedido em tempo real.
+              Recomendado deixar o padrão acima.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Button onClick={save} disabled={!dirty || saving} className="flex-1 min-w-[120px]">
+              <Save className="mr-1 h-4 w-4" /> {saving ? "Salvando..." : "Salvar"}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={testLink}
+              disabled={testing || !configured || dirty}
+              className="flex-1 min-w-[160px]"
+              title={dirty ? "Salve antes de testar" : "Gerar link de R$ 10,00 de teste"}
+            >
+              {testing ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Zap className="mr-1 h-4 w-4" />}
+              Testar link (R$ 10,00)
+            </Button>
           </div>
 
           <button
@@ -110,22 +212,22 @@ export const InfinitePaySection = ({ storeId }: Props) => {
               <p className="font-semibold">Como integrar a InfinitePay à sua loja:</p>
               <ol className="ml-4 list-decimal space-y-2 text-muted-foreground">
                 <li>
-                  Baixe o aplicativo <strong>InfinitePay</strong> e crie sua conta como vendedor (se ainda não tiver).
+                  Baixe o app <strong>InfinitePay</strong> e crie sua conta como vendedor.
                 </li>
                 <li>
-                  No app, vá em <strong>Perfil → InfiniteTag</strong> e copie seu nome de usuário (ex.: <code className="rounded bg-muted px-1">lucassiles</code>).
+                  No app, vá em <strong>Perfil → InfiniteTag</strong> e copie seu nome de usuário.
                 </li>
                 <li>
-                  Cole esse nome no campo acima (sem o <code className="rounded bg-muted px-1">$</code>) e clique em <strong>Salvar</strong>.
+                  Cole no campo acima (sem <code className="rounded bg-muted px-1">$</code>), defina sua URL de redirecionamento (opcional) e mantenha a URL de webhook padrão.
+                </li>
+                <li>
+                  Clique em <strong>Salvar</strong>, depois em <strong>Testar link</strong> para validar a integração — um link de R$ 10,00 será aberto.
                 </li>
                 <li>
                   Em <strong>Configurações → Formas de pagamento</strong>, ative <em>"Cartão de crédito — link de pagamento"</em>.
                 </li>
                 <li>
-                  Pronto! Quando um cliente finalizar o pedido e escolher pagar no crédito, o sistema gera automaticamente um link da InfinitePay com o valor exato do pedido.
-                </li>
-                <li>
-                  O cliente é redirecionado para o checkout seguro da InfinitePay, conclui o pagamento e volta para a sua loja.
+                  Pronto! Cada pedido pago no crédito gera um link InfinitePay automaticamente, e o pedido é marcado como pago em tempo real pelo webhook.
                 </li>
               </ol>
 
@@ -134,15 +236,14 @@ export const InfinitePaySection = ({ storeId }: Props) => {
                 <ul className="ml-4 mt-1 list-disc space-y-1 text-muted-foreground">
                   <li>Cartão de crédito (parcelamento conforme sua conta InfinitePay)</li>
                   <li>Pix (se ativado na sua conta InfinitePay)</li>
-                  <li>Pagamento 100% online — você não precisa fazer nada manualmente</li>
+                  <li>Pagamento 100% online — sem trabalho manual</li>
                 </ul>
               </div>
 
               <div className="rounded-md bg-amber-500/10 p-3 text-xs">
                 <p className="font-bold text-amber-700">⚠ Importante:</p>
                 <p className="mt-1 text-muted-foreground">
-                  A taxa de cada transação é cobrada pela InfinitePay diretamente na sua conta. Consulte as taxas no app da InfinitePay.
-                  O valor líquido cai na sua conta conforme as regras da InfinitePay (D+1 crédito à vista, etc.).
+                  As taxas são cobradas pela InfinitePay diretamente na sua conta. Consulte as taxas e prazos no app oficial.
                 </p>
               </div>
 

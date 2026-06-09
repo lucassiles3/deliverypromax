@@ -3215,6 +3215,8 @@ export type Database = {
           free_shipping_threshold: number | null
           id: string
           infinitepay_handle: string | null
+          infinitepay_redirect_url: string | null
+          infinitepay_webhook_url: string | null
           instagram: string | null
           lat: number | null
           lifecycle_changed_at: string | null
@@ -3297,6 +3299,8 @@ export type Database = {
           free_shipping_threshold?: number | null
           id?: string
           infinitepay_handle?: string | null
+          infinitepay_redirect_url?: string | null
+          infinitepay_webhook_url?: string | null
           instagram?: string | null
           lat?: number | null
           lifecycle_changed_at?: string | null
@@ -3379,6 +3383,8 @@ export type Database = {
           free_shipping_threshold?: number | null
           id?: string
           infinitepay_handle?: string | null
+          infinitepay_redirect_url?: string | null
+          infinitepay_webhook_url?: string | null
           instagram?: string | null
           lat?: number | null
           lifecycle_changed_at?: string | null
