@@ -78,6 +78,23 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Idempotência: se já temos uma transação com este external_id (transaction_nsu),
+    // não processa novamente.
+    if (transactionNsu) {
+      const { data: existing } = await supabase
+        .from("payment_transactions")
+        .select("id, status, order_id")
+        .eq("gateway", "infinitepay")
+        .eq("external_id", transactionNsu)
+        .maybeSingle();
+      if (existing) {
+        console.log("[infinitepay-webhook] duplicate transaction_nsu, skipping:", transactionNsu);
+        return new Response(JSON.stringify({ ok: true, duplicate: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     if (approved) {
       const { data: order } = await supabase
         .from("orders")
@@ -86,33 +103,40 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (order) {
-        // Marca como recebido se ainda estava aguardando pagamento
         if (order.status === "pending_payment") {
           await supabase.from("orders").update({ status: "received" }).eq("id", orderNsu);
         }
 
-        // Registra transação
-        await supabase.from("payment_transactions").insert({
+        const { error: insErr } = await supabase.from("payment_transactions").insert({
           order_id: orderNsu,
           store_id: order.store_id,
           gateway: "infinitepay",
           method: "credit_card",
           status: "approved",
-          amount: amount ?? null,
+          amount: amount ?? 0,
           external_id: transactionNsu ?? null,
-          raw_response: body,
+          raw_webhook: body,
+          paid_at: new Date().toISOString(),
         } as any);
+        if (insErr && !String(insErr.message).includes("duplicate")) {
+          console.error("[infinitepay-webhook] insert error:", insErr);
+        }
       }
     } else if (refused) {
-      await supabase.from("payment_transactions").insert({
-        order_id: orderNsu,
-        gateway: "infinitepay",
-        method: "credit_card",
-        status: "refused",
-        amount: amount ?? null,
-        external_id: transactionNsu ?? null,
-        raw_response: body,
-      } as any);
+      const { data: order } = await supabase
+        .from("orders").select("store_id").eq("id", orderNsu).maybeSingle();
+      if (order) {
+        await supabase.from("payment_transactions").insert({
+          order_id: orderNsu,
+          store_id: (order as any).store_id,
+          gateway: "infinitepay",
+          method: "credit_card",
+          status: "rejected",
+          amount: amount ?? 0,
+          external_id: transactionNsu ?? null,
+          raw_webhook: body,
+        } as any);
+      }
     }
   } catch (e) {
     console.error("[infinitepay-webhook] error:", e);
