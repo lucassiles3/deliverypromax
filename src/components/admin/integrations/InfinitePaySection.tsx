@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CreditCard, ExternalLink, Save, ChevronDown, ChevronUp, CheckCircle2, Copy, Zap, Loader2, Plus, Trash2 } from "lucide-react";
+import { CreditCard, ExternalLink, Save, ChevronDown, ChevronUp, CheckCircle2, Zap, Loader2, Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,6 @@ import { toast } from "sonner";
 interface Props {
   storeId: string;
 }
-
-const WEBHOOK_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/infinitepay-webhook`;
 
 export const InfinitePaySection = ({ storeId }: Props) => {
   const [handle, setHandle] = useState("");
@@ -40,7 +38,7 @@ export const InfinitePaySection = ({ storeId }: Props) => {
         const d: any = data || {};
         const h = d.infinitepay_handle ?? "";
         const r = d.infinitepay_redirect_url ?? "";
-        const w = d.infinitepay_webhook_url ?? WEBHOOK_BASE;
+        const w = d.infinitepay_webhook_url ?? "";
         setHandle(h);
         setRedirectUrl(r);
         setWebhookUrl(w);
@@ -125,10 +123,8 @@ export const InfinitePaySection = ({ storeId }: Props) => {
     0,
   );
 
-  const copyWebhook = async () => {
-    await navigator.clipboard.writeText(WEBHOOK_BASE);
-    toast.success("URL do webhook copiada!");
-  };
+
+
 
   const dirty =
     handle.trim().replace(/^\$/, "") !== initial.handle ||
@@ -193,21 +189,17 @@ export const InfinitePaySection = ({ storeId }: Props) => {
 
           <div>
             <Label className="text-sm">URL do webhook (notificações de pagamento)</Label>
-            <div className="mt-1 flex gap-2">
-              <Input
-                value={webhookUrl}
-                onChange={(e) => setWebhookUrl(e.target.value)}
-                placeholder={WEBHOOK_BASE}
-              />
-              <Button type="button" variant="outline" onClick={copyWebhook} title="Copiar URL padrão">
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
+            <Input
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+              placeholder="https://seu-webhook-da-infinitepay.com/notificacoes"
+              className="mt-1"
+            />
             <p className="mt-1 text-[11px] text-muted-foreground">
-              A InfinitePay chamará esta URL quando o pagamento for aprovado, atualizando seu pedido em tempo real.
-              Recomendado deixar o padrão acima.
+              Cole aqui a URL de webhook fornecida pela sua conta InfinitePay. A cada pagamento (crédito por link ou Pix) ela enviará um POST com o payload, atualizando o pedido em tempo real.
             </p>
           </div>
+
 
           <div className="flex flex-wrap gap-2 pt-1">
             <Button onClick={save} disabled={!dirty || saving} className="flex-1 min-w-[120px]">
@@ -326,11 +318,15 @@ export const InfinitePaySection = ({ storeId }: Props) => {
                   No app, vá em <strong>Perfil → InfiniteTag</strong> e copie seu nome de usuário.
                 </li>
                 <li>
-                  Cole no campo acima (sem <code className="rounded bg-muted px-1">$</code>), defina sua URL de redirecionamento (opcional) e mantenha a URL de webhook padrão.
+                  Cole no campo acima (sem <code className="rounded bg-muted px-1">$</code>) e defina sua URL de redirecionamento (opcional).
                 </li>
                 <li>
-                  Clique em <strong>Salvar</strong>, depois em <strong>Testar link</strong> para validar a integração — um link de R$ 10,00 será aberto.
+                  No painel da sua conta InfinitePay, copie a <strong>URL de Webhook</strong> da sua conta e cole no campo "URL do webhook" acima — assim cada loja recebe as notificações na sua própria URL.
                 </li>
+                <li>
+                  Clique em <strong>Salvar</strong>, depois em <strong>Testar checkout</strong> para validar a integração.
+                </li>
+
                 <li>
                   Em <strong>Configurações → Formas de pagamento</strong>, ative <em>"Cartão de crédito — link de pagamento"</em>.
                 </li>
