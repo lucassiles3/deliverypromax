@@ -38,7 +38,7 @@ export const InfinitePaySection = ({ storeId }: Props) => {
         const d: any = data || {};
         const h = d.infinitepay_handle ?? "";
         const r = d.infinitepay_redirect_url ?? "";
-        const w = d.infinitepay_webhook_url ?? WEBHOOK_BASE;
+        const w = d.infinitepay_webhook_url ?? "";
         setHandle(h);
         setRedirectUrl(r);
         setWebhookUrl(w);
