@@ -123,10 +123,8 @@ export const InfinitePaySection = ({ storeId }: Props) => {
     0,
   );
 
-  const copyWebhook = async () => {
-    await navigator.clipboard.writeText(WEBHOOK_BASE);
-    toast.success("URL do webhook copiada!");
-  };
+
+
 
   const dirty =
     handle.trim().replace(/^\$/, "") !== initial.handle ||
