@@ -216,15 +216,96 @@ export const InfinitePaySection = ({ storeId }: Props) => {
             <Button
               type="button"
               variant="secondary"
-              onClick={testLink}
-              disabled={testing || !configured || dirty}
+              onClick={() => setShowTest((v) => !v)}
+              disabled={!configured || dirty}
               className="flex-1 min-w-[160px]"
-              title={dirty ? "Salve antes de testar" : "Gerar link de R$ 10,00 de teste"}
+              title={dirty ? "Salve antes de testar" : "Configurar e gerar link de teste"}
             >
-              {testing ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Zap className="mr-1 h-4 w-4" />}
-              Testar link (R$ 10,00)
+              <Zap className="mr-1 h-4 w-4" />
+              {showTest ? "Fechar teste" : "Testar checkout"}
             </Button>
           </div>
+
+          {showTest && (
+            <div className="space-y-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold">🧪 Configurar pedido de teste</p>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+                  Total: R$ {testTotal.toFixed(2).replace(".", ",")}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Nome do cliente</Label>
+                  <Input value={testCustomerName} onChange={(e) => setTestCustomerName(e.target.value)} className="mt-1 h-9" />
+                </div>
+                <div>
+                  <Label className="text-xs">E-mail (opcional)</Label>
+                  <Input value={testCustomerEmail} onChange={(e) => setTestCustomerEmail(e.target.value)} className="mt-1 h-9" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs">Itens</Label>
+                {testItems.map((it, idx) => (
+                  <div key={idx} className="flex flex-wrap items-end gap-2 rounded-md border bg-background p-2">
+                    <div className="flex-1 min-w-[140px]">
+                      <Label className="text-[10px] text-muted-foreground">Descrição</Label>
+                      <Input
+                        value={it.description}
+                        onChange={(e) => updateItem(idx, { description: e.target.value })}
+                        className="h-8 mt-0.5"
+                      />
+                    </div>
+                    <div className="w-16">
+                      <Label className="text-[10px] text-muted-foreground">Qtd</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={it.quantity}
+                        onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })}
+                        className="h-8 mt-0.5"
+                      />
+                    </div>
+                    <div className="w-24">
+                      <Label className="text-[10px] text-muted-foreground">Preço (R$)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={it.price}
+                        onChange={(e) => updateItem(idx, { price: Number(e.target.value) })}
+                        className="h-8 mt-0.5"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => removeItem(idx)}
+                      disabled={testItems.length === 1}
+                      title="Remover item"
+                      className="h-8 w-8"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                  <Plus className="mr-1 h-3 w-3" /> Adicionar item
+                </Button>
+              </div>
+
+              <Button onClick={testLink} disabled={testing} className="w-full">
+                {testing ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Zap className="mr-1 h-4 w-4" />}
+                Gerar link de teste e abrir
+              </Button>
+              <p className="text-[11px] text-muted-foreground">
+                O link abre em uma nova aba. Use cartão de crédito real para validar todo o fluxo, incluindo a confirmação via webhook.
+              </p>
+            </div>
+          )}
 
           <button
             onClick={() => setShowTutorial((v) => !v)}
