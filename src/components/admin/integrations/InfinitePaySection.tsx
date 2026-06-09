@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CreditCard, ExternalLink, Save, ChevronDown, ChevronUp, CheckCircle2, Copy, Zap, Loader2 } from "lucide-react";
+import { CreditCard, ExternalLink, Save, ChevronDown, ChevronUp, CheckCircle2, Copy, Zap, Loader2, Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,13 @@ export const InfinitePaySection = ({ storeId }: Props) => {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showTest, setShowTest] = useState(false);
+  type TestItem = { description: string; quantity: number; price: number };
+  const [testItems, setTestItems] = useState<TestItem[]>([
+    { description: "Pedido de teste", quantity: 1, price: 10 },
+  ]);
+  const [testCustomerName, setTestCustomerName] = useState("Cliente Teste");
+  const [testCustomerEmail, setTestCustomerEmail] = useState("teste@exemplo.com");
 
   useEffect(() => {
     if (!storeId) return;
@@ -72,16 +79,25 @@ export const InfinitePaySection = ({ storeId }: Props) => {
       toast.error("Salve as alterações antes de testar.");
       return;
     }
+    const items = testItems
+      .map((i) => ({
+        quantity: Math.max(1, Math.floor(Number(i.quantity) || 1)),
+        price: Math.round(Number(i.price || 0) * 100), // reais → centavos
+        description: (i.description || "Item").trim(),
+      }))
+      .filter((i) => i.price > 0);
+    if (items.length === 0) {
+      toast.error("Adicione ao menos um item com valor maior que zero.");
+      return;
+    }
     setTesting(true);
     try {
       const { data, error } = await supabase.functions.invoke("infinitepay-create-link", {
         body: {
           store_id: storeId,
           order_nsu: `test-${Date.now()}`,
-          items: [
-            { quantity: 1, price: 1000, description: "Pedido de teste" },
-          ],
-          customer: { name: "Cliente Teste", email: "teste@exemplo.com" },
+          items,
+          customer: { name: testCustomerName || "Cliente Teste", email: testCustomerEmail || undefined },
         },
       });
       if (error) throw error;
@@ -97,6 +113,17 @@ export const InfinitePaySection = ({ storeId }: Props) => {
       setTesting(false);
     }
   };
+
+  const updateItem = (idx: number, patch: Partial<TestItem>) =>
+    setTestItems((arr) => arr.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
+  const addItem = () =>
+    setTestItems((arr) => [...arr, { description: "Item " + (arr.length + 1), quantity: 1, price: 10 }]);
+  const removeItem = (idx: number) =>
+    setTestItems((arr) => (arr.length > 1 ? arr.filter((_, i) => i !== idx) : arr));
+  const testTotal = testItems.reduce(
+    (s, i) => s + (Number(i.price) || 0) * Math.max(1, Math.floor(Number(i.quantity) || 1)),
+    0,
+  );
 
   const copyWebhook = async () => {
     await navigator.clipboard.writeText(WEBHOOK_BASE);
