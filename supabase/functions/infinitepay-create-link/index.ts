@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
 
     const { data: store, error: storeErr } = await supabase
       .from("stores")
-      .select("infinitepay_handle, name")
+      .select("infinitepay_handle, infinitepay_redirect_url, infinitepay_webhook_url, name")
       .eq("id", body.store_id)
       .maybeSingle();
 
@@ -83,7 +83,10 @@ Deno.serve(async (req) => {
       items,
     };
     if (body.order_nsu) payload.order_nsu = String(body.order_nsu);
-    if (body.redirect_url) payload.redirect_url = body.redirect_url;
+    const redirect = body.redirect_url || (store as any).infinitepay_redirect_url;
+    if (redirect) payload.redirect_url = redirect;
+    const webhook = (store as any).infinitepay_webhook_url;
+    if (webhook) payload.webhook_url = webhook;
     if (body.customer && (body.customer.name || body.customer.email || body.customer.phone_number)) {
       payload.customer = body.customer;
     }
