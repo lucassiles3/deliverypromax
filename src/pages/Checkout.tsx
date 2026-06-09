@@ -737,17 +737,24 @@ const Checkout = () => {
         }
       }
 
-      const waUrl = buildWhatsappUrl(order.id);
-      if (waUrl) {
-        // Use anchor click to avoid popup blockers / iframe restrictions
+      const openInNewTab = (url: string) => {
         const a = document.createElement("a");
-        a.href = waUrl;
+        a.href = url;
         a.target = "_blank";
         a.rel = "noopener noreferrer";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+      };
+
+      // Para crédito com link InfinitePay, abre o checkout em nova aba imediatamente.
+      if (payment === "credit_link" && paymentLink) {
+        openInNewTab(paymentLink);
+        setPaidLinkUrl(paymentLink);
       }
+
+      const waUrl = buildWhatsappUrl(order.id);
+      if (waUrl) openInNewTab(waUrl);
 
       toast.success("Pedido confirmado! 🎉");
       clear();
