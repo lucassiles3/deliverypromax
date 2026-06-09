@@ -318,11 +318,15 @@ export const InfinitePaySection = ({ storeId }: Props) => {
                   No app, vá em <strong>Perfil → InfiniteTag</strong> e copie seu nome de usuário.
                 </li>
                 <li>
-                  Cole no campo acima (sem <code className="rounded bg-muted px-1">$</code>), defina sua URL de redirecionamento (opcional) e mantenha a URL de webhook padrão.
+                  Cole no campo acima (sem <code className="rounded bg-muted px-1">$</code>) e defina sua URL de redirecionamento (opcional).
                 </li>
                 <li>
-                  Clique em <strong>Salvar</strong>, depois em <strong>Testar link</strong> para validar a integração — um link de R$ 10,00 será aberto.
+                  No painel da sua conta InfinitePay, copie a <strong>URL de Webhook</strong> da sua conta e cole no campo "URL do webhook" acima — assim cada loja recebe as notificações na sua própria URL.
                 </li>
+                <li>
+                  Clique em <strong>Salvar</strong>, depois em <strong>Testar checkout</strong> para validar a integração.
+                </li>
+
                 <li>
                   Em <strong>Configurações → Formas de pagamento</strong>, ative <em>"Cartão de crédito — link de pagamento"</em>.
                 </li>
