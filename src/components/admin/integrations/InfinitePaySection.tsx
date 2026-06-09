@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CreditCard, ExternalLink, Save, ChevronDown, ChevronUp, CheckCircle2, Copy, Zap, Loader2, Plus, Trash2 } from "lucide-react";
+import { CreditCard, ExternalLink, Save, ChevronDown, ChevronUp, CheckCircle2, Zap, Loader2, Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,6 @@ import { toast } from "sonner";
 interface Props {
   storeId: string;
 }
-
-const WEBHOOK_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/infinitepay-webhook`;
 
 export const InfinitePaySection = ({ storeId }: Props) => {
   const [handle, setHandle] = useState("");
