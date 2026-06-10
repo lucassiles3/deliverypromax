@@ -292,11 +292,12 @@ const ListingForm = ({
   onSave,
 }: {
   value: FormState;
-  onChange: (v: FormState) => void;
+  onChange: React.Dispatch<React.SetStateAction<FormState | null>>;
   onClose: () => void;
   onSave: () => void;
 }) => {
-  const set = <K extends keyof FormState>(k: K, v: FormState[K]) => onChange({ ...value, [k]: v });
+  const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
+    onChange((prev) => (prev ? { ...prev, [k]: v } : prev));
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
