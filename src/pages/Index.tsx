@@ -23,7 +23,7 @@ import { LocationGate } from "@/components/LocationGate";
 import heroBasket from "@/assets/hero-basket-3d.png";
 import promoBasket from "@/assets/promo-basket-3d.png";
 
-import { distanceKm, formatDistance } from "@/lib/distance";
+import { distanceKm } from "@/lib/distance";
 import { isStoreOpen } from "@/lib/storeHours";
 import {
   Loader2,
