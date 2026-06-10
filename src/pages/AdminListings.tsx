@@ -391,9 +391,12 @@ const ListingForm = ({
                 <Label className="text-xs">Categoria *</Label>
                 <select
                   value={value.category_key}
-                  onChange={(e) =>
-                    onChange({ ...value, category_key: e.target.value, subcategory_key: "" })
-                  }
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    onChange((prev) =>
+                      prev ? { ...prev, category_key: next, subcategory_key: "" } : prev,
+                    );
+                  }}
                   className="mt-1 w-full rounded-md border-2 border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none"
                 >
                   {CATEGORIES.map((c) => (
