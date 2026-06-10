@@ -292,11 +292,12 @@ const ListingForm = ({
   onSave,
 }: {
   value: FormState;
-  onChange: (v: FormState) => void;
+  onChange: React.Dispatch<React.SetStateAction<FormState | null>>;
   onClose: () => void;
   onSave: () => void;
 }) => {
-  const set = <K extends keyof FormState>(k: K, v: FormState[K]) => onChange({ ...value, [k]: v });
+  const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
+    onChange((prev) => (prev ? { ...prev, [k]: v } : prev));
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
@@ -390,9 +391,12 @@ const ListingForm = ({
                 <Label className="text-xs">Categoria *</Label>
                 <select
                   value={value.category_key}
-                  onChange={(e) =>
-                    onChange({ ...value, category_key: e.target.value, subcategory_key: "" })
-                  }
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    onChange((prev) =>
+                      prev ? { ...prev, category_key: next, subcategory_key: "" } : prev,
+                    );
+                  }}
                   className="mt-1 w-full rounded-md border-2 border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none"
                 >
                   {CATEGORIES.map((c) => (
@@ -496,9 +500,13 @@ const ListingForm = ({
           <Label className="text-xs mb-1 inline-block">Localização no mapa</Label>
           <LocationPicker
             value={value.lat && value.lng ? { lat: value.lat, lng: value.lng } : null}
-            onChange={(c) => onChange({ ...value, lat: c.lat, lng: c.lng })}
+            onChange={(c) =>
+              onChange((prev) => (prev ? { ...prev, lat: c.lat, lng: c.lng } : prev))
+            }
             address={value.address}
-            onAddressChange={(addr) => onChange({ ...value, address: addr })}
+            onAddressChange={(addr) =>
+              onChange((prev) => (prev ? { ...prev, address: addr } : prev))
+            }
           />
           <p className="mt-1 text-[11px] text-muted-foreground">
             Pesquise um endereço, CEP ou bairro — o mapa atualiza. Arraste o pino e o endereço é
