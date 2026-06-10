@@ -89,7 +89,7 @@ const Categorias = () => {
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {list.map((s, i) => (
-                <StoreCard key={s.id} store={s} index={i} />
+                <StoreCard key={s.id} store={s} index={i} distanceKm={(s as any)._distance ?? null} inRange={(s as any)._inRange} />
               ))}
             </div>
           )}
