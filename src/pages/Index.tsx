@@ -493,28 +493,20 @@ const Index = () => {
         </section>
       )}
 
-      {/* Fallback — nenhuma loja no raio */}
-      {coords && inRangeStores.length === 0 && nearestFallback && !showOutOfRange && (
+      {/* Nenhuma loja no raio */}
+      {coords && inRangeStores.length === 0 && !showOutOfRange && (
         <section className="container pb-3">
           <div className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4">
             <p className="text-sm font-bold text-foreground">
               Nenhuma loja atende seu endereço no momento 😔
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              A loja mais próxima de você está a{" "}
-              <strong className="text-foreground">{formatDistance(nearestFallback._distance!)}</strong>.
-              Você ainda pode pedir para retirada.
+              Tente alterar seu endereço para ver lojas que entregam na sua região.
             </p>
-            <div className="mt-3 max-w-sm">
-              <StoreCard
-                store={nearestFallback}
-                distanceKm={nearestFallback._distance}
-                inRange={false}
-              />
-            </div>
           </div>
         </section>
       )}
+
       {/* Conteúdo */}
       {isLoading ? (
         <div className="flex justify-center py-16">
