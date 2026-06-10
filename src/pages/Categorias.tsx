@@ -4,6 +4,9 @@ import { BottomNav } from "@/components/BottomNav";
 import { StoreCard } from "@/components/StoreCard";
 import { useStores } from "@/hooks/useStores";
 import { useExternalListings } from "@/hooks/useExternalListings";
+import { useAddresses } from "@/hooks/useAddresses";
+import { useUserLocation } from "@/hooks/useUserLocation";
+import { distanceKm as calcDistance } from "@/lib/distance";
 import { CATEGORIES, SUBCATEGORIES, matchCategory, matchSubcategory } from "@/components/CategoryGrid";
 import { Loader2, Grid3x3, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
@@ -11,10 +14,32 @@ import { motion } from "framer-motion";
 const Categorias = () => {
   const { data: storesData = [], isLoading } = useStores();
   const { data: externalListings = [] } = useExternalListings();
-  const allStores = useMemo(
-    () => [...storesData, ...(externalListings as any[])],
-    [storesData, externalListings],
+  const { data: addresses } = useAddresses();
+  const defaultAddr = useMemo(
+    () => addresses?.find((a: any) => a.is_default) ?? addresses?.[0] ?? null,
+    [addresses],
   );
+  const addrCoords =
+    defaultAddr && defaultAddr.lat && defaultAddr.lng
+      ? { lat: Number(defaultAddr.lat), lng: Number(defaultAddr.lng) }
+      : null;
+  const { coords } = useUserLocation(addrCoords);
+
+  const allStores = useMemo(() => {
+    const combined = [...storesData, ...(externalListings as any[])];
+    return combined
+      .map((s: any) => {
+        let distance: number | null = null;
+        if (coords && s.lat && s.lng) {
+          distance = calcDistance(coords, { lat: Number(s.lat), lng: Number(s.lng) });
+        }
+        const radius = s.deliveryRadiusKm ?? null;
+        const inRange =
+          !coords || distance === null || radius === null ? true : distance <= radius;
+        return { ...s, _distance: distance, _radius: radius, _inRange: inRange };
+      })
+      .filter((s: any) => s._inRange);
+  }, [storesData, externalListings, coords]);
 
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [openSub, setOpenSub] = useState<string | null>(null);
