@@ -551,32 +551,26 @@ const Index = () => {
         <div className="container pb-12 pt-2">
 
 
-          {(storesData.length > 0 || externalListings.length > 0) && (
+          {inRangeStores.length > 0 && (
             <section className="mb-8">
               <div className="flex flex-col gap-3 md:grid md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
-                {[...storesData, ...(externalListings as any[])]
+                {inRangeStores
                   .slice()
-                  .sort((a, b) => {
-                    const aOpen = enriched.find((e: any) => e.id === a.id)?._open ?? true;
-                    const bOpen = enriched.find((e: any) => e.id === b.id)?._open ?? true;
-                    return Number(bOpen) - Number(aOpen);
-                  })
-                  .map((s, i) => {
-                    const enrichedItem = enriched.find((e: any) => e.id === s.id) as any;
-                    return (
-                      <StoreCard
-                        key={s.id}
-                        store={s}
-                        index={i}
-                        distanceKm={enrichedItem?._distance ?? null}
-                        isOpen={enrichedItem?._open ?? true}
-                        inRange={coords ? enrichedItem?._inRange : undefined}
-                      />
-                    );
-                  })}
+                  .sort((a: any, b: any) => Number(b._open) - Number(a._open))
+                  .map((s: any, i: number) => (
+                    <StoreCard
+                      key={s.id}
+                      store={s}
+                      index={i}
+                      distanceKm={s._distance ?? null}
+                      isOpen={s._open ?? true}
+                      inRange={coords ? s._inRange : undefined}
+                    />
+                  ))}
               </div>
             </section>
           )}
+
 
           {!user && (
             <div className="mt-6 rounded-2xl border border-dashed bg-card p-6 text-center">
