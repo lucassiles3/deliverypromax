@@ -497,9 +497,13 @@ const ListingForm = ({
           <Label className="text-xs mb-1 inline-block">Localização no mapa</Label>
           <LocationPicker
             value={value.lat && value.lng ? { lat: value.lat, lng: value.lng } : null}
-            onChange={(c) => onChange({ ...value, lat: c.lat, lng: c.lng })}
+            onChange={(c) =>
+              onChange((prev) => (prev ? { ...prev, lat: c.lat, lng: c.lng } : prev))
+            }
             address={value.address}
-            onAddressChange={(addr) => onChange({ ...value, address: addr })}
+            onAddressChange={(addr) =>
+              onChange((prev) => (prev ? { ...prev, address: addr } : prev))
+            }
           />
           <p className="mt-1 text-[11px] text-muted-foreground">
             Pesquise um endereço, CEP ou bairro — o mapa atualiza. Arraste o pino e o endereço é
