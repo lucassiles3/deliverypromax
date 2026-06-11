@@ -192,9 +192,9 @@ const Index = () => {
 
   const showOutOfRange = false;
 
-  // Lojas no raio E abertas — base para tudo
+  // Lojas no raio — fechadas aparecem desfocadas com tag "Fechado"
   const inRangeStores = useMemo(
-    () => enriched.filter((s) => (coords ? s._inRange : true) && s._open),
+    () => enriched.filter((s) => (coords ? s._inRange : true)),
     [enriched, coords],
   );
   const outOfRangeCount = enriched.filter((s) => coords && !s._inRange).length;
