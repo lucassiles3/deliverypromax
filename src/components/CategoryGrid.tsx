@@ -51,6 +51,7 @@ export const SUBCATEGORIES: Record<string, SubcategoryDef[]> = {
     { key: "bakery", label: "Padaria", emoji: "🥐", match: ["padaria", "pão", "pao"] },
     { key: "coffee", label: "Cafeteria", emoji: "☕", match: ["cafeteria", "café", "cafe"] },
     { key: "juice", label: "Sucos", emoji: "🥤", match: ["suco", "vitamina"] },
+    { key: "drinks_depot", label: "Depósito de bebidas", emoji: "🍾", match: ["depósito de bebidas", "deposito de bebidas", "bebidas"] },
   ],
   market: [
     { key: "supermarket", label: "Supermercado", emoji: "🛒", match: ["supermercado", "mercado"] },
