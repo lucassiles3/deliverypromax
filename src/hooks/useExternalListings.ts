@@ -47,7 +47,7 @@ export const useExternalListings = () =>
         id: `ext_${l.id}`,
         slug: `ext_${l.id}`,
         name: l.name,
-        tagline: l.address ?? "",
+        tagline: "",
         cuisine: cuisineFromListing(l),
         rating: 5,
         reviews: 0,
