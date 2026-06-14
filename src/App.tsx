@@ -65,6 +65,9 @@ const Master = lazy(() => import("./pages/Master.tsx"));
 const Landing = lazy(() => import("./pages/Landing.tsx"));
 const Cadastro = lazy(() => import("./pages/Cadastro.tsx"));
 const AdminListings = lazy(() => import("./pages/AdminListings.tsx"));
+const Sobre = lazy(() => import("./pages/Sobre.tsx"));
+const Termos = lazy(() => import("./pages/Termos.tsx"));
+const Privacidade = lazy(() => import("./pages/Privacidade.tsx"));
 
 /** Atalho: envolve um elemento em Suspense com fallback dedicado. */
 const withFallback = (node: React.ReactNode, fallback: React.ReactNode) => (
@@ -137,6 +140,9 @@ const App = () => (
                 <Route path="/master" element={<Master />} />
                 <Route path="/landing" element={<Landing />} />
                 <Route path="/cadastro" element={<Cadastro />} />
+                <Route path="/sobre" element={<Sobre />} />
+                <Route path="/termos" element={<Termos />} />
+                <Route path="/privacidade" element={<Privacidade />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
