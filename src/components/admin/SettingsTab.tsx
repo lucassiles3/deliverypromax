@@ -157,6 +157,27 @@ export const SettingsTab = ({ storeId }: { storeId: string }) => {
         </div>
       </section>
 
+      {/* Modo Catálogo */}
+      <section className="rounded-2xl bg-card p-5 shadow-soft">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-purple-500/10 p-2 text-purple-600">
+              <BookOpen className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-bold">Modo catálogo</h3>
+              <p className="text-xs text-muted-foreground">
+                Quando ligado, os clientes só conseguem visualizar os produtos. O botão de adicionar ao carrinho e o checkout ficam ocultos.
+              </p>
+            </div>
+          </div>
+          <Toggle
+            checked={form.catalog_mode}
+            onChange={(v) => setForm((f) => ({ ...f, catalog_mode: v }))}
+          />
+        </div>
+      </section>
+
       {/* PDV */}
       <section className="rounded-2xl bg-card p-5 shadow-soft">
         <div className="flex items-start justify-between gap-3">
