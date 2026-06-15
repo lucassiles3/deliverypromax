@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Bell, Timer, Volume2, Printer, ShoppingCart } from "lucide-react";
+import { Bell, Timer, Volume2, Printer, ShoppingCart, BookOpen } from "lucide-react";
 
 type StoreSettings = {
   accept_alert_min: number;
@@ -13,6 +13,7 @@ type StoreSettings = {
   auto_print_enabled: boolean;
   print_format: "a4" | "thermal_80mm";
   pdv_enabled: boolean;
+  catalog_mode: boolean;
 };
 
 export const SettingsTab = ({ storeId }: { storeId: string }) => {
@@ -24,7 +25,7 @@ export const SettingsTab = ({ storeId }: { storeId: string }) => {
       const { data, error } = await supabase
         .from("stores")
         .select(
-          "accept_alert_min, autocancel_min, autocancel_enabled, sound_alerts_enabled, auto_print_enabled, print_format, pdv_enabled"
+          "accept_alert_min, autocancel_min, autocancel_enabled, sound_alerts_enabled, auto_print_enabled, print_format, pdv_enabled, catalog_mode"
         )
         .eq("id", storeId)
         .maybeSingle();
@@ -41,6 +42,7 @@ export const SettingsTab = ({ storeId }: { storeId: string }) => {
     auto_print_enabled: false,
     print_format: "thermal_80mm",
     pdv_enabled: true,
+    catalog_mode: false,
   });
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export const SettingsTab = ({ storeId }: { storeId: string }) => {
     qc.invalidateQueries({ queryKey: ["store-full-settings", storeId] });
     qc.invalidateQueries({ queryKey: ["store-settings", storeId] });
     qc.invalidateQueries({ queryKey: ["store-toggles", storeId] });
+    qc.invalidateQueries({ queryKey: ["store"] });
   };
 
   const testPrint = async () => {
