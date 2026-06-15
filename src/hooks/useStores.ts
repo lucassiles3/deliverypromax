@@ -37,6 +37,7 @@ type DbStore = {
   address_complement?: string | null;
   address_neighborhood?: string | null;
   address_state?: string | null;
+  catalog_mode?: boolean | null;
 };
 
 const mapStore = (s: DbStore, products: Product[] = []): Store => ({
@@ -74,6 +75,7 @@ const mapStore = (s: DbStore, products: Product[] = []): Store => ({
   addressComplement: s.address_complement ?? undefined,
   addressNeighborhood: s.address_neighborhood ?? undefined,
   addressState: s.address_state ?? undefined,
+  catalogMode: !!s.catalog_mode,
 });
 
 // Colunas essenciais para listagens (home, busca, categorias).

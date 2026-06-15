@@ -7,10 +7,11 @@ type Props = {
   product: Product;
   storeSlug: string;
   storeId?: string;
+  catalogMode?: boolean;
   onOpen: (product: Product) => void;
 };
 
-export const ProductCard = memo(({ product, storeId, onOpen }: Props) => {
+export const ProductCard = memo(({ product, storeId, catalogMode, onOpen }: Props) => {
   return (
     <article
       onClick={() => onOpen(product)}
@@ -64,16 +65,18 @@ export const ProductCard = memo(({ product, storeId, onOpen }: Props) => {
               R$ {product.price.toFixed(2).replace(".", ",")}
             </div>
           </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpen(product);
-            }}
-            aria-label={`Adicionar ${product.name}`}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full gradient-primary text-primary-foreground shadow-glow transition-bounce hover:scale-110 active:scale-95"
-          >
-            <Plus className="h-5 w-5" strokeWidth={3} />
-          </button>
+          {!catalogMode && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpen(product);
+              }}
+              aria-label={`Adicionar ${product.name}`}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full gradient-primary text-primary-foreground shadow-glow transition-bounce hover:scale-110 active:scale-95"
+            >
+              <Plus className="h-5 w-5" strokeWidth={3} />
+            </button>
+          )}
         </div>
       </div>
     </article>

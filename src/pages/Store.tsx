@@ -295,6 +295,7 @@ const Store = () => {
                     product={p}
                     storeSlug={store.slug}
                     storeId={store.id}
+                    catalogMode={store.catalogMode}
                     onOpen={(prod) => navigate(`/loja/${store.slug}/produto/${prod.id}`)}
                   />
                 ))}
