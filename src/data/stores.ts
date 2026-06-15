@@ -73,6 +73,7 @@ export type Store = {
   addressComplement?: string;
   addressNeighborhood?: string;
   addressState?: string;
+  catalogMode?: boolean;
 };
 
 export type Coupon = {
