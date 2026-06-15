@@ -275,9 +275,29 @@ export const OrderDetailsModal = ({
             )}
 
             <div className="mt-3 rounded-lg bg-muted/40 p-3">
-              <h5 className="mb-1 text-[11px] font-bold uppercase text-muted-foreground">
-                Pagamento
-              </h5>
+              <div className="mb-1 flex items-center justify-between">
+                <h5 className="text-[11px] font-bold uppercase text-muted-foreground">
+                  Pagamento
+                </h5>
+                {(() => {
+                  const ps = (order as any).payment_status ?? "pending";
+                  const map: Record<string, string> = {
+                    paid: "bg-green-500/15 text-green-700",
+                    pending: "bg-amber-500/15 text-amber-700",
+                    refunded: "bg-red-500/15 text-red-700",
+                  };
+                  const label: Record<string, string> = {
+                    paid: "✓ Pago",
+                    pending: "Aguardando",
+                    refunded: "Estornado",
+                  };
+                  return (
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${map[ps] ?? map.pending}`}>
+                      {label[ps] ?? ps}
+                    </span>
+                  );
+                })()}
+              </div>
               <p className="inline-flex items-center gap-1.5 text-sm font-semibold">
                 <PayIcon className="h-4 w-4 text-primary" />
                 {PAY_LABEL[order.payment_method ?? "pix"]}
@@ -292,7 +312,46 @@ export const OrderDetailsModal = ({
                   )
                 </p>
               )}
+              {(order as any).paid_at && (
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Pago em {format(new Date((order as any).paid_at), "dd/MM HH:mm", { locale: ptBR })}
+                </p>
+              )}
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <span className="text-[10px] font-bold uppercase text-muted-foreground self-center mr-1">
+                  Marcar como:
+                </span>
+                {(["pending", "paid", "refunded"] as const).map((s) => {
+                  const active = ((order as any).payment_status ?? "pending") === s;
+                  const labels = { pending: "Pendente", paid: "Pago", refunded: "Estornado" };
+                  return (
+                    <button
+                      key={s}
+                      disabled={active}
+                      onClick={async () => {
+                        const patch: any = { payment_status: s };
+                        if (s === "paid") patch.paid_at = new Date().toISOString();
+                        if (s === "pending") patch.paid_at = null;
+                        const { error } = await supabase.from("orders").update(patch).eq("id", order.id);
+                        if (error) return toast.error(error.message);
+                        toast.success(`Pagamento marcado como ${labels[s].toLowerCase()}`);
+                        qc.invalidateQueries({ queryKey: ["order-detail", order.id] });
+                        qc.invalidateQueries({ queryKey: ["kanban-orders", order.store_id] });
+                        qc.invalidateQueries({ queryKey: ["orders-history"] });
+                      }}
+                      className={`rounded-md px-2 py-1 text-[11px] font-bold ${
+                        active
+                          ? "bg-primary text-primary-foreground cursor-default"
+                          : "border bg-card hover:bg-muted"
+                      }`}
+                    >
+                      {labels[s]}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
 
             {order.method === "logistics" && (
               <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
