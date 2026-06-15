@@ -3196,6 +3196,7 @@ export type Database = {
           auto_print_enabled: boolean
           autocancel_enabled: boolean
           autocancel_min: number
+          catalog_mode: boolean
           categories: string[] | null
           chatbot_connected_at: string | null
           chatbot_n8n_webhook_url: string | null
@@ -3280,6 +3281,7 @@ export type Database = {
           auto_print_enabled?: boolean
           autocancel_enabled?: boolean
           autocancel_min?: number
+          catalog_mode?: boolean
           categories?: string[] | null
           chatbot_connected_at?: string | null
           chatbot_n8n_webhook_url?: string | null
@@ -3364,6 +3366,7 @@ export type Database = {
           auto_print_enabled?: boolean
           autocancel_enabled?: boolean
           autocancel_min?: number
+          catalog_mode?: boolean
           categories?: string[] | null
           chatbot_connected_at?: string | null
           chatbot_n8n_webhook_url?: string | null
