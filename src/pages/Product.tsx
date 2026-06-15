@@ -209,6 +209,7 @@ const Product = () => {
       </div>
 
       {/* Sticky CTA */}
+      {!store.catalogMode && (
       <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 p-3 backdrop-blur-xl md:bottom-0">
         <div className="container flex max-w-2xl items-center gap-2">
           <div className="flex items-center gap-1 rounded-full border bg-background p-1">
