@@ -241,6 +241,7 @@ const Product = () => {
           </Button>
         </div>
       </div>
+      )}
     </div>
   );
 };
