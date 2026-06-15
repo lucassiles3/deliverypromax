@@ -136,22 +136,29 @@ Deno.serve(async (req) => {
     }
 
     if (approved) {
-      // 1) Atualiza pedido para "received" se ainda estava aguardando pagamento
+      // 1) Atualiza pedido para "received" se ainda estava aguardando pagamento + marca como pago
+      const nowIso = new Date().toISOString();
       if (order.status === "pending_payment") {
         await supabase
           .from("orders")
           .update({
             status: "received",
-            // grava recibo no notes para exibir na tela do pedido
+            payment_status: "paid",
+            paid_at: nowIso,
             ...(receiptUrl ? { notes: `[RECIBO_PAGAMENTO] ${receiptUrl}` } : {}),
-          })
+          } as any)
           .eq("id", orderNsu);
-      } else if (receiptUrl) {
+      } else {
         await supabase
           .from("orders")
-          .update({ notes: `[RECIBO_PAGAMENTO] ${receiptUrl}` })
+          .update({
+            payment_status: "paid",
+            paid_at: nowIso,
+            ...(receiptUrl ? { notes: `[RECIBO_PAGAMENTO] ${receiptUrl}` } : {}),
+          } as any)
           .eq("id", orderNsu);
       }
+
 
       // 2) Registra a transação aprovada
       const { error: insErr } = await supabase.from("payment_transactions").insert({

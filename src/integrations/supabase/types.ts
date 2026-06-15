@@ -1776,7 +1776,9 @@ export type Database = {
           id: string
           method: Database["public"]["Enums"]["delivery_method"]
           notes: string | null
+          paid_at: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_status: string
           pickup_code: string | null
           pickup_confirmed_at: string | null
           pickup_handler_name: string | null
@@ -1814,7 +1816,9 @@ export type Database = {
           id?: string
           method?: Database["public"]["Enums"]["delivery_method"]
           notes?: string | null
+          paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_status?: string
           pickup_code?: string | null
           pickup_confirmed_at?: string | null
           pickup_handler_name?: string | null
@@ -1852,7 +1856,9 @@ export type Database = {
           id?: string
           method?: Database["public"]["Enums"]["delivery_method"]
           notes?: string | null
+          paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_status?: string
           pickup_code?: string | null
           pickup_confirmed_at?: string | null
           pickup_handler_name?: string | null
