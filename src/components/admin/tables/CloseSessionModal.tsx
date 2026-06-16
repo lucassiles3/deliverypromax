@@ -337,7 +337,7 @@ export const CloseSessionModal = ({
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={printReceipt}><Printer className="mr-1 h-4 w-4" />Imprimir</Button>
+          <Button variant="outline" onClick={printReceipt} disabled={printing}><Printer className="mr-1 h-4 w-4" />{printing ? "Imprimindo…" : "Imprimir"}</Button>
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
           <Button onClick={finalize} disabled={saving || (remaining > 0.01)}>
             {saving ? "Finalizando…" : "Finalizar e liberar mesa"}
