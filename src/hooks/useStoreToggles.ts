@@ -5,7 +5,7 @@ import { toast } from "sonner";
 export type StoreToggles = {
   sound_alerts_enabled: boolean;
   auto_print_enabled: boolean;
-  print_format: "a4" | "thermal_80mm";
+  print_format: "a4" | "thermal_80mm" | "thermal_58mm";
   pdv_enabled: boolean;
 };
 

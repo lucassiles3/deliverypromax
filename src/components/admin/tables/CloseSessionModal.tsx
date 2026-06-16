@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Banknote, CreditCard, QrCode, Wallet, Plus, Trash2, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
+import { useStoreToggles } from "@/hooks/useStoreToggles";
 
 type Method = "cash" | "pix" | "credit" | "debit" | "voucher";
 type Payment = { method: Method; amount: number; payer?: string };
@@ -30,9 +31,11 @@ export const CloseSessionModal = ({
   onClosed: () => void;
 }) => {
   const qc = useQueryClient();
+  const { toggles } = useStoreToggles(storeId);
   const total = Number(session.total);
   const [payments, setPayments] = useState<Payment[]>([{ method: "cash", amount: total }]);
   const [saving, setSaving] = useState(false);
+  const [printing, setPrinting] = useState(false);
 
   const sumPaid = useMemo(() => payments.reduce((s, p) => s + (Number(p.amount) || 0), 0), [payments]);
   const remaining = +(total - sumPaid).toFixed(2);
@@ -137,29 +140,138 @@ export const CloseSessionModal = ({
     onClosed();
   };
 
-  const printReceipt = () => {
-    const w = window.open("", "_blank", "width=380,height=600");
-    if (!w) return;
-    const lines = payments
-      .filter((p) => Number(p.amount) > 0)
-      .map((p) => `${labels[p.method].label}: ${brl(Number(p.amount))}`)
-      .join("<br/>");
-    w.document.write(`
-      <html><body style="font-family:monospace;padding:16px;font-size:12px">
-        <h2 style="text-align:center;margin:0 0 8px">Mesa ${tableNumber}</h2>
-        <hr/>
-        <p>Subtotal: ${brl(Number(session.subtotal))}</p>
-        <p>Serviço (${session.service_fee_percent}%): ${brl(Number(session.service_fee))}</p>
-        <p>Desconto: ${brl(Number(session.discount))}</p>
-        <h3>Total: ${brl(total)}</h3>
-        <hr/>
-        ${lines}
-        <hr/>
-        <p style="text-align:center">Obrigado!</p>
-      </body></html>
-    `);
-    w.document.close();
-    setTimeout(() => w.print(), 200);
+  const printReceipt = async () => {
+    try {
+      setPrinting(true);
+      const format = (toggles.print_format ?? "thermal_80mm") as "a4" | "thermal_80mm" | "thermal_58mm";
+
+      const [storeRes, itemsRes] = await Promise.all([
+        supabase
+          .from("stores")
+          .select(
+            "name, tagline, phone, cnpj, instagram, address_cep, address_street, address_number, address_complement, address_neighborhood, city, address_state"
+          )
+          .eq("id", storeId)
+          .maybeSingle(),
+        supabase
+          .from("table_session_items")
+          .select("product_name, quantity, unit_price, notes, customer_name")
+          .eq("session_id", session.id)
+          .order("created_at", { ascending: true }),
+      ]);
+
+      const store = storeRes.data ?? {};
+      const items = itemsRes.data ?? [];
+
+      const fullAddress = [
+        (store as any).address_street &&
+          `${(store as any).address_street}${(store as any).address_number ? `, ${(store as any).address_number}` : ""}`,
+        (store as any).address_complement,
+        (store as any).address_neighborhood,
+        [(store as any).city, (store as any).address_state].filter(Boolean).join("/"),
+        (store as any).address_cep && `CEP ${(store as any).address_cep}`,
+      ]
+        .filter(Boolean)
+        .join(" — ");
+
+      const isThermal58 = format === "thermal_58mm";
+      const isThermal80 = format === "thermal_80mm";
+      const isThermal = isThermal58 || isThermal80;
+
+      const css = isThermal58
+        ? `@page{size:58mm auto;margin:1mm}body{font-family:'Courier New',monospace;font-size:10px;line-height:1.25;width:54mm;margin:0;color:#000}h1{font-size:12px;margin:0 0 3px;text-align:center}h2{font-size:11px;margin:6px 0 3px;text-align:center}.center{text-align:center}.bold{font-weight:bold}.divider{border-top:1px dashed #000;margin:4px 0}.row{display:flex;justify-content:space-between;gap:4px}.item{margin-bottom:3px}.item-row{display:flex;justify-content:space-between;gap:4px}.item-extras{padding-left:6px;font-size:9px;color:#333}.total{font-size:12px;font-weight:bold}.small{font-size:9px}`
+        : isThermal80
+        ? `@page{size:80mm auto;margin:2mm}body{font-family:'Courier New',monospace;font-size:11px;line-height:1.3;width:76mm;margin:0;color:#000}h1{font-size:14px;margin:0 0 4px;text-align:center}h2{font-size:12px;margin:8px 0 4px;text-align:center}.center{text-align:center}.bold{font-weight:bold}.divider{border-top:1px dashed #000;margin:6px 0}.row{display:flex;justify-content:space-between;gap:6px}.item{margin-bottom:4px}.item-row{display:flex;justify-content:space-between;gap:6px}.item-extras{padding-left:8px;font-size:10px;color:#333}.total{font-size:14px;font-weight:bold}.small{font-size:10px}`
+        : `@page{size:A4;margin:12mm}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;color:#111;max-width:600px;margin:0 auto}h1{font-size:22px;margin:0 0 6px}h2{font-size:16px;margin:14px 0 6px}.center{text-align:center}.bold{font-weight:bold}.divider{border-top:1px solid #ddd;margin:10px 0}.row{display:flex;justify-content:space-between;gap:12px}.item{margin-bottom:6px;padding-bottom:4px;border-bottom:1px dashed #eee}.item-row{display:flex;justify-content:space-between;gap:12px;font-weight:600}.item-extras{padding-left:12px;font-size:12px;color:#555}.total{font-size:18px;font-weight:bold}.small{font-size:11px;color:#555}`;
+
+      const esc = (s: any) =>
+        String(s ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
+      const itemsHtml = items.length
+        ? items
+            .map((it: any) => {
+              const sub = Number(it.quantity) * Number(it.unit_price || 0);
+              return `<div class="item">
+                <div class="item-row"><span>${it.quantity}× ${esc(it.product_name)}</span><span>${brl(sub)}</span></div>
+                ${it.customer_name ? `<div class="item-extras">Cliente: ${esc(it.customer_name)}</div>` : ""}
+                ${it.notes ? `<div class="item-extras">Obs: ${esc(it.notes)}</div>` : ""}
+              </div>`;
+            })
+            .join("")
+        : '<div class="small center">Sem itens registrados</div>';
+
+      const paysHtml = payments
+        .filter((p) => Number(p.amount) > 0)
+        .map(
+          (p) =>
+            `<div class="row"><span>${labels[p.method].label}${p.payer ? ` (${esc(p.payer)})` : ""}</span><span>${brl(Number(p.amount))}</span></div>`
+        )
+        .join("");
+
+      const openedAt = session.opened_at ? new Date(session.opened_at).toLocaleString("pt-BR") : "—";
+      const closedAt = new Date().toLocaleString("pt-BR");
+
+      const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/>
+<title>Comanda Mesa ${tableNumber}</title><style>${css}</style></head><body>
+  <h1>${esc((store as any).name || "Estabelecimento")}</h1>
+  ${(store as any).tagline ? `<div class="center small">${esc((store as any).tagline)}</div>` : ""}
+  <div class="center small">
+    ${(store as any).cnpj ? `CNPJ: ${esc((store as any).cnpj)}<br/>` : ""}
+    ${(store as any).phone ? `Tel: ${esc((store as any).phone)}<br/>` : ""}
+    ${fullAddress ? `${esc(fullAddress)}<br/>` : ""}
+    ${(store as any).instagram ? `Instagram: ${esc((store as any).instagram)}` : ""}
+  </div>
+  <div class="divider"></div>
+
+  <div class="center bold">CUPOM NÃO FISCAL — COMANDA</div>
+  <div class="row"><span class="bold">Mesa</span><span class="bold">#${tableNumber}</span></div>
+  <div class="row"><span>Sessão</span><span>${esc(String(session.id).slice(0, 8).toUpperCase())}</span></div>
+  ${session.customer_name ? `<div class="row"><span>Cliente</span><span>${esc(session.customer_name)}</span></div>` : ""}
+  ${session.people ? `<div class="row"><span>Pessoas</span><span>${session.people}</span></div>` : ""}
+  ${session.waiter_name ? `<div class="row"><span>Garçom</span><span>${esc(session.waiter_name)}</span></div>` : ""}
+  <div class="row small"><span>Aberta em</span><span>${openedAt}</span></div>
+  <div class="row small"><span>Fechada em</span><span>${closedAt}</span></div>
+
+  <h2>ITENS CONSUMIDOS</h2>
+  <div class="divider"></div>
+  ${itemsHtml}
+  <div class="divider"></div>
+
+  <div class="row"><span>Subtotal</span><span>${brl(Number(session.subtotal))}</span></div>
+  ${
+    Number(session.service_fee_percent) > 0
+      ? `<div class="row"><span>Serviço (${session.service_fee_percent}%)</span><span>${brl(Number(session.service_fee))}</span></div>`
+      : ""
+  }
+  ${Number(session.discount) > 0 ? `<div class="row"><span>Desconto</span><span>- ${brl(Number(session.discount))}</span></div>` : ""}
+  <div class="row total"><span>TOTAL</span><span>${brl(total)}</span></div>
+
+  <h2>PAGAMENTOS</h2>
+  ${paysHtml || '<div class="small center">Nenhum pagamento informado</div>'}
+  ${session.notes ? `<div class="divider"></div><div class="small"><span class="bold">Observações da comanda:</span><br/>${esc(session.notes)}</div>` : ""}
+
+  <div class="divider"></div>
+  <div class="center small">Obrigado pela preferência!<br/>Volte sempre 🧡</div>
+
+  <script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},300)},120)};</script>
+</body></html>`;
+
+      const w = window.open("", "_blank", isThermal ? "width=380,height=640" : "width=720,height=900");
+      if (!w) {
+        toast.error("Popup bloqueado — habilite popups para imprimir.");
+        return;
+      }
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao imprimir");
+    } finally {
+      setPrinting(false);
+    }
   };
 
   return (
@@ -225,7 +337,7 @@ export const CloseSessionModal = ({
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={printReceipt}><Printer className="mr-1 h-4 w-4" />Imprimir</Button>
+          <Button variant="outline" onClick={printReceipt} disabled={printing}><Printer className="mr-1 h-4 w-4" />{printing ? "Imprimindo…" : "Imprimir"}</Button>
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
           <Button onClick={finalize} disabled={saving || (remaining > 0.01)}>
             {saving ? "Finalizando…" : "Finalizar e liberar mesa"}
