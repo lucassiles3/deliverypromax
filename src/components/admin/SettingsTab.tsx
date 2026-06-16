@@ -11,7 +11,7 @@ type StoreSettings = {
   autocancel_enabled: boolean;
   sound_alerts_enabled: boolean;
   auto_print_enabled: boolean;
-  print_format: "a4" | "thermal_80mm";
+  print_format: "a4" | "thermal_80mm" | "thermal_58mm";
   pdv_enabled: boolean;
   catalog_mode: boolean;
 };
@@ -134,12 +134,18 @@ export const SettingsTab = ({ storeId }: { storeId: string }) => {
 
         <div className="mt-4 space-y-2">
           <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Formato</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
+            <FormatBtn
+              active={form.print_format === "thermal_58mm"}
+              onClick={() => setForm((f) => ({ ...f, print_format: "thermal_58mm" }))}
+              title="Cupom 58mm"
+              hint="Térmica compacta"
+            />
             <FormatBtn
               active={form.print_format === "thermal_80mm"}
               onClick={() => setForm((f) => ({ ...f, print_format: "thermal_80mm" }))}
               title="Cupom 80mm"
-              hint="Impressora térmica"
+              hint="Térmica padrão"
             />
             <FormatBtn
               active={form.print_format === "a4"}
