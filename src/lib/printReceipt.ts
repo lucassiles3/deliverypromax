@@ -30,7 +30,7 @@ export type PrintData = {
   total: number;
 };
 
-export type PrintFormat = "a4" | "thermal_80mm";
+export type PrintFormat = "a4" | "thermal_80mm" | "thermal_58mm";
 
 const formatBRL = (n: number) =>
   `R$ ${Number(n || 0).toFixed(2).replace(".", ",")}`;
@@ -91,9 +91,25 @@ const paymentLabel = (m: string) =>
   } as Record<string, string>)[m] ?? m;
 
 const buildHtml = (data: PrintData, format: PrintFormat) => {
-  const isThermal = format === "thermal_80mm";
+  const isThermal58 = format === "thermal_58mm";
+  const isThermal80 = format === "thermal_80mm";
+  const isThermal = isThermal58 || isThermal80;
 
-  const css = isThermal
+  const css = isThermal58
+    ? `
+      @page { size: 58mm auto; margin: 1mm; }
+      body { font-family: 'Courier New', monospace; font-size: 10px; line-height: 1.25; width: 54mm; margin: 0; color: #000; }
+      h1 { font-size: 12px; margin: 0 0 3px; text-align: center; }
+      .center { text-align: center; }
+      .divider { border-top: 1px dashed #000; margin: 4px 0; }
+      .row { display: flex; justify-content: space-between; gap: 4px; }
+      .item { margin-bottom: 3px; }
+      .item-row { display: flex; justify-content: space-between; gap: 4px; }
+      .item-extras { padding-left: 6px; font-size: 9px; color: #333; }
+      .total { font-size: 12px; font-weight: bold; }
+      .small { font-size: 9px; }
+    `
+    : isThermal80
     ? `
       @page { size: 80mm auto; margin: 2mm; }
       body { font-family: 'Courier New', monospace; font-size: 11px; width: 76mm; margin: 0; color: #000; }
