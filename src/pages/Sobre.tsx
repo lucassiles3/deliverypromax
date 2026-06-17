@@ -9,14 +9,14 @@ const PLANS = [
   {
     id: "catalogo",
     name: "Catálogo Digital",
-    price: 150,
+    price: 99.9,
     desc: "Tenha sua loja online com cardápio digital, pedidos e pagamentos.",
     features: ["Catálogo ilimitado", "Pedidos via WhatsApp", "Pagamento Pix e cartão", "Painel completo"],
   },
   {
     id: "chatbot",
     name: "Catálogo + Chatbot IA",
-    price: 250,
+    price: 189.9,
     tag: "Mais popular",
     desc: "Atendimento automatizado 24/7 com IA conectada ao seu catálogo.",
     features: ["Tudo do Catálogo", "Chatbot com IA", "Respostas automáticas", "Recuperação de carrinho"],
@@ -24,14 +24,14 @@ const PLANS = [
   {
     id: "ia",
     name: "IA para WhatsApp",
-    price: 399.9,
+    price: 369.9,
     desc: "IA avançada que vende, agenda e atende clientes no WhatsApp.",
     features: ["Atendimento humano + IA", "Agendamentos", "Funil de vendas", "Integrações"],
   },
   {
     id: "automacao",
     name: "Automação Inteligente",
-    price: 699.9,
+    price: 649.9,
     tag: "Empresarial",
     desc: "Solução completa para empresas que querem escalar com automação.",
     features: ["Tudo dos outros planos", "Automações personalizadas", "API e webhooks", "Suporte prioritário"],

@@ -14,10 +14,10 @@ const SEGMENTS = [
 ];
 
 const PLANS = [
-  { id: "catalogo", name: "Catálogo Digital", price: 150 },
-  { id: "chatbot", name: "Catálogo + Chatbot IA", price: 250, tag: "Popular" },
-  { id: "ia", name: "IA para WhatsApp", price: 399.9 },
-  { id: "automacao", name: "Automação Inteligente", price: 699.9, tag: "Empresarial" },
+  { id: "catalogo", name: "Catálogo Digital", price: 99.9 },
+  { id: "chatbot", name: "Catálogo + Chatbot IA", price: 189.9, tag: "Popular" },
+  { id: "ia", name: "IA para WhatsApp", price: 369.9 },
+  { id: "automacao", name: "Automação Inteligente", price: 649.9, tag: "Empresarial" },
 ];
 
 const STEPS = [

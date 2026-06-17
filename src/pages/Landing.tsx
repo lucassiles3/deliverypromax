@@ -406,7 +406,7 @@ const Landing = () => {
           {[
             {
               name: "Catálogo Digital",
-              price: 150,
+              price: 99.9,
               desc: "Ideal para começar sua presença digital.",
               cta: "Começar Agora",
               tag: null as string | null,
@@ -422,7 +422,7 @@ const Landing = () => {
             },
             {
               name: "Catálogo + Chatbot IA",
-              price: 250,
+              price: 189.9,
               desc: "Automatize seu atendimento e venda mais no WhatsApp.",
               cta: "Automatizar Meu Atendimento",
               tag: "Mais Popular",
@@ -438,7 +438,7 @@ const Landing = () => {
             },
             {
               name: "IA para WhatsApp",
-              price: 399.9,
+              price: 369.9,
               desc: "Transforme seu WhatsApp em um vendedor inteligente.",
               cta: "Ativar IA no Meu Negócio",
               tag: null,
@@ -457,7 +457,7 @@ const Landing = () => {
             },
             {
               name: "Automação Inteligente",
-              price: 699.9,
+              price: 649.9,
               desc: "Operação completa com IA e automações avançadas.",
               cta: "Escalar Meu Negócio",
               tag: "Plano Empresarial",
