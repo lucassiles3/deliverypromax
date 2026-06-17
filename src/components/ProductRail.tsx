@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { Star, Flame, Plus } from "lucide-react";
 import type { Store, Product } from "@/data/stores";
+import { useCart } from "@/context/CartContext";
+import { toast } from "@/hooks/use-toast";
 
 type ProductWithStore = Product & { _store: Store };
 
@@ -13,6 +15,8 @@ export const ProductRail = ({
   subtitle?: string;
   products: ProductWithStore[];
 }) => {
+  const { add } = useCart();
+
   if (products.length === 0) return null;
 
   return (
@@ -24,10 +28,12 @@ export const ProductRail = ({
         </div>
       </div>
       <div className="scrollbar-hide -mx-4 flex gap-4 overflow-x-auto px-4 pb-2 snap-x snap-mandatory">
-        {products.map((p) => (
+        {products.map((p) => {
+          const catalogMode = !!(p._store as any).catalogMode;
+          return (
           <Link
             key={`${p._store.id}-${p.id}`}
-            to={`/loja/${p._store.slug}`}
+            to={`/loja/${p._store.slug}/produto/${p.id}`}
             className="group relative w-[60%] shrink-0 snap-start overflow-hidden rounded-3xl bg-card shadow-card transition-smooth hover:-translate-y-1 hover:shadow-float sm:w-[42%] md:w-[30%] lg:w-[22%]"
           >
             <div className="relative aspect-[4/5] w-full overflow-hidden">
@@ -37,10 +43,8 @@ export const ProductRail = ({
                 loading="lazy"
                 className="h-full w-full object-cover transition-bounce group-hover:scale-110"
               />
-              {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/30 to-transparent" />
 
-              {/* Top badges */}
               <div className="absolute left-2 top-2 flex flex-col gap-1">
                 {p.promo && p.oldPrice && (
                   <span className="flex items-center gap-0.5 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-secondary-foreground shadow-soft">
@@ -55,13 +59,11 @@ export const ProductRail = ({
                 )}
               </div>
 
-              {/* Rating */}
               <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-background/95 px-2 py-0.5 text-[11px] font-bold backdrop-blur">
                 <Star className="h-3 w-3 fill-accent text-accent" />
                 {p.rating.toFixed(1)}
               </div>
 
-              {/* Bottom info */}
               <div className="absolute inset-x-0 bottom-0 p-3 text-background">
                 <div className="mb-1 flex items-center gap-1.5">
                   <span className="text-base leading-none">{p._store.logo}</span>
@@ -83,17 +85,32 @@ export const ProductRail = ({
                       R$ {p.price.toFixed(2).replace(".", ",")}
                     </div>
                   </div>
-                  <div
-                    aria-hidden
-                    className="flex h-9 w-9 items-center justify-center rounded-full gradient-primary text-primary-foreground shadow-glow transition-bounce group-hover:scale-110"
-                  >
-                    <Plus className="h-4 w-4" strokeWidth={3} />
-                  </div>
+                  {!catalogMode && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const hasRequired = (p.addonGroups ?? []).some((g) => g.required);
+                        if (hasRequired) {
+                          window.location.href = `/loja/${p._store.slug}/produto/${p.id}`;
+                          return;
+                        }
+                        add(p, p._store.slug);
+                        toast({ title: "Adicionado ao carrinho", description: p.name });
+                      }}
+                      aria-label={`Adicionar ${p.name}`}
+                      className="flex h-9 w-9 items-center justify-center rounded-full gradient-primary text-primary-foreground shadow-glow transition-bounce hover:scale-110 active:scale-95"
+                    >
+                      <Plus className="h-4 w-4" strokeWidth={3} />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
