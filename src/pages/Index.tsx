@@ -431,8 +431,20 @@ const Index = () => {
         </section>
       )}
 
+      {/* Produtos em destaque das lojas */}
+      {featuredProducts.length > 0 && (
+        <section className="container pb-2">
+          <ProductRail
+            title="Produtos em destaque"
+            subtitle="Os mais pedidos das lojas Itchat"
+            products={featuredProducts}
+          />
+        </section>
+      )}
+
       {/* Mais visitadas do mês — carrossel de logos */}
       <TopVisitedRail />
+
 
 
       {/* Filtros */}
