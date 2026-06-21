@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+// Link removed — cards are now non-clickable images
 import { Star, Flame, Plus } from "lucide-react";
 import type { Store, Product } from "@/data/stores";
 import { useCart } from "@/context/CartContext";
@@ -31,9 +31,8 @@ export const ProductRail = ({
         {products.map((p) => {
           const catalogMode = !!(p._store as any).catalogMode;
           return (
-          <Link
+          <div
             key={`${p._store.id}-${p.id}`}
-            to={`/loja/${p._store.slug}/produto/${p.id}`}
             className="group relative w-[60%] shrink-0 snap-start overflow-hidden rounded-3xl bg-card shadow-card transition-smooth hover:-translate-y-1 hover:shadow-float sm:w-[42%] md:w-[30%] lg:w-[22%]"
           >
             <div className="relative aspect-[4/5] w-full overflow-hidden">
@@ -108,7 +107,7 @@ export const ProductRail = ({
                 </div>
               </div>
             </div>
-          </Link>
+          </div>
           );
         })}
       </div>
