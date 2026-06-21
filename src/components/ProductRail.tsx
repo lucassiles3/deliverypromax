@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+// Link removed — cards are now non-clickable images
 import { Star, Flame, Plus } from "lucide-react";
 import type { Store, Product } from "@/data/stores";
 import { useCart } from "@/context/CartContext";
