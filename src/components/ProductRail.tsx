@@ -107,7 +107,7 @@ export const ProductRail = ({
                 </div>
               </div>
             </div>
-          </Link>
+          </div>
           );
         })}
       </div>
