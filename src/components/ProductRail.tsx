@@ -65,7 +65,16 @@ export const ProductRail = ({
 
               <div className="absolute inset-x-0 bottom-0 p-3 text-background">
                 <div className="mb-1 flex items-center gap-1.5">
-                  <span className="text-base leading-none">{p._store.logo}</span>
+                  {p._store.logo?.startsWith("http") ? (
+                    <img
+                      src={p._store.logo}
+                      alt=""
+                      className="h-4 w-4 rounded-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <span className="text-base leading-none">{p._store.logo}</span>
+                  )}
                   <span className="line-clamp-1 text-[10px] font-semibold uppercase tracking-wide opacity-90">
                     {p._store.name}
                   </span>
