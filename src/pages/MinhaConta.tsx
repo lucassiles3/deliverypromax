@@ -12,8 +12,18 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PasswordStrength } from "@/components/PasswordStrength";
 
+import { useStoreAccess } from "@/hooks/useStoreAccess";
+
 const MinhaConta = () => {
   const { user, loading, signOut, isOwner } = useAuth();
+  const { data: storeAccess = [], isLoading: accessLoading } = useStoreAccess();
+  const hasStores = storeAccess.length > 0;
+  const showLojista = isOwner || hasStores;
+  const goLojista = () => {
+    if (accessLoading) return;
+    if (hasStores) navigate("/admin");
+    else navigate("/cadastro");
+  };
   const navigate = useNavigate();
   const { data: profile } = useProfile();
   const update = useUpdateProfile();
