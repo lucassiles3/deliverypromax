@@ -3,6 +3,7 @@ import { ShoppingBag, MapPin, LogIn, LogOut, Store as StoreIcon, User as UserIco
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useStoreAccess } from "@/hooks/useStoreAccess";
 import { NotificationBell } from "@/components/NotificationBell";
 
 const NAV_ITEMS = [
@@ -15,6 +16,9 @@ const NAV_ITEMS = [
 export const Header = () => {
   const { count, setOpen } = useCart();
   const { user, signOut, isOwner } = useAuth();
+  const { data: storeAccess = [], isLoading: accessLoading } = useStoreAccess();
+  const hasStores = storeAccess.length > 0;
+  const showLojistaBtn = isOwner || hasStores;
   const location = useLocation();
   const navigate = useNavigate();
   const isHome = location.pathname === "/";
@@ -22,6 +26,11 @@ export const Header = () => {
   const hideNav = ["/auth", "/reset-password", "/admin", "/pdv", "/checkout"].some((p) =>
     location.pathname.startsWith(p),
   );
+  const goLojista = () => {
+    if (isAdminView) return navigate("/");
+    if (accessLoading) return;
+    navigate(hasStores ? "/admin" : "/cadastro");
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/85 backdrop-blur-xl">
@@ -63,10 +72,11 @@ export const Header = () => {
         )}
 
         <div className="flex flex-1 items-center justify-end gap-2">
-          {isOwner && (
+          {showLojistaBtn && (
             <button
-              onClick={() => navigate(isAdminView ? "/" : "/admin")}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-bounce hover:scale-105 ${
+              onClick={goLojista}
+              disabled={!isAdminView && accessLoading}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-bounce hover:scale-105 disabled:opacity-70 ${
                 isAdminView
                   ? "bg-primary text-primary-foreground shadow-glow"
                   : "bg-accent/15 text-accent-foreground hover:bg-accent/25"
