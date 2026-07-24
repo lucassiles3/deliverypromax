@@ -72,17 +72,20 @@ const MinhaConta = () => {
           <ShortcutLink to="/notificacoes" icon={Bell} label="Notificações" />
         </div>
 
-        {isOwner && (
+        {showLojista && (
           <button
-            onClick={() => navigate("/admin")}
-            className="flex w-full items-center gap-4 rounded-2xl bg-primary p-5 text-left shadow-lg shadow-primary/20 transition-transform active:scale-[0.98]"
+            onClick={goLojista}
+            disabled={accessLoading}
+            className="flex w-full items-center gap-4 rounded-2xl bg-primary p-5 text-left shadow-lg shadow-primary/20 transition-transform active:scale-[0.98] disabled:opacity-70"
           >
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/20">
               <Store className="h-7 w-7 text-primary-foreground" />
             </div>
             <div className="flex-1">
               <p className="font-display text-lg font-bold text-primary-foreground">Modo Lojista</p>
-              <p className="text-sm text-primary-foreground/80">Acessar painel de administração da loja</p>
+              <p className="text-sm text-primary-foreground/80">
+                {hasStores ? "Acessar painel de administração da loja" : "Criar sua loja e escolher um plano"}
+              </p>
             </div>
             <div className="shrink-0 rounded-full bg-white/20 px-3 py-1.5 text-xs font-bold text-primary-foreground">
               Ir
