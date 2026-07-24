@@ -72,10 +72,11 @@ export const Header = () => {
         )}
 
         <div className="flex flex-1 items-center justify-end gap-2">
-          {isOwner && (
+          {showLojistaBtn && (
             <button
-              onClick={() => navigate(isAdminView ? "/" : "/admin")}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-bounce hover:scale-105 ${
+              onClick={goLojista}
+              disabled={!isAdminView && accessLoading}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-bounce hover:scale-105 disabled:opacity-70 ${
                 isAdminView
                   ? "bg-primary text-primary-foreground shadow-glow"
                   : "bg-accent/15 text-accent-foreground hover:bg-accent/25"
