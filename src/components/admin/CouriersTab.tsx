@@ -155,7 +155,7 @@ const CourierFormModal = ({
   const submit = async () => {
     if (!name.trim()) return toast.error("Nome obrigatório");
 
-    let userId: string | null | undefined = courier?.user_id;
+    const userId: string | null | undefined = courier?.user_id;
     // If new + email provided, try to find an existing user by email and link
     if (!courier && email.trim()) {
       setLinking(true);

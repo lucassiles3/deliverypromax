@@ -18,7 +18,7 @@ export function isOpenNow(
   const [oh, om] = open.split(":").map(Number);
   const [ch, cm] = close.split(":").map(Number);
   const openMin = oh * 60 + (om || 0);
-  let closeMin = ch * 60 + (cm || 0);
+  const closeMin = ch * 60 + (cm || 0);
   // suporta janela que cruza meia-noite (ex: 18:00 -> 02:00)
   if (closeMin <= openMin) {
     return cur >= openMin || cur <= closeMin;
