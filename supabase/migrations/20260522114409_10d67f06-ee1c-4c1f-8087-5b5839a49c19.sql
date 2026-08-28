@@ -1,0 +1,1 @@
+ALTER TABLE public.external_listings ADD COLUMN IF NOT EXISTS subcategory_key text;

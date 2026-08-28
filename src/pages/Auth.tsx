@@ -1,0 +1,471 @@
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Header } from "@/components/Header";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { lovable } from "@/integrations/lovable";
+import { supabase } from "@/integrations/supabase/client";
+import { Sparkles, Mail, Lock, User as UserIcon, Phone, Store as StoreIcon, ShoppingBag } from "lucide-react";
+import { toast } from "sonner";
+
+type Mode = "signin" | "signup" | "forgot";
+type Account = "customer" | "owner";
+
+const Auth = () => {
+  const { user, roles, signIn, signUp } = useAuth();
+  const navigate = useNavigate();
+  const [account, setAccountState] = useState<Account>(() => {
+    try {
+      const stored = localStorage.getItem("ff_pending_account_type") as Account | null;
+      if (stored === "owner" || stored === "customer") return stored;
+    } catch {}
+    return "customer";
+  });
+  const setAccount = (a: Account) => {
+    try { localStorage.setItem("ff_pending_account_type", a); } catch {}
+    setAccountState(a);
+  };
+  const [mode, setMode] = useState<Mode>("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
+  const [pendingOwner, setPendingOwner] = useState(false);
+
+  useEffect(() => {
+    document.title =
+      mode === "signup" ? "Cadastre-se • Itchat Brasil" : mode === "forgot" ? "Recuperar senha • Itchat Brasil" : "Entrar • Itchat Brasil";
+  }, [mode]);
+
+  // Redireciona conforme tipo de conta selecionado.
+  // Lojista → /admin (promovendo se necessário). Cliente → /
+  useEffect(() => {
+    if (!user) return;
+    const finalize = async () => {
+      const stored = (() => {
+        try {
+          return localStorage.getItem("ff_pending_account_type") as Account | null;
+        } catch {
+          return null;
+        }
+      })();
+      const effectiveAccount: Account = stored ?? account;
+      const isOwner = roles.includes("store_owner") || roles.includes("admin");
+
+      if (effectiveAccount === "owner") {
+        if (!isOwner) {
+          const { error } = await supabase.functions.invoke("claim-owner-role");
+          if (error) {
+            toast.error("Não foi possível ativar sua conta de lojista");
+            setPendingOwner(false);
+            return;
+          }
+          toast.success("Conta de lojista ativada! 🏪");
+        }
+        setPendingOwner(false);
+        try { localStorage.removeItem("ff_pending_account_type"); } catch {}
+        window.location.replace("/admin");
+        return;
+      }
+
+      setPendingOwner(false);
+      try { localStorage.removeItem("ff_pending_account_type"); } catch {}
+      window.location.replace("/");
+    };
+    finalize();
+  }, [user, roles, pendingOwner, account, navigate]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+
+    if (mode === "forgot") {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      setLoading(false);
+      if (error) return toast.error(error.message);
+      toast.success("Enviamos um link para redefinir sua senha 📧");
+      setMode("signin");
+      return;
+    }
+
+    if (mode === "signup" && account === "owner") setPendingOwner(true);
+
+    const { error } =
+      mode === "signin"
+        ? await signIn(email, password)
+        : await signUp(email, password, name, phone);
+    setLoading(false);
+    if (error) {
+      setPendingOwner(false);
+      toast.error(error);
+      return;
+    }
+    toast.success(mode === "signin" ? "Bem-vindo de volta! 🎉" : "Conta criada! Aproveite 🚀");
+  };
+
+  const signInWithGoogle = async () => {
+    if (googleLoading) return;
+    if (mode === "signup" && account === "owner") setPendingOwner(true);
+    setGoogleLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin + "/auth",
+      });
+      if (result.error) {
+        toast.error("Não foi possível entrar com Google");
+        setPendingOwner(false);
+        setGoogleLoading(false);
+        return;
+      }
+      if (result.redirected) return;
+      toast.success("Bem-vindo! 🎉");
+    } catch {
+      toast.error("Erro ao conectar com Google");
+      setPendingOwner(false);
+      setGoogleLoading(false);
+    }
+  };
+
+  const signInWithApple = async () => {
+    if (appleLoading) return;
+    if (mode === "signup" && account === "owner") setPendingOwner(true);
+    setAppleLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("apple", {
+        redirect_uri: window.location.origin + "/auth",
+      });
+      if (result.error) {
+        toast.error("Não foi possível entrar com Apple");
+        setPendingOwner(false);
+        setAppleLoading(false);
+        return;
+      }
+      if (result.redirected) return;
+      toast.success("Bem-vindo! 🎉");
+    } catch {
+      toast.error("Erro ao conectar com Apple");
+      setPendingOwner(false);
+      setAppleLoading(false);
+    }
+  };
+
+  const titles: Record<Mode, { title: string; subtitle: string; cta: string }> = {
+    signin: {
+      title: account === "owner" ? "Acesso do lojista" : "Bem-vindo de volta",
+      subtitle:
+        account === "owner"
+          ? "Entre para gerenciar pedidos da sua loja"
+          : "Entre para acessar seus pedidos",
+      cta: "Entrar",
+    },
+    signup: {
+      title: account === "owner" ? "Cadastrar minha loja" : "Criar conta",
+      subtitle:
+        account === "owner"
+          ? "Cadastre-se grátis e comece a vender hoje"
+          : "Cadastre-se em 30 segundos e comece a comprar",
+      cta: account === "owner" ? "Criar conta de lojista" : "Criar minha conta",
+    },
+    forgot: {
+      title: "Esqueceu a senha?",
+      subtitle: "Enviaremos um link para redefinir",
+      cta: "Enviar link de recuperação",
+    },
+  };
+  const t = titles[mode];
+
+  return (
+    <div className="min-h-screen bg-muted/40">
+      <Header />
+      <div className="container flex items-center justify-center py-10 md:py-16">
+        <div className="w-full max-w-md rounded-3xl bg-card p-7 shadow-float">
+          {/* Account type selector */}
+          {mode !== "forgot" && (
+            <div className="mb-6 grid grid-cols-2 gap-2 rounded-2xl bg-muted p-1">
+              <button
+                type="button"
+                onClick={() => setAccount("customer")}
+                className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition-bounce ${
+                  account === "customer"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <ShoppingBag className="h-4 w-4" />
+                Sou cliente
+              </button>
+              <button
+                type="button"
+                onClick={() => setAccount("owner")}
+                className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition-bounce ${
+                  account === "owner"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <StoreIcon className="h-4 w-4" />
+                Sou lojista
+              </button>
+            </div>
+          )}
+
+          <div className="mb-6 text-center">
+            <div
+              className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl text-2xl font-bold text-primary-foreground shadow-glow ${
+                account === "owner" ? "bg-accent" : "gradient-primary"
+              }`}
+            >
+              {account === "owner" ? <StoreIcon className="h-6 w-6" /> : "F"}
+            </div>
+            <h1 className="font-display text-3xl font-bold">{t.title}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{t.subtitle}</p>
+          </div>
+
+          {mode !== "forgot" && (
+            <>
+              <button
+                onClick={signInWithGoogle}
+                disabled={googleLoading}
+                className="mb-3 flex h-12 w-full items-center justify-center gap-3 rounded-xl border-2 border-border bg-background font-semibold transition-bounce hover:scale-[1.02] hover:border-primary disabled:opacity-50"
+              >
+                <GoogleIcon />
+                {googleLoading ? "Conectando..." : `${mode === "signin" ? "Entrar" : "Cadastrar"} com Google`}
+              </button>
+
+              <button
+                onClick={signInWithApple}
+                disabled={appleLoading}
+                className="mb-4 flex h-12 w-full items-center justify-center gap-3 rounded-xl border-2 border-border bg-black font-semibold text-white transition-bounce hover:scale-[1.02] disabled:opacity-50"
+              >
+                <AppleIcon />
+                {appleLoading ? "Conectando..." : `${mode === "signin" ? "Entrar" : "Cadastrar"} com Apple`}
+              </button>
+
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-card px-3 text-xs uppercase tracking-wider text-muted-foreground">
+                    ou com email
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+
+          <form onSubmit={submit} className="space-y-3">
+            {mode === "signup" && (
+              <>
+                <Field icon={UserIcon}>
+                  <input
+                    required
+                    placeholder={account === "owner" ? "Seu nome (responsável)" : "Seu nome completo"}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full bg-transparent outline-none"
+                  />
+                </Field>
+                <Field icon={Phone}>
+                  <input
+                    placeholder={account === "owner" ? "WhatsApp da loja" : "WhatsApp (opcional)"}
+                    required={account === "owner"}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full bg-transparent outline-none"
+                  />
+                </Field>
+              </>
+            )}
+            <Field icon={Mail}>
+              <input
+                required
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-transparent outline-none"
+              />
+            </Field>
+            {mode !== "forgot" && (
+              <>
+                <Field icon={Lock}>
+                  <input
+                    required
+                    type="password"
+                    placeholder="Senha (mín. 6 caracteres)"
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-transparent outline-none"
+                  />
+                </Field>
+                {mode === "signup" && (
+                  <PasswordStrength password={password} />
+                )}
+              </>
+            )}
+
+            {mode === "signin" && (
+              <button
+                type="button"
+                onClick={() => setMode("forgot")}
+                className="w-full text-right text-xs font-medium text-primary hover:underline"
+              >
+                Esqueci minha senha
+              </button>
+            )}
+
+            <Button
+              type="submit"
+              size="lg"
+              disabled={loading}
+              className={`h-12 w-full rounded-xl font-bold shadow-glow transition-bounce hover:scale-[1.02] ${
+                account === "owner" ? "bg-accent text-accent-foreground hover:bg-accent/90" : "gradient-primary"
+              }`}
+            >
+              {loading ? "Aguarde..." : t.cta}
+            </Button>
+          </form>
+
+          {mode === "signup" && (
+            <div
+              className={`mt-5 rounded-xl p-3 text-center text-xs ${
+                account === "owner" ? "bg-accent/10 text-accent-foreground" : "bg-success/5 text-success"
+              }`}
+            >
+              <Sparkles className="mr-1 inline h-3.5 w-3.5" />
+              {account === "owner"
+                ? "0% de mensalidade • Receba pedidos no WhatsApp"
+                : "Compre com segurança e praticidade"}
+            </div>
+          )}
+
+          <button
+            onClick={() =>
+              setMode(mode === "signin" ? "signup" : "signin")
+            }
+            className="mt-5 w-full text-center text-sm text-muted-foreground hover:text-foreground"
+          >
+            {mode === "signin" ? (
+              <>
+                {account === "owner" ? "Ainda não tem loja cadastrada?" : "Não tem conta?"}{" "}
+                <strong className="text-primary">
+                  {account === "owner" ? "Cadastrar minha loja" : "Cadastre-se grátis"}
+                </strong>
+              </>
+            ) : mode === "signup" ? (
+              <>
+                Já tem conta? <strong className="text-primary">Entrar</strong>
+              </>
+            ) : (
+              <>
+                Lembrou a senha? <strong className="text-primary">Voltar ao login</strong>
+              </>
+            )}
+          </button>
+
+          <Link
+            to="/"
+            className="mt-3 block text-center text-xs text-muted-foreground hover:text-foreground"
+          >
+            ← Continuar como visitante
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Field = ({ icon: Icon, children }: { icon: typeof Mail; children: React.ReactNode }) => (
+  <label className="flex items-center gap-2 rounded-xl border-2 border-border bg-background p-3 text-sm transition-smooth focus-within:border-primary">
+    <Icon className="h-4 w-4 text-muted-foreground" />
+    {children}
+  </label>
+);
+
+const PasswordStrength = ({ password }: { password: string }) => {
+  const rules = [
+    { label: "Mínimo de 6 caracteres", test: password.length >= 6 },
+    { label: "Uma letra maiúscula", test: /[A-Z]/.test(password) },
+    { label: "Uma letra minúscula", test: /[a-z]/.test(password) },
+    { label: "Um número", test: /\d/.test(password) },
+    { label: "Um caractere especial (!@#$...)", test: /[^A-Za-z0-9]/.test(password) },
+  ];
+  const score = rules.filter((r) => r.test).length;
+  const pct = (score / rules.length) * 100;
+  const levels = [
+    { label: "Muito fraca", color: "bg-destructive" },
+    { label: "Fraca", color: "bg-destructive" },
+    { label: "Razoável", color: "bg-yellow-500" },
+    { label: "Boa", color: "bg-yellow-400" },
+    { label: "Forte", color: "bg-green-500" },
+    { label: "Excelente", color: "bg-green-600" },
+  ];
+  const level = levels[score];
+
+  if (!password) return null;
+
+  return (
+    <div className="space-y-2 px-1">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className={`h-full transition-all duration-300 ${level.color}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">Força da senha</span>
+        <span className="font-semibold">{level.label}</span>
+      </div>
+      <ul className="space-y-1 text-xs">
+        {rules.map((r) => (
+          <li
+            key={r.label}
+            className={`flex items-center gap-2 ${r.test ? "text-green-600" : "text-muted-foreground"}`}
+          >
+            <span className={`flex h-3.5 w-3.5 items-center justify-center rounded-full text-[10px] ${r.test ? "bg-green-600 text-white" : "border border-muted-foreground/40"}`}>
+              {r.test ? "✓" : ""}
+            </span>
+            {r.label}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+const GoogleIcon = () => (
+  <svg className="h-5 w-5" viewBox="0 0 24 24">
+    <path
+      fill="#4285F4"
+      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+    />
+    <path
+      fill="#34A853"
+      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+    />
+    <path
+      fill="#FBBC05"
+      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+    />
+    <path
+      fill="#EA4335"
+      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+    />
+  </svg>
+);
+
+const AppleIcon = () => (
+  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.05 20.28c-.98.95-2.05.86-3.08.41-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.41C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+  </svg>
+);
+
+export default Auth;

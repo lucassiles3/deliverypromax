@@ -1,0 +1,27 @@
+project_id = "wguhkvnzoklrivydgrda"
+
+[functions.claim-owner-role]
+verify_jwt = false
+
+[functions.api-rest]
+verify_jwt = false
+
+[functions.webhook-dispatcher]
+verify_jwt = false
+
+[functions.chatbot-qr-receive]
+verify_jwt = false
+
+[functions.asaas-webhook]
+verify_jwt = false
+
+[functions.monthly-invoice-cron]
+verify_jwt = false
+
+[functions.subscription-grace-cron]
+verify_jwt = false
+
+[functions.infinitepay-webhook]
+verify_jwt = false
+
+

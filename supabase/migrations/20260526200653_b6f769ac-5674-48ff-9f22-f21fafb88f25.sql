@@ -1,0 +1,1 @@
+DELETE FROM public.stores WHERE id = '4d42553d-da62-4fce-8923-9c1e47e598c2' AND slug = 'burgzada';
