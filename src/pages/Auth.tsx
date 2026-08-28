@@ -57,11 +57,16 @@ const Auth = () => {
 
       if (effectiveAccount === "owner") {
         if (!isOwner) {
-          const { error } = await supabase.functions.invoke("claim-owner-role");
-          if (error) {
-            toast.error("Não foi possível ativar sua conta de lojista");
-            setPendingOwner(false);
-            return;
+          // Tenta via RPC PostgreSQL direto primeiro
+          const { error: rpcErr } = await (supabase.rpc as any)("claim_owner_role");
+          if (rpcErr) {
+            // Fallback para edge function
+            const { error: fnErr } = await supabase.functions.invoke("claim-owner-role");
+            if (fnErr) {
+              toast.error("Não foi possível ativar sua conta de lojista");
+              setPendingOwner(false);
+              return;
+            }
           }
           toast.success("Conta de lojista ativada! 🏪");
         }
