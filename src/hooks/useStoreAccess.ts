@@ -30,12 +30,27 @@ export const canAccessSection = (
 };
 
 export const useStoreAccess = () => {
-  const { user } = useAuth();
+  const { user, isMaster } = useAuth();
 
   return useQuery({
-    queryKey: ["store-access", user?.id],
+    queryKey: ["store-access", user?.id, isMaster],
     enabled: !!user,
     queryFn: async (): Promise<StoreAccess[]> => {
+      if (isMaster) {
+        const { data: allStores, error: allErr } = await supabase
+          .from("stores")
+          .select("id, name, logo, slug, owner_id");
+        if (allErr) throw allErr;
+
+        return (allStores ?? []).map((s) => ({
+          id: s.id,
+          name: s.name,
+          logo: s.logo,
+          slug: s.slug,
+          role: "owner" as const,
+        })).sort((a, b) => a.name.localeCompare(b.name));
+      }
+
       const { data: owned, error: ownErr } = await supabase
         .from("stores")
         .select("id, name, logo, slug, owner_id")

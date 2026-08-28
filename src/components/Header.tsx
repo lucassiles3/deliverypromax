@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ShoppingBag, MapPin, LogIn, LogOut, Store as StoreIcon, User as UserIcon, Home, Grid3x3, Receipt, Heart } from "lucide-react";
+import { ShoppingBag, MapPin, LogIn, LogOut, Store as StoreIcon, User as UserIcon, Home, Grid3x3, Receipt, Heart, Shield } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,7 +15,7 @@ const NAV_ITEMS = [
 
 export const Header = () => {
   const { count, setOpen } = useCart();
-  const { user, signOut, isOwner } = useAuth();
+  const { user, signOut, isOwner, isMaster } = useAuth();
   const { data: storeAccess = [], isLoading: accessLoading } = useStoreAccess();
   const hasStores = storeAccess.length > 0;
   const showLojistaBtn = isOwner || hasStores;
@@ -99,6 +99,15 @@ export const Header = () => {
           {user ? (
             <>
               <NotificationBell />
+              {isMaster && (
+                <Link
+                  to="/master"
+                  className="hidden items-center gap-1 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary hover:text-primary-foreground sm:flex"
+                  title="Painel Mestre Super Admin"
+                >
+                  <Shield className="h-3.5 w-3.5" /> Painel Master
+                </Link>
+              )}
               <Link
                 to="/conta"
                 className="hidden items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground sm:flex"

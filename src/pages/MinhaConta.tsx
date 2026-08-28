@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Navigate, Link, useNavigate } from "react-router-dom";
-import { User, Lock, Phone, Mail, Save, MapPin, Heart, Bell, Receipt, LogOut, Trophy, Cake, Store, Eye, EyeOff } from "lucide-react";
+import { User, Lock, Phone, Mail, Save, MapPin, Heart, Bell, Receipt, LogOut, Trophy, Cake, Store, Eye, EyeOff, Shield } from "lucide-react";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,7 +15,7 @@ import { PasswordStrength } from "@/components/PasswordStrength";
 import { useStoreAccess } from "@/hooks/useStoreAccess";
 
 const MinhaConta = () => {
-  const { user, loading, signOut, isOwner } = useAuth();
+  const { user, loading, signOut, isOwner, isMaster } = useAuth();
   const { data: storeAccess = [], isLoading: accessLoading } = useStoreAccess();
   const hasStores = storeAccess.length > 0;
   const showLojista = isOwner || hasStores;
@@ -71,6 +71,28 @@ const MinhaConta = () => {
           <ShortcutLink to="/favoritos" icon={Heart} label="Favoritos" />
           <ShortcutLink to="/notificacoes" icon={Bell} label="Notificações" />
         </div>
+
+        {isMaster && (
+          <div className="flex w-full items-center justify-between gap-4 rounded-2xl border-2 border-primary bg-primary/10 p-5 shadow-soft">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold">
+                <Shield className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="font-display text-lg font-bold text-foreground">Super Administrador (Master)</p>
+                <p className="text-xs text-muted-foreground">Acesso irrestrito a todas as lojas, relatórios, parceiros e configurações globais</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Link to="/master" className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-glow hover:bg-primary/90">
+                Painel Master
+              </Link>
+              <Link to="/admin/parceiros" className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-bold text-foreground hover:bg-muted">
+                Parceiros
+              </Link>
+            </div>
+          </div>
+        )}
 
         {showLojista && (
           <button

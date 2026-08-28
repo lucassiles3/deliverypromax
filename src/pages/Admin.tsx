@@ -39,6 +39,8 @@ import {
   UserCog,
   Plug,
   Boxes,
+  Shield,
+  ExternalLink,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -97,7 +99,7 @@ const statusConfig: Record<DbStatus, { label: string; color: string; icon: typeo
 };
 
 const Admin = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isMaster, loading: authLoading } = useAuth();
   const qc = useQueryClient();
   const [storeId, setStoreId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>(() => {
@@ -523,6 +525,26 @@ const Admin = () => {
               <Printer className="h-3.5 w-3.5" />
               Imprimir
             </button>
+            {isMaster && (
+              <>
+                <Link
+                  to="/master"
+                  className="flex items-center gap-1.5 rounded-xl border-2 border-primary bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary transition-smooth hover:bg-primary hover:text-primary-foreground"
+                  title="Painel Mestre Super Admin"
+                >
+                  <Shield className="h-3.5 w-3.5" />
+                  Painel Master
+                </Link>
+                <Link
+                  to="/admin/parceiros"
+                  className="flex items-center gap-1.5 rounded-xl border-2 border-border bg-card px-3 py-1.5 text-xs font-bold text-foreground transition-smooth hover:border-primary"
+                  title="Gerenciar Estabelecimentos Parceiros"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Parceiros
+                </Link>
+              </>
+            )}
             <select
               value={storeId ?? ""}
               onChange={(e) => setStoreId(e.target.value)}

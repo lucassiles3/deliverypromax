@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
-type Role = "admin" | "store_owner" | "customer";
+type Role = "super_admin" | "admin" | "store_owner" | "customer";
 
 type AuthState = {
   user: User | null;
@@ -16,6 +16,7 @@ export const useAuth = (): AuthState & {
   signUp: (email: string, password: string, displayName?: string, phone?: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   isOwner: boolean;
+  isMaster: boolean;
 } => {
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -90,11 +91,16 @@ export const useAuth = (): AuthState & {
     await supabase.auth.signOut();
   };
 
+  const isMaster =
+    state.roles.includes("super_admin") ||
+    (state.user?.email ?? "").toLowerCase() === "suporteitchat@gmail.com";
+
   return {
     ...state,
     signIn,
     signUp,
     signOut,
-    isOwner: state.roles.includes("store_owner") || state.roles.includes("admin"),
+    isOwner: state.roles.includes("store_owner") || state.roles.includes("admin") || isMaster,
+    isMaster,
   };
 };
