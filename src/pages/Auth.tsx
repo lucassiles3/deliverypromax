@@ -119,19 +119,29 @@ const Auth = () => {
     if (mode === "signup" && account === "owner") setPendingOwner(true);
     setGoogleLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + "/auth",
+      // 1. Tenta autenticação nativa do Supabase com Google
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth`,
+        },
       });
-      if (result.error) {
-        toast.error("Não foi possível entrar com Google");
-        setPendingOwner(false);
-        setGoogleLoading(false);
-        return;
+
+      if (error) {
+        console.warn("Supabase Google OAuth error, tentando fallback Lovable:", error.message);
+        const result = await lovable.auth.signInWithOAuth("google", {
+          redirect_uri: `${window.location.origin}/auth`,
+        });
+        if (result.error) {
+          toast.error(error.message || "Não foi possível entrar com Google. Verifique a configuração do provedor no Supabase.");
+          setPendingOwner(false);
+          setGoogleLoading(false);
+          return;
+        }
       }
-      if (result.redirected) return;
-      toast.success("Bem-vindo! 🎉");
-    } catch {
-      toast.error("Erro ao conectar com Google");
+    } catch (err: any) {
+      console.error("Erro no login Google:", err);
+      toast.error(err?.message || "Erro ao conectar com Google");
       setPendingOwner(false);
       setGoogleLoading(false);
     }
@@ -142,19 +152,28 @@ const Auth = () => {
     if (mode === "signup" && account === "owner") setPendingOwner(true);
     setAppleLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("apple", {
-        redirect_uri: window.location.origin + "/auth",
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "apple",
+        options: {
+          redirectTo: `${window.location.origin}/auth`,
+        },
       });
-      if (result.error) {
-        toast.error("Não foi possível entrar com Apple");
-        setPendingOwner(false);
-        setAppleLoading(false);
-        return;
+
+      if (error) {
+        console.warn("Supabase Apple OAuth error, tentando fallback Lovable:", error.message);
+        const result = await lovable.auth.signInWithOAuth("apple", {
+          redirect_uri: `${window.location.origin}/auth`,
+        });
+        if (result.error) {
+          toast.error(error.message || "Não foi possível entrar com Apple");
+          setPendingOwner(false);
+          setAppleLoading(false);
+          return;
+        }
       }
-      if (result.redirected) return;
-      toast.success("Bem-vindo! 🎉");
-    } catch {
-      toast.error("Erro ao conectar com Apple");
+    } catch (err: any) {
+      console.error("Erro no login Apple:", err);
+      toast.error(err?.message || "Erro ao conectar com Apple");
       setPendingOwner(false);
       setAppleLoading(false);
     }
