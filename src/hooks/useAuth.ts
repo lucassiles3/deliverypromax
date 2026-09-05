@@ -42,14 +42,23 @@ export const useAuth = (): AuthState & {
       setState((s) => ({ ...s, session, user: session?.user ?? null }));
       if (session?.user) loadRoles(session.user.id);
       else setState((s) => ({ ...s, loading: false }));
+    }).catch((err) => {
+      console.error("Erro ao obter sessão:", err);
+      setState((s) => ({ ...s, loading: false }));
     });
 
     return () => sub.subscription.unsubscribe();
   }, []);
 
   const loadRoles = async (uid: string) => {
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
-    setState((s) => ({ ...s, roles: (data?.map((r) => r.role) as Role[]) ?? [], loading: false }));
+    try {
+      const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", uid);
+      if (error) console.warn("Erro ao carregar papéis do usuário:", error);
+      setState((s) => ({ ...s, roles: (data?.map((r) => r.role) as Role[]) ?? [], loading: false }));
+    } catch (err) {
+      console.error("Erro inesperado ao carregar papéis:", err);
+      setState((s) => ({ ...s, loading: false }));
+    }
   };
 
   const translateError = (msg?: string): string | null => {

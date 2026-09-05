@@ -36,51 +36,56 @@ export const useStoreAccess = () => {
     queryKey: ["store-access", user?.id, isMaster],
     enabled: !!user,
     queryFn: async (): Promise<StoreAccess[]> => {
-      if (isMaster) {
-        const { data: allStores, error: allErr } = await supabase
-          .from("stores")
-          .select("id, name, logo, slug, owner_id");
-        if (allErr) throw allErr;
+      try {
+        if (isMaster) {
+          const { data: allStores, error: allErr } = await supabase
+            .from("stores")
+            .select("id, name, logo, slug, owner_id");
+          if (allErr) console.warn("Erro ao buscar todas as lojas:", allErr);
 
-        return (allStores ?? []).map((s) => ({
-          id: s.id,
-          name: s.name,
-          logo: s.logo,
-          slug: s.slug,
-          role: "owner" as const,
-        })).sort((a, b) => a.name.localeCompare(b.name));
-      }
-
-      const { data: owned, error: ownErr } = await supabase
-        .from("stores")
-        .select("id, name, logo, slug, owner_id")
-        .eq("owner_id", user!.id);
-      if (ownErr) throw ownErr;
-
-      const { data: memberships, error: memErr } = await supabase
-        .from("store_members")
-        .select("role, store_id, stores:store_id(id, name, logo, slug)")
-        .eq("user_id", user!.id)
-        .eq("active", true);
-      if (memErr) throw memErr;
-
-      const map = new Map<string, StoreAccess>();
-      (owned ?? []).forEach((s) =>
-        map.set(s.id, { id: s.id, name: s.name, logo: s.logo, slug: s.slug, role: "owner" }),
-      );
-      (memberships ?? []).forEach((m: any) => {
-        if (m.stores && !map.has(m.stores.id)) {
-          map.set(m.stores.id, {
-            id: m.stores.id,
-            name: m.stores.name,
-            logo: m.stores.logo,
-            slug: m.stores.slug,
-            role: m.role,
-          });
+          return (allStores ?? []).map((s) => ({
+            id: s.id,
+            name: s.name,
+            logo: s.logo,
+            slug: s.slug,
+            role: "owner" as const,
+          })).sort((a, b) => a.name.localeCompare(b.name));
         }
-      });
 
-      return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+        const { data: owned, error: ownErr } = await supabase
+          .from("stores")
+          .select("id, name, logo, slug, owner_id")
+          .eq("owner_id", user!.id);
+        if (ownErr) console.warn("Erro ao buscar lojas do proprietário:", ownErr);
+
+        const { data: memberships, error: memErr } = await supabase
+          .from("store_members")
+          .select("role, store_id, stores:store_id(id, name, logo, slug)")
+          .eq("user_id", user!.id)
+          .eq("active", true);
+        if (memErr) console.warn("Erro ao buscar associações de equipe:", memErr);
+
+        const map = new Map<string, StoreAccess>();
+        (owned ?? []).forEach((s) =>
+          map.set(s.id, { id: s.id, name: s.name, logo: s.logo, slug: s.slug, role: "owner" }),
+        );
+        (memberships ?? []).forEach((m: any) => {
+          if (m.stores && !map.has(m.stores.id)) {
+            map.set(m.stores.id, {
+              id: m.stores.id,
+              name: m.stores.name,
+              logo: m.stores.logo,
+              slug: m.stores.slug,
+              role: m.role,
+            });
+          }
+        });
+
+        return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+      } catch (err) {
+        console.error("Erro inesperado em useStoreAccess:", err);
+        return [];
+      }
     },
   });
 };

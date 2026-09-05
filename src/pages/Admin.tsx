@@ -41,6 +41,7 @@ import {
   Boxes,
   Shield,
   ExternalLink,
+  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -167,9 +168,16 @@ const Admin = () => {
     enabled: !!storeId && currentRole === "owner",
     refetchInterval: 30000,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("store_subscription_state", { _store_id: storeId! });
-      if (error) throw error;
-      return data as any;
+      try {
+        const { data, error } = await supabase.rpc("store_subscription_state", { _store_id: storeId! });
+        if (error) {
+          console.warn("store_subscription_state fallback:", error.message);
+          return null;
+        }
+        return data as any;
+      } catch {
+        return null;
+      }
     },
   });
 
@@ -318,7 +326,14 @@ const Admin = () => {
     return { revenue: today, active, avg, count: orders.length };
   }, [orders]);
 
-  if (authLoading) return <div className="min-h-screen" />;
+  if (authLoading || (storesLoading && stores.length === 0)) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm font-medium text-muted-foreground">Carregando painel do lojista...</p>
+      </div>
+    );
+  }
   if (!user) return <Navigate to="/auth" replace />;
   if (!storesLoading && stores.length === 0) {
     return <CreateStoreOnboarding userId={user.id} userEmail={user.email ?? ""} />;
