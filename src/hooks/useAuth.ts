@@ -55,6 +55,9 @@ export const useAuth = (): AuthState & {
   const translateError = (msg?: string): string | null => {
     if (!msg) return null;
     const m = msg.toLowerCase();
+    if (m.includes("failed to fetch") || m.includes("fetch failed") || m.includes("networkerror") || m.includes("network error")) {
+      return "Erro de conexão com o servidor. Verifique sua internet ou se o projeto Supabase está ativo.";
+    }
     if (m.includes("invalid login") || m.includes("invalid credentials")) return "Email ou senha incorretos";
     if (m.includes("email not confirmed")) return "Confirme seu email antes de entrar";
     if (m.includes("user already registered") || m.includes("already been registered")) return "Este email já está cadastrado";
@@ -68,23 +71,31 @@ export const useAuth = (): AuthState & {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: translateError(error?.message) };
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      return { error: translateError(error?.message) };
+    } catch (err: any) {
+      return { error: translateError(err?.message || "Failed to fetch") };
+    }
   };
 
   const signUp = async (email: string, password: string, displayName?: string, phone?: string) => {
-    const meta: Record<string, string> = {};
-    if (displayName) meta.display_name = displayName;
-    if (phone) meta.phone = phone;
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: Object.keys(meta).length ? meta : undefined,
-      },
-    });
-    return { error: translateError(error?.message) };
+    try {
+      const meta: Record<string, string> = {};
+      if (displayName) meta.display_name = displayName;
+      if (phone) meta.phone = phone;
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: Object.keys(meta).length ? meta : undefined,
+        },
+      });
+      return { error: translateError(error?.message) };
+    } catch (err: any) {
+      return { error: translateError(err?.message || "Failed to fetch") };
+    }
   };
 
   const signOut = async () => {
