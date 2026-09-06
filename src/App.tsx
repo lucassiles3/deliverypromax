@@ -22,7 +22,7 @@ if (typeof window !== "undefined") {
 }
 
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -130,6 +130,7 @@ const App = () => (
                 <Route path="/meus-pedidos" element={withFallback(<MyOrders />, <AccountFallback />)} />
                 <Route path="/meus-pedidos/:id" element={withFallback(<OrderDetails />, <AccountFallback />)} />
                 <Route path="/conta" element={withFallback(<MinhaConta />, <AccountFallback />)} />
+                <Route path="/minha-conta" element={<Navigate to="/conta" replace />} />
                 <Route path="/enderecos" element={withFallback(<Enderecos />, <AccountFallback />)} />
                 <Route path="/favoritos" element={withFallback(<Favoritos />, <AccountFallback />)} />
                 <Route path="/notificacoes" element={withFallback(<Notificacoes />, <AccountFallback />)} />
