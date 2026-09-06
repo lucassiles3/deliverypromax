@@ -158,6 +158,18 @@ const Index = () => {
     [stores],
   );
 
+  const availableCategoryKeys = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          stores
+            .map((s: any) => s._categoryKey || s.category_key || s.category)
+            .filter(Boolean),
+        ),
+      ),
+    [stores],
+  );
+
   // Enrich with distance + open + inRange
   const enriched = useMemo(() => {
     return stores.map((s: any) => {
@@ -346,6 +358,7 @@ const Index = () => {
       <section className="container py-6">
         <CategoryGrid
           availableCuisines={availableCuisines}
+          availableCategoryKeys={availableCategoryKeys}
           active={activeCat}
           onPick={pickCategory}
         />

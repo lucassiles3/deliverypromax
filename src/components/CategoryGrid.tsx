@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { UtensilsCrossed, ShoppingCart, Pill, Shirt, Laptop, Wrench, Dog, Sparkles, Beer, Home, Smartphone, Truck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -127,17 +128,21 @@ export const matchSubcategory = (cuisine: string | null | undefined, sub: Subcat
 
 export const CategoryGrid = ({
   availableCuisines,
+  availableCategoryKeys = [],
   active,
   onPick,
 }: {
   availableCuisines: string[];
+  availableCategoryKeys?: string[];
   active: string | null;
   onPick: (key: string | null) => void;
 }) => {
   const navigate = useNavigate();
   const cuisinesLower = availableCuisines.map((c) => c.toLowerCase());
+  const categoryKeysSet = useMemo(() => new Set(availableCategoryKeys), [availableCategoryKeys]);
 
   const isAvailable = (cat: CategoryDef) =>
+    categoryKeysSet.has(cat.key) ||
     cuisinesLower.some((c) => cat.match.some((m) => c.includes(m)));
 
   const renderCategory = (cat: CategoryDef) => {
