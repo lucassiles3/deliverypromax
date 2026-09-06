@@ -78,7 +78,7 @@ export const PDVTab = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cash_registers")
-        .select("*")
+        .select("id, store_id, status, opened_at, initial_amount, opened_by, opened_by_name")
         .eq("store_id", storeId)
         .eq("status", "open")
         .order("opened_at", { ascending: false })
@@ -595,7 +595,7 @@ const CashDrawer = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cash_movements")
-        .select("*")
+        .select("id, cash_register_id, store_id, order_id, type, payment_method, amount, description, created_at")
         .eq("cash_register_id", openRegister.id)
         .order("created_at", { ascending: false });
       if (error) throw error;

@@ -58,7 +58,7 @@ export const useSectors = (storeId: string | null) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("sectors")
-        .select("*")
+        .select("id, store_id, name, color, position, active")
         .eq("store_id", storeId!)
         .order("position");
       if (error) throw error;
@@ -75,7 +75,7 @@ export const useTables = (storeId: string | null) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tables")
-        .select("*")
+        .select("id, store_id, sector_id, number, name, capacity, status, notes, position_x, position_y, qr_token, position, active")
         .eq("store_id", storeId!)
         .order("number");
       if (error) throw error;
@@ -111,7 +111,7 @@ export const useOpenSessions = (storeId: string | null) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("table_sessions")
-        .select("*")
+        .select("id, store_id, table_id, status, people, waiter_user_id, waiter_name, customer_name, customer_phone, notes, subtotal, service_fee, service_fee_percent, discount, total, paid_amount, opened_at, closed_at, cash_register_id")
         .eq("store_id", storeId!)
         .eq("status", "open");
       if (error) throw error;

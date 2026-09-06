@@ -280,9 +280,15 @@ export const MenuTab = ({ storeId }: { storeId: string }) => {
         return ai - bi;
       });
     });
-    await Promise.all(
-      reordered.map((p, i) => supabase.from("products").update({ position: i }).eq("id", p.id))
-    );
+    const changedProducts = reordered.filter((p, i) => p.position !== i);
+    if (changedProducts.length > 0) {
+      await Promise.all(
+        changedProducts.map((p) => {
+          const newPos = reordered.findIndex((item) => item.id === p.id);
+          return supabase.from("products").update({ position: newPos }).eq("id", p.id);
+        })
+      );
+    }
     qc.invalidateQueries({ queryKey: ["menu-products", storeId] });
   };
 
@@ -709,9 +715,15 @@ const CategoriesModal = ({
     const oldIdx = categories.findIndex((c) => c.id === active.id);
     const newIdx = categories.findIndex((c) => c.id === over.id);
     const reordered = arrayMove(categories, oldIdx, newIdx);
-    await Promise.all(
-      reordered.map((c, i) => supabase.from("categories").update({ position: i }).eq("id", c.id))
-    );
+    const changedCats = reordered.filter((c, i) => c.position !== i);
+    if (changedCats.length > 0) {
+      await Promise.all(
+        changedCats.map((c) => {
+          const newPos = reordered.findIndex((item) => item.id === c.id);
+          return supabase.from("categories").update({ position: newPos }).eq("id", c.id);
+        })
+      );
+    }
     onChanged();
   };
 

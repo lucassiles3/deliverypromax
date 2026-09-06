@@ -25,9 +25,24 @@ export const CATEGORIES: CategoryDef[] = [
   { key: "services", label: "Serviços", icon: Truck, color: "bg-muted text-foreground", match: ["serviço", "servico"] },
 ];
 
-export const matchCategory = (cuisine: string | null | undefined, cat: CategoryDef) => {
+export const matchCategory = (
+  cuisine: string | null | undefined,
+  cat: CategoryDef,
+  categoriesArr?: string[] | null,
+  categoryKey?: string | null
+) => {
+  if (categoryKey && (categoryKey === cat.key || categoryKey.toLowerCase() === cat.label.toLowerCase())) return true;
+  if (categoriesArr && Array.isArray(categoriesArr)) {
+    if (
+      categoriesArr.includes(cat.key) ||
+      categoriesArr.some((c) => c.toLowerCase() === cat.key || c.toLowerCase() === cat.label.toLowerCase())
+    ) {
+      return true;
+    }
+  }
   if (!cuisine) return false;
   const c = cuisine.toLowerCase();
+  if (c === cat.label.toLowerCase() || c === cat.key) return true;
   return cat.match.some((m) => c.includes(m));
 };
 
@@ -118,9 +133,17 @@ export const SUBCATEGORIES: Record<string, SubcategoryDef[]> = {
   ],
 };
 
-export const matchSubcategory = (cuisine: string | null | undefined, sub: SubcategoryDef) => {
+export const matchSubcategory = (
+  cuisine: string | null | undefined,
+  sub: SubcategoryDef,
+  subcategoryKey?: string | null
+) => {
+  if (subcategoryKey && (subcategoryKey === sub.key || subcategoryKey.toLowerCase() === sub.label.toLowerCase())) {
+    return true;
+  }
   if (!cuisine) return false;
   const c = cuisine.toLowerCase();
+  if (c === sub.label.toLowerCase() || c === sub.key) return true;
   return sub.match.some((m) => c.includes(m));
 };
 

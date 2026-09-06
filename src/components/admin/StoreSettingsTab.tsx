@@ -123,7 +123,11 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
   const { data: store } = useQuery({
     queryKey: ["store-profile", storeId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("stores").select("*").eq("id", storeId).maybeSingle();
+      const { data, error } = await supabase
+        .from("stores")
+        .select("id, name, short_description, tagline, logo, cover_url, categories, phone, whatsapp_phone, instagram, website, address_cep, address_street, address_number, address_complement, address_neighborhood, city, address_state, lat, lng, slug")
+        .eq("id", storeId)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -481,7 +485,7 @@ const HoursSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeof 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("store_holidays")
-        .select("*")
+        .select("id, store_id, date, label, closed, open_time, close_time")
         .eq("store_id", storeId)
         .order("date");
       if (error) throw error;
@@ -719,7 +723,7 @@ const DeliverySection = ({ storeId, qc }: { storeId: string; qc: ReturnType<type
     queryFn: async () => {
       const { data, error } = await supabase
         .from("store_neighborhoods")
-        .select("*")
+        .select("id, store_id, name, fee, estimated_time_min")
         .eq("store_id", storeId)
         .order("name");
       if (error) throw error;
@@ -1042,7 +1046,10 @@ const PaymentSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
   const { data: methods = [] } = useQuery({
     queryKey: ["store-payments", storeId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("store_payment_methods").select("*").eq("store_id", storeId);
+      const { data, error } = await supabase
+        .from("store_payment_methods")
+        .select("id, store_id, method, enabled, notes")
+        .eq("store_id", storeId);
       if (error) throw error;
       return data ?? [];
     },

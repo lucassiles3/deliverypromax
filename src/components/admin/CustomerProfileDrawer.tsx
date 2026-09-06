@@ -48,7 +48,7 @@ export const CustomerProfileDrawer = ({
       if (userId) {
         const { data: pts } = await supabase
           .from("loyalty_points")
-          .select("*")
+          .select("id, delta, reason, created_at, expires_at")
           .eq("store_id", storeId)
           .eq("user_id", userId)
           .order("created_at", { ascending: false })

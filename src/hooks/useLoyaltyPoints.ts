@@ -86,7 +86,7 @@ export const useLoyaltyRewards = (storeId?: string) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("loyalty_rewards")
-        .select("*")
+        .select("id, store_id, name, description, cost_points, reward_type, reward_value, free_product_id, stock, active, position")
         .eq("store_id", storeId!)
         .eq("active", true)
         .order("position");

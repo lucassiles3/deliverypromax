@@ -85,12 +85,44 @@ const STORE_LIST_COLUMNS =
   "delivery_time, delivery_fee, free_shipping_threshold, min_order, open, promo, " +
   "categories, lat, lng, delivery_radius_km, opening_hours";
 
-export const useStores = () =>
-  useQuery({
-    queryKey: ["stores"],
+const STORE_DETAIL_COLUMNS =
+  "id, slug, name, tagline, cuisine, logo, cover_url, city, rating, reviews, " +
+  "delivery_time, delivery_fee, free_shipping_threshold, min_order, open, promo, " +
+  "categories, whatsapp_phone, opening_hours, lat, lng, delivery_radius_km, cnpj, " +
+  "phone, instagram, website, short_description, address_cep, address_street, " +
+  "address_number, address_complement, address_neighborhood, address_state, catalog_mode";
+
+export const useStores = (coords?: { lat: number; lng: number } | null) => {
+  const normLat = coords?.lat != null ? Number(coords.lat.toFixed(3)) : null;
+  const normLng = coords?.lng != null ? Number(coords.lng.toFixed(3)) : null;
+
+  return useQuery({
+    queryKey: ["stores", normLat, normLng],
     staleTime: 1000 * 60 * 10, // lista de lojas muda pouco → 10 min
     queryFn: async (): Promise<Store[]> => {
-      // Oculta lojas demo/seed (sem dono atribuído) de todas as listagens públicas.
+      if (normLat != null && normLng != null) {
+        const { data: rpcData, error: rpcErr } = await supabase.rpc("get_available_stores", {
+          user_lat: normLat,
+          user_lng: normLng,
+        });
+        if (!rpcErr && rpcData) {
+          return (rpcData as any[]).map((s) => mapStore({
+            ...s,
+            tagline: null,
+            cover_url: null,
+            city: null,
+            rating: 5,
+            reviews: 0,
+            delivery_time: null,
+            delivery_fee: null,
+            free_shipping_threshold: null,
+            min_order: null,
+            open: true,
+            promo: null,
+          }));
+        }
+      }
+      // Fallback padrão se não houver coordenadas
       const { data, error } = await supabase
         .from("stores")
         .select(STORE_LIST_COLUMNS)
@@ -100,6 +132,7 @@ export const useStores = () =>
       return (data as unknown as DbStore[]).map((s) => mapStore(s));
     },
   });
+};
 
 export const useStoreBySlug = (slug: string) =>
   useQuery({
@@ -110,7 +143,7 @@ export const useStoreBySlug = (slug: string) =>
       // em stores, evitando o waterfall (fetch loja → fetch produtos).
       const storePromise = supabase
         .from("stores")
-        .select("*")
+        .select(STORE_DETAIL_COLUMNS)
         .eq("slug", slug)
         .maybeSingle();
 
@@ -220,7 +253,10 @@ export const useCoupons = () =>
   useQuery({
     queryKey: ["coupons"],
     queryFn: async (): Promise<Coupon[]> => {
-      const { data, error } = await supabase.from("coupons").select("*");
+      const { data, error } = await supabase
+        .from("coupons")
+        .select("code, type, value, min_order, label")
+        .eq("active", true);
       if (error) throw error;
       return (data ?? []).map((c: any) => ({
         code: c.code,

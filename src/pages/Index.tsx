@@ -106,13 +106,6 @@ const Index = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const { data: addresses } = useAddresses();
-  const { data: storesData = [], isLoading } = useStores();
-  const { data: externalListings = [] } = useExternalListings();
-  const stores = useMemo(
-    () => [...storesData, ...(externalListings as any[])] as any[],
-    [storesData, externalListings],
-  );
-  const { data: featuredProducts = [] } = useFeaturedProducts(storesData);
 
   const defaultAddr = useMemo(
     () => addresses?.find((a: any) => a.is_default) ?? addresses?.[0] ?? null,
@@ -123,6 +116,14 @@ const Index = () => {
       ? { lat: Number(defaultAddr.lat), lng: Number(defaultAddr.lng) }
       : null;
   const { coords, requesting, denied, requestGps, setManual } = useUserLocation(addrCoords);
+
+  const { data: storesData = [], isLoading } = useStores(coords);
+  const { data: externalListings = [] } = useExternalListings(coords);
+  const stores = useMemo(
+    () => [...storesData, ...(externalListings as any[])] as any[],
+    [storesData, externalListings],
+  );
+  const { data: featuredProducts = [] } = useFeaturedProducts(storesData);
 
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [activeSub, setActiveSub] = useState<string | null>(null);
@@ -180,23 +181,21 @@ const Index = () => {
         ? s.open !== false
         : isStoreOpen(s.openingHours);
       const open = manualOpen && scheduleOpen;
-      let distance: number | null = null;
-      if (coords && s.lat && s.lng) {
-        distance = distanceKm(coords, { lat: Number(s.lat), lng: Number(s.lng) });
-      }
-      const radius = s.deliveryRadiusKm ?? null;
-      // Sem coords OU sem raio definido => considera "dentro do raio"
-      const inRange = distance === null || radius === null ? true : distance <= radius;
+
+      const { inRange, distanceKm: distance, hasStoreCoords } = isStoreInDeliveryRadius(coords, s);
+
       return {
         ...s,
         _open: open,
         _distance: distance,
-        _radius: radius,
+        _radius: s.deliveryRadiusKm ?? s.delivery_radius_km ?? null,
+        _hasCoords: hasStoreCoords,
         _inRange: inRange,
       } as Store & {
         _open: boolean;
         _distance: number | null;
         _radius: number | null;
+        _hasCoords: boolean;
         _inRange: boolean;
       };
     });
@@ -204,15 +203,12 @@ const Index = () => {
 
   const showOutOfRange = false;
 
-  // Lojas no raio — fechadas aparecem desfocadas com tag "Fechado"
+  // Lojas elegíveis no raio (devem ter localização e estar dentro do raio)
   const inRangeStores = useMemo(
-    () => enriched.filter((s) => (coords ? s._inRange : true)),
+    () => enriched.filter((s) => (coords ? s._hasCoords && s._inRange : s._hasCoords)),
     [enriched, coords],
   );
-  const outOfRangeCount = enriched.filter((s) => coords && !s._inRange).length;
-
-
-
+  const outOfRangeCount = enriched.filter((s) => coords && s._hasCoords && !s._inRange).length;
 
   const filtered = useMemo(() => {
     let list = showOutOfRange ? enriched : inRangeStores;
@@ -220,11 +216,12 @@ const Index = () => {
       const cat = CATEGORIES.find((c) => c.key === activeCat);
       if (cat) {
         list = list.filter((s: any) =>
-          s._categoryKey === activeCat ||
-          s.category_key === activeCat ||
-          s.category === activeCat ||
-          (s.category && s.category.toLowerCase() === cat.label.toLowerCase()) ||
-          matchCategory(s.cuisine, cat),
+          matchCategory(
+            s.cuisine,
+            cat,
+            s.categories,
+            s._categoryKey || s.category_key || s.category
+          )
         );
       }
     }
@@ -232,7 +229,11 @@ const Index = () => {
       const sub = SUBCATEGORIES[activeCat]?.find((x) => x.key === activeSub);
       if (sub) {
         list = list.filter((s: any) =>
-          s._subcategoryKey === activeSub || matchSubcategory(s.cuisine, sub),
+          matchSubcategory(
+            s.cuisine,
+            sub,
+            s._subcategoryKey || s.subcategory_key
+          )
         );
       }
     }
@@ -548,8 +549,13 @@ const Index = () => {
             </h2>
           </div>
           {filtered.length === 0 ? (
-            <div className="rounded-2xl border border-dashed py-12 text-center text-muted-foreground">
-              Nenhuma loja com esses filtros.
+            <div className="rounded-2xl border border-dashed border-primary/30 bg-card p-8 text-center text-muted-foreground">
+              <p className="font-display text-base font-bold text-foreground">
+                Nenhum estabelecimento disponível nesta categoria perto de você 🔍
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Tente selecionar outra categoria ou alterar sua localização para ver opções de outras regiões.
+              </p>
             </div>
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

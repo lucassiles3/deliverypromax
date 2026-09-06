@@ -6,7 +6,7 @@ import { useStores } from "@/hooks/useStores";
 import { useExternalListings } from "@/hooks/useExternalListings";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useUserLocation } from "@/hooks/useUserLocation";
-import { distanceKm as calcDistance } from "@/lib/distance";
+import { isStoreInDeliveryRadius } from "@/lib/distance";
 import { CATEGORIES, SUBCATEGORIES, matchCategory, matchSubcategory } from "@/components/CategoryGrid";
 import { Loader2, Grid3x3, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
@@ -29,16 +29,16 @@ const Categorias = () => {
     const combined = [...storesData, ...(externalListings as any[])];
     return combined
       .map((s: any) => {
-        let distance: number | null = null;
-        if (coords && s.lat && s.lng) {
-          distance = calcDistance(coords, { lat: Number(s.lat), lng: Number(s.lng) });
-        }
-        const radius = s.deliveryRadiusKm ?? null;
-        const inRange =
-          !coords || distance === null || radius === null ? true : distance <= radius;
-        return { ...s, _distance: distance, _radius: radius, _inRange: inRange };
+        const { inRange, distanceKm: distance, hasStoreCoords } = isStoreInDeliveryRadius(coords, s);
+        return {
+          ...s,
+          _distance: distance,
+          _radius: s.deliveryRadiusKm ?? s.delivery_radius_km ?? null,
+          _hasCoords: hasStoreCoords,
+          _inRange: inRange,
+        };
       })
-      .filter((s: any) => s._inRange);
+      .filter((s: any) => (coords ? s._hasCoords && s._inRange : s._hasCoords));
   }, [storesData, externalListings, coords]);
 
   const [openCat, setOpenCat] = useState<string | null>(null);
@@ -50,9 +50,9 @@ const Categorias = () => {
     const sub = SUBCATEGORIES[openCat]?.find((s) => s.key === openSub);
     const list = allStores.filter((s: any) =>
       sub
-        ? s._subcategoryKey === sub.key || matchSubcategory(s.cuisine, sub)
+        ? matchSubcategory(s.cuisine, sub, s._subcategoryKey || s.subcategory_key)
         : cat
-          ? s._categoryKey === cat.key || matchCategory(s.cuisine, cat)
+          ? matchCategory(s.cuisine, cat, s.categories, s._categoryKey || s.category_key || s.category)
           : false,
     );
 
@@ -83,8 +83,13 @@ const Categorias = () => {
           {isLoading ? (
             <Loader2 className="mx-auto my-12 h-6 w-6 animate-spin text-primary" />
           ) : list.length === 0 ? (
-            <div className="rounded-2xl border border-dashed py-16 text-center text-muted-foreground">
-              Nenhuma loja nesta subcategoria por enquanto.
+            <div className="rounded-2xl border border-dashed border-primary/30 bg-card p-10 text-center text-muted-foreground">
+              <p className="font-display text-base font-bold text-foreground">
+                Nenhum estabelecimento disponível nesta subcategoria perto de você 🔍
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Tente alterar o seu endereço ou explorar outras subcategorias.
+              </p>
             </div>
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

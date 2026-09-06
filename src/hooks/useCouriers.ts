@@ -26,7 +26,7 @@ export const useCouriers = (storeId: string | null) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("couriers")
-        .select("*")
+        .select("id, store_id, user_id, name, phone, vehicle_type, vehicle_plate, photo_url, active, is_online, created_at, updated_at")
         .eq("store_id", storeId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -89,7 +89,7 @@ export const useMyCourier = () => {
       if (!user) return null;
       const { data, error } = await supabase
         .from("couriers")
-        .select("*, stores:store_id(name, slug, logo)")
+        .select("id, store_id, user_id, name, phone, vehicle_type, vehicle_plate, photo_url, active, is_online, stores:store_id(name, slug, logo)")
         .eq("user_id", user.id)
         .eq("active", true)
         .maybeSingle();

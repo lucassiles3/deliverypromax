@@ -89,7 +89,7 @@ export const FinancialTab = ({ storeId, storeName }: { storeId: string; storeNam
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payouts")
-        .select("*")
+        .select("id, store_id, period_start, period_end, gross_amount, fee_amount, net_amount, orders_count, status, scheduled_for, paid_at, created_at")
         .eq("store_id", storeId)
         .order("period_end", { ascending: false });
       if (error) throw error;

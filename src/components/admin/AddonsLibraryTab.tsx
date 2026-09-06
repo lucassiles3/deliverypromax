@@ -85,7 +85,7 @@ const ItemsSection = ({ storeId }: { storeId: string }) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("addon_items")
-        .select("*")
+        .select("id, store_id, name, description, image_url, price, track_stock, stock, active, position")
         .eq("store_id", storeId)
         .order("position");
       if (error) throw error;
@@ -572,7 +572,7 @@ const GroupFormModal = ({
     queryFn: async () => {
       const { data } = await supabase
         .from("addon_items")
-        .select("*")
+        .select("id, name, price, image_url, active")
         .eq("store_id", storeId)
         .eq("active", true)
         .order("name");

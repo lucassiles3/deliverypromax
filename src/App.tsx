@@ -124,6 +124,7 @@ const App = () => (
                 <Route path="/checkout" element={withFallback(<Checkout />, <CheckoutFallback />)} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/parceiros" element={<AdminListings />} />
+                <Route path="/admin/parceiro" element={<Navigate to="/admin/parceiros" replace />} />
                 <Route path="/pdv" element={<PDV />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />

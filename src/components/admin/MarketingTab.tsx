@@ -832,7 +832,11 @@ const ReactivationSection = ({ storeId }: { storeId: string }) => {
   const { data: campaigns = [] } = useQuery({
     queryKey: ["reactivation-campaigns", storeId],
     queryFn: async () => {
-      const { data } = await supabase.from("reactivation_campaigns").select("*").eq("store_id", storeId).order("created_at", { ascending: false });
+      const { data } = await supabase
+        .from("reactivation_campaigns")
+        .select("id, name, inactive_days, discount_type, discount_value, coupon_validity_days, active, created_at")
+        .eq("store_id", storeId)
+        .order("created_at", { ascending: false });
       return data ?? [];
     },
   });
@@ -840,7 +844,12 @@ const ReactivationSection = ({ storeId }: { storeId: string }) => {
   const { data: runs = [] } = useQuery({
     queryKey: ["reactivation-runs", storeId],
     queryFn: async () => {
-      const { data } = await supabase.from("reactivation_runs").select("*").eq("store_id", storeId).order("created_at", { ascending: false }).limit(100);
+      const { data } = await supabase
+        .from("reactivation_runs")
+        .select("id, campaign_id, customer_name, customer_phone, coupon_code, redeemed, created_at")
+        .eq("store_id", storeId)
+        .order("created_at", { ascending: false })
+        .limit(100);
       return data ?? [];
     },
   });

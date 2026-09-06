@@ -243,6 +243,16 @@ const AdminListings = () => {
                           <MapPin className="h-3 w-3" /> {l.address}
                         </p>
                       )}
+                      {l.delivery_radius_km && (
+                        <p className="mt-0.5 text-xs text-muted-foreground font-medium">
+                          Raio: <strong>{l.delivery_radius_km} km</strong>
+                        </p>
+                      )}
+                      {(!l.lat || !l.lng) && (
+                        <div className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-amber-500/15 px-2 py-0.5 text-[11px] font-bold text-amber-600 border border-amber-500/30">
+                          ⚠️ Localização não configurada
+                        </div>
+                      )}
                     </div>
                   </div>
                   <a
@@ -496,6 +506,12 @@ const ListingForm = ({
         </div>
 
 
+        {(!value.lat || !value.lng) && (
+          <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-700 font-medium">
+            ⚠️ <strong>Atenção:</strong> Localização não configurada! Este estabelecimento não aparecerá para os clientes até que as coordenadas (latitude e longitude) sejam definidas no mapa ou informadas manualmente.
+          </div>
+        )}
+
         <div>
           <Label className="text-xs mb-1 inline-block">Localização no mapa</Label>
           <LocationPicker
@@ -512,6 +528,33 @@ const ListingForm = ({
             Pesquise um endereço, CEP ou bairro — o mapa atualiza. Arraste o pino e o endereço é
             preenchido automaticamente.
           </p>
+
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label className="text-xs">Latitude</Label>
+              <Input
+                type="number"
+                step="any"
+                value={value.lat ?? ""}
+                onChange={(e) =>
+                  set("lat", e.target.value === "" ? null : Number(e.target.value))
+                }
+                placeholder="-22.XXXXXX"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Longitude</Label>
+              <Input
+                type="number"
+                step="any"
+                value={value.lng ?? ""}
+                onChange={(e) =>
+                  set("lng", e.target.value === "" ? null : Number(e.target.value))
+                }
+                placeholder="-42.XXXXXX"
+              />
+            </div>
+          </div>
         </div>
 
         <div>

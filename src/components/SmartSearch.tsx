@@ -7,13 +7,16 @@ import { brl } from "@/lib/format";
 import { isStoreOpen } from "@/lib/storeHours";
 import { isOpenNow } from "@/lib/openingHours";
 
-type StoreHit = { id: string; slug: string; name: string; cuisine: string | null; logo: string | null; opening_hours?: any; open?: boolean };
+import { useUserLocation } from "@/hooks/useUserLocation";
+import { isStoreInDeliveryRadius } from "@/lib/distance";
+
+type StoreHit = { id: string; slug: string; name: string; cuisine: string | null; logo: string | null; opening_hours?: any; open?: boolean; lat?: number | null; lng?: number | null; delivery_radius_km?: number | null };
 type ProductHit = {
   id: string;
   name: string;
   price: number;
   image_url: string | null;
-  store: { slug: string; name: string } | null;
+  store: { slug: string; name: string; lat?: number | null; lng?: number | null; delivery_radius_km?: number | null } | null;
 };
 type PartnerHit = {
   id: string;
@@ -22,13 +25,19 @@ type PartnerHit = {
   catalog_url: string;
   category_key: string;
   opening_hours?: any;
+  lat?: number | null;
+  lng?: number | null;
+  delivery_radius_km?: number | null;
 };
+
+const searchCache = new Map<string, { stores: StoreHit[]; products: ProductHit[]; partners: PartnerHit[] }>();
 
 export const SmartSearch = ({
   onCategoryPick,
 }: {
   onCategoryPick?: (cat: string) => void;
 }) => {
+  const { coords } = useUserLocation();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -39,6 +48,8 @@ export const SmartSearch = ({
   const wrapRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  const activeRequestRef = useRef<number>(0);
+
   // outside click
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -48,9 +59,10 @@ export const SmartSearch = ({
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  // debounced search
+  // debounced search with query cache & race-condition cancellation
   useEffect(() => {
-    const term = q.trim();
+    const requestId = ++activeRequestRef.current;
+    const term = q.trim().toLowerCase();
     if (term.length < 2) {
       setStores([]);
       setProducts([]);
@@ -58,43 +70,68 @@ export const SmartSearch = ({
       setCuisines([]);
       return;
     }
+
+    if (searchCache.has(term)) {
+      const cached = searchCache.get(term)!;
+      setStores(cached.stores);
+      setProducts(cached.products);
+      setPartners(cached.partners);
+      const uniqCui = Array.from(
+        new Set(cached.stores.map((s) => s.cuisine).filter((c): c is string => !!c)),
+      ).slice(0, 4);
+      setCuisines(uniqCui);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     const t = setTimeout(async () => {
+      if (activeRequestRef.current !== requestId) return;
       const like = `%${term}%`;
       const [{ data: ss }, { data: pp }, { data: ext }] = await Promise.all([
         supabase
           .from("stores")
-          .select("id, slug, name, cuisine, logo, open, opening_hours")
+          .select("id, slug, name, cuisine, logo, open, opening_hours, lat, lng, delivery_radius_km")
           .not("owner_id", "is", null)
           .or(`name.ilike.${like},cuisine.ilike.${like}`)
           .limit(15),
         supabase
           .from("products")
-          .select("id, name, price, image_url, store:stores!inner(slug, name, owner_id, open, opening_hours)")
+          .select("id, name, price, image_url, store:stores!inner(slug, name, owner_id, open, opening_hours, lat, lng, delivery_radius_km)")
           .ilike("name", like)
           .eq("active", true)
           .not("store.owner_id", "is", null)
           .limit(20),
         supabase
           .from("external_listings")
-          .select("id, name, logo, catalog_url, category_key, opening_hours")
+          .select("id, name, logo, catalog_url, category_key, opening_hours, lat, lng, delivery_radius_km")
           .ilike("name", like)
           .eq("active", true)
           .limit(15),
       ]);
-      // Filtra lojas fechadas (toggle manual ou fora do horário)
+      if (activeRequestRef.current !== requestId) return;
+      // Filtra lojas fechadas (toggle manual ou fora do horário) e fora do raio
       const sList = ((ss ?? []) as StoreHit[])
         .filter((s) => s.open !== false && isStoreOpen(s.opening_hours))
+        .filter((s) => (coords ? isStoreInDeliveryRadius(coords, s).inRange : true))
         .slice(0, 5);
       const pList = ((pp ?? []) as any[])
         .filter((p) => {
           const st = p.store;
-          return !st || (st.open !== false && isStoreOpen(st.opening_hours));
+          if (!st || st.open === false || !isStoreOpen(st.opening_hours)) return false;
+          return coords ? isStoreInDeliveryRadius(coords, st).inRange : true;
         })
         .slice(0, 6);
       const extList = ((ext ?? []) as PartnerHit[])
         .filter((p) => isOpenNow(p.opening_hours))
+        .filter((p) => (coords ? isStoreInDeliveryRadius(coords, p).inRange : true))
         .slice(0, 5);
+
+      const hitData = { stores: sList, products: pList as unknown as ProductHit[], partners: extList };
+      if (searchCache.size > 50) searchCache.clear();
+      searchCache.set(term, hitData);
+
+      if (activeRequestRef.current !== requestId) return;
       setStores(sList);
       setProducts(pList as unknown as ProductHit[]);
       setPartners(extList);
@@ -105,7 +142,7 @@ export const SmartSearch = ({
       setLoading(false);
     }, 220);
     return () => clearTimeout(t);
-  }, [q]);
+  }, [q, coords]);
 
   const hasResults = stores.length + products.length + cuisines.length + partners.length > 0;
   const showDropdown = open && q.trim().length >= 2;

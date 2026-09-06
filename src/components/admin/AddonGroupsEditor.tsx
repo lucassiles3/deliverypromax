@@ -196,9 +196,12 @@ export const AddonGroupsEditor = ({ productId }: { productId: string }) => {
     const reordered = arrayMove(groups, oldIdx, newIdx).map((g, i) => ({ ...g, position: i }));
     setGroups(reordered);
     // persist positions
-    await Promise.all(
-      reordered.filter((g) => !g._new).map((g) => supabase.from("addon_groups").update({ position: g.position }).eq("id", g.id))
-    );
+    const changedGroups = reordered.filter((g) => !g._new && groups.find((oldG) => oldG.id === g.id)?.position !== g.position);
+    if (changedGroups.length > 0) {
+      await Promise.all(
+        changedGroups.map((g) => supabase.from("addon_groups").update({ position: g.position }).eq("id", g.id))
+      );
+    }
   };
 
   if (loading) return <p className="text-sm text-muted-foreground">Carregando adicionais...</p>;

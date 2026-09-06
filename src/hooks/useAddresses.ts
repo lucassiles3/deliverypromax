@@ -27,7 +27,7 @@ export const useAddresses = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_addresses")
-        .select("*")
+        .select("id, user_id, label, cep, street, number, complement, neighborhood, city, state, country, reference, lat, lng, is_default, created_at")
         .order("is_default", { ascending: false })
         .order("created_at", { ascending: false });
       if (error) throw error;

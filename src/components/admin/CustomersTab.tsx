@@ -56,7 +56,7 @@ export const CustomersTab = ({ storeId }: { storeId: string }) => {
   const [segFilter, setSegFilter] = useState<SegmentFilter>("all");
   const [openProfile, setOpenProfile] = useState<string | null>(null); // phone
 
-  // Fetch all delivered/active orders → aggregate by phone
+  // Fetch delivered/active orders → aggregate by phone (capped at 500 for performance)
   const { data: orders = [] } = useQuery({
     queryKey: ["crm-orders", storeId],
     queryFn: async () => {
@@ -64,7 +64,8 @@ export const CustomersTab = ({ storeId }: { storeId: string }) => {
         .from("orders")
         .select("id, user_id, customer_name, customer_phone, total, status, created_at")
         .eq("store_id", storeId)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(500);
       if (error) throw error;
       return data ?? [];
     },
@@ -75,7 +76,7 @@ export const CustomersTab = ({ storeId }: { storeId: string }) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("blocked_customers")
-        .select("*")
+        .select("id, user_id, phone, reason, blocked_at")
         .eq("store_id", storeId);
       if (error) throw error;
       return data ?? [];
@@ -87,7 +88,7 @@ export const CustomersTab = ({ storeId }: { storeId: string }) => {
     queryFn: async () => {
       const { data } = await supabase
         .from("store_loyalty_config")
-        .select("*")
+        .select("enabled, points_per_real, redeem_points, redeem_value, validity_days")
         .eq("store_id", storeId)
         .maybeSingle();
       return data;
