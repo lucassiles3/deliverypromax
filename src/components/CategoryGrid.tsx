@@ -146,19 +146,17 @@ export const CategoryGrid = ({
     cuisinesLower.some((c) => cat.match.some((m) => c.includes(m)));
 
   const renderCategory = (cat: CategoryDef) => {
-    const available = isAvailable(cat);
     const Icon = cat.icon;
     const selected = active === cat.key;
     return (
       <button
         key={cat.key}
-        onClick={() => available && onPick(selected ? null : cat.key)}
-        disabled={!available}
+        onClick={() => onPick(selected ? null : cat.key)}
         className={`group flex shrink-0 flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition-smooth sm:shrink ${
           selected
-            ? "border-primary bg-primary/5 shadow-soft"
-            : "border-border bg-card hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-soft"
-        } ${!available ? "cursor-not-allowed opacity-40" : ""}`}
+            ? "border-primary bg-primary/5 shadow-soft ring-2 ring-primary/20"
+            : "border-border bg-card hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-soft"
+        }`}
       >
         <div
           className={`flex h-11 w-11 items-center justify-center rounded-xl transition-bounce ${cat.color} ${
@@ -168,7 +166,6 @@ export const CategoryGrid = ({
           <Icon className="h-5 w-5" />
         </div>
         <span className="text-[11px] font-semibold leading-tight">{cat.label}</span>
-        {!available && <span className="text-[9px] text-muted-foreground">Em breve</span>}
       </button>
     );
   };

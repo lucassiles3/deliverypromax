@@ -220,7 +220,11 @@ const Index = () => {
       const cat = CATEGORIES.find((c) => c.key === activeCat);
       if (cat) {
         list = list.filter((s: any) =>
-          s._categoryKey === activeCat || matchCategory(s.cuisine, cat),
+          s._categoryKey === activeCat ||
+          s.category_key === activeCat ||
+          s.category === activeCat ||
+          (s.category && s.category.toLowerCase() === cat.label.toLowerCase()) ||
+          matchCategory(s.cuisine, cat),
         );
       }
     }
