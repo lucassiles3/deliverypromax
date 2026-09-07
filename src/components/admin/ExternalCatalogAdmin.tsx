@@ -101,15 +101,29 @@ export const ExternalCatalogAdmin = ({
       const opt = await optimizeImage(file, { preset: "logo" });
       const optimizedFile = opt.file;
       const ext = optimizedFile.name.split(".").pop() || "webp";
-      const path = `${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from("listing-logos").upload(path, optimizedFile, {
+      const userPrefix = listing.created_by || "user";
+      const path = `${userPrefix}/${crypto.randomUUID()}.${ext}`;
+
+      let targetBucket = "listing-logos";
+      let uploadRes = await supabase.storage.from("listing-logos").upload(path, optimizedFile, {
         cacheControl: "31536000",
-        upsert: false,
+        upsert: true,
         contentType: optimizedFile.type,
       });
+
+      if (uploadRes.error) {
+        console.warn("listing-logos upload warning, trying store-assets fallback:", uploadRes.error.message);
+        targetBucket = "store-assets";
+        uploadRes = await supabase.storage.from("store-assets").upload(path, optimizedFile, {
+          cacheControl: "31536000",
+          upsert: true,
+          contentType: optimizedFile.type,
+        });
+      }
+
       setUploading(false);
-      if (error) return toast.error(error.message);
-      const { data } = supabase.storage.from("listing-logos").getPublicUrl(path);
+      if (uploadRes.error) return toast.error(`Erro ao enviar imagem: ${uploadRes.error.message}`);
+      const { data } = supabase.storage.from(targetBucket).getPublicUrl(path);
       setLogo(data.publicUrl);
       if (opt.compressionRatio > 0.05) {
         toast.success(`Logo otimizada (-${(opt.compressionRatio * 100).toFixed(0)}%) e enviada`);
