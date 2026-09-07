@@ -55,6 +55,8 @@ import { optimizeImage } from "@/lib/imageOptimization";
 import { resolveAsset } from "@/lib/assetMap";
 import { ProductFormData } from "@/components/admin/ProductFormModal";
 import { CustomerHistoryDrawer } from "@/components/admin/CustomerHistoryDrawer";
+import { ExternalCatalogAdmin } from "@/components/admin/ExternalCatalogAdmin";
+import { useUserExternalListing } from "@/hooks/useExternalListings";
 // Tabs principais agora lazy — reduzem o bundle inicial do /admin
 const ReportsTab = lazy(() => import("@/components/admin/ReportsTab").then(m => ({ default: m.ReportsTab })));
 const DashboardTab = lazy(() => import("@/components/admin/DashboardTab").then(m => ({ default: m.DashboardTab })));
@@ -717,6 +719,8 @@ const slugify = (s: string) =>
 
 const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmail: string }) => {
   const qc = useQueryClient();
+  const { data: userListing, refetch: refetchListing } = useUserExternalListing(userId);
+  const [forceCreateStore, setForceCreateStore] = useState(false);
   const [mode, setMode] = useState<"ask" | "external" | "store">("ask");
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -732,6 +736,16 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
   const [saving, setSaving] = useState(false);
 
   const isListingsManager = userEmail.toLowerCase() === "suporteitchat@gmail.com";
+
+  if (userListing && !forceCreateStore) {
+    return (
+      <ExternalCatalogAdmin
+        listing={userListing as any}
+        onRefresh={refetchListing}
+        onCreateFullStore={() => setForceCreateStore(true)}
+      />
+    );
+  }
 
   const handleNameChange = (v: string) => {
     setName(v);
@@ -832,6 +846,7 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
       <ExternalCatalogOnboarding
         userId={userId}
         onBack={() => setMode("ask")}
+        onSaved={() => refetchListing()}
       />
     );
   }
@@ -970,7 +985,15 @@ const defaultExtHours: ExtHours = EXT_DAYS.reduce((acc, d) => {
   return acc;
 }, {} as ExtHours);
 
-const ExternalCatalogOnboarding = ({ userId, onBack }: { userId: string; onBack: () => void }) => {
+const ExternalCatalogOnboarding = ({
+  userId,
+  onBack,
+  onSaved,
+}: {
+  userId: string;
+  onBack: () => void;
+  onSaved?: () => void;
+}) => {
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [logo, setLogo] = useState("🏪");
@@ -1039,8 +1062,13 @@ const ExternalCatalogOnboarding = ({ userId, onBack }: { userId: string; onBack:
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Seu catálogo foi cadastrado no itChat! 🎉");
-    qc.invalidateQueries({ queryKey: ["external-listings"] });
-    onBack();
+    await qc.invalidateQueries({ queryKey: ["external-listings"] });
+    await qc.invalidateQueries({ queryKey: ["user-external-listing", userId] });
+    if (onSaved) {
+      onSaved();
+    } else {
+      onBack();
+    }
   };
 
   const isImageUrl = (s: string) => /^https?:\/\//i.test(s);

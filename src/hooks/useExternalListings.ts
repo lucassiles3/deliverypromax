@@ -125,3 +125,19 @@ export const useAllExternalListings = () =>
       return (data ?? []) as unknown as ExternalListing[];
     },
   });
+
+export const useUserExternalListing = (userId?: string) =>
+  useQuery({
+    queryKey: ["user-external-listing", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("external_listings" as any)
+        .select("id, name, logo, category_key, subcategory_key, catalog_url, address, lat, lng, opening_hours, active, delivery_time, delivery_radius_km, delivery_fee, created_at, created_by")
+        .eq("created_by", userId!)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      return (data && data[0]) ? (data[0] as unknown as ExternalListing) : null;
+    },
+  });
