@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Navigate, Link, useNavigate } from "react-router-dom";
-import { User, Lock, Phone, Mail, Save, MapPin, Heart, Bell, Receipt, LogOut, Trophy, Cake, Store, Eye, EyeOff, Shield } from "lucide-react";
+import { User, Lock, Phone, Mail, Save, MapPin, Heart, Bell, Receipt, LogOut, Trophy, Cake, Store, Eye, EyeOff, Shield, Loader2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PasswordStrength } from "@/components/PasswordStrength";
+import { toast } from "sonner";
 
 import { useStoreAccess } from "@/hooks/useStoreAccess";
 
@@ -43,16 +44,32 @@ const MinhaConta = () => {
     }
   }, [profile]);
 
-  const hasUpper = /[A-Z]/.test(pw);
-  const hasLower = /[a-z]/.test(pw);
-  const hasNumber = /\d/.test(pw);
-  const hasSpecial = /[^A-Za-z0-9]/.test(pw);
-  const isPasswordStrong = pw.length >= 6 && hasUpper && hasLower && hasNumber && hasSpecial;
-
   if (loading) return <div className="min-h-screen" />;
   if (!user) return <Navigate to="/auth" replace />;
 
   const initials = (form.display_name || user.email || "?").slice(0, 2).toUpperCase();
+
+  const handleSaveProfile = () => {
+    update.mutate({
+      display_name: form.display_name.trim(),
+      phone: form.phone.trim() || null,
+      birthday: form.birthday || null,
+    });
+  };
+
+  const handleUpdatePassword = () => {
+    if (!pw) {
+      toast.error("Informe a nova senha");
+      return;
+    }
+    if (pw.length < 6) {
+      toast.error("A senha deve ter no mínimo 6 caracteres");
+      return;
+    }
+    updatePw.mutate(pw, {
+      onSuccess: () => setPw(""),
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -148,8 +165,9 @@ const MinhaConta = () => {
             </div>
           </div>
 
-          <Button className="mt-4" onClick={() => update.mutate({ display_name: form.display_name, phone: form.phone, birthday: form.birthday || null })} disabled={update.isPending}>
-            <Save className="mr-1 h-4 w-4" /> Salvar perfil
+          <Button className="mt-4" onClick={handleSaveProfile} disabled={update.isPending}>
+            {update.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />}
+            {update.isPending ? "Salvando..." : "Salvar perfil"}
           </Button>
         </Card>
 
@@ -162,7 +180,7 @@ const MinhaConta = () => {
             <div className="relative flex-1">
               <Input
                 type={showPw ? "text" : "password"}
-                placeholder="Nova senha"
+                placeholder="Nova senha (mín. 6 caracteres)"
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
                 className="pr-10"
@@ -177,14 +195,11 @@ const MinhaConta = () => {
               </button>
             </div>
             <Button
-              onClick={() => {
-                if (!isPasswordStrong) return;
-                updatePw.mutate(pw);
-                setPw("");
-              }}
-              disabled={!isPasswordStrong || updatePw.isPending}
+              onClick={handleUpdatePassword}
+              disabled={updatePw.isPending || !pw.trim()}
             >
-              Atualizar senha
+              {updatePw.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
+              {updatePw.isPending ? "Atualizando..." : "Atualizar senha"}
             </Button>
           </div>
           {pw.length > 0 && (

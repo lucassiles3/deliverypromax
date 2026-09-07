@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export const useProfile = () => {
   const { user } = useAuth();
@@ -26,16 +26,25 @@ export const useUpdateProfile = () => {
   return useMutation({
     mutationFn: async (input: { display_name?: string; phone?: string | null; avatar_url?: string | null; cpf?: string | null; birthday?: string | null }) => {
       if (!user) throw new Error("Faça login");
-      const { error } = await supabase
+      const { error: profileError } = await supabase
         .from("profiles")
         .upsert({ id: user.id, ...input, updated_at: new Date().toISOString() });
-      if (error) throw error;
+      if (profileError) throw profileError;
+
+      // Sync metadata with Auth User
+      const meta: Record<string, any> = {};
+      if (input.display_name !== undefined) meta.display_name = input.display_name;
+      if (input.phone !== undefined) meta.phone = input.phone;
+      if (input.birthday !== undefined) meta.birthday = input.birthday;
+      if (Object.keys(meta).length > 0) {
+        await supabase.auth.updateUser({ data: meta }).catch(() => {});
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["profile"] });
-      toast({ description: "Perfil atualizado" });
+      toast.success("Perfil atualizado com sucesso! 🎉");
     },
-    onError: (e: Error) => toast({ description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast.error(e.message || "Erro ao atualizar perfil"),
   });
 };
 
@@ -45,6 +54,6 @@ export const useUpdatePassword = () =>
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
     },
-    onSuccess: () => toast({ description: "Senha alterada com sucesso" }),
-    onError: (e: Error) => toast({ description: e.message, variant: "destructive" }),
+    onSuccess: () => toast.success("Senha alterada com sucesso! 🔒"),
+    onError: (e: Error) => toast.error(e.message || "Erro ao alterar senha"),
   });
