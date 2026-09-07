@@ -22,10 +22,11 @@ export const PixGatewaySection = ({ storeId }: { storeId: string }) => {
 
   const { data: gateways = [] } = useQuery({
     queryKey: ["pay-gateways", storeId],
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payment_gateways")
-        .select("*")
+        .select("id, store_id, provider, access_token_secret_name, split_enabled, split_recipient_id, marketplace_fee_percent, sandbox, active, is_default, created_at")
         .eq("store_id", storeId);
       if (error) throw error;
       return data ?? [];

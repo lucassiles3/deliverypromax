@@ -24,10 +24,11 @@ export const BirthdaySection = ({ storeId }: { storeId: string }) => {
 
   const { data: campaigns = [] } = useQuery({
     queryKey: ["birthday-campaigns", storeId],
+    staleTime: 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("birthday_campaigns")
-        .select("*")
+        .select("id, name, active, discount_type, discount_value, coupon_validity_days, message, created_at")
         .eq("store_id", storeId)
         .order("created_at", { ascending: false });
       if (error) throw error;

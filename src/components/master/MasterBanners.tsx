@@ -30,7 +30,7 @@ export default function MasterBanners() {
     setLoading(true);
     const { data, error } = await supabase
       .from("home_banners")
-      .select("*")
+      .select("id, title, image_url, link_url, position, active, starts_at, ends_at")
       .order("position", { ascending: true });
     setLoading(false);
     if (error) return toast.error(error.message);

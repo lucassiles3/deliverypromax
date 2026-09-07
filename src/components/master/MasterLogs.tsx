@@ -22,7 +22,7 @@ export default function MasterLogs() {
     const load = async () => {
       const { data } = await supabase
         .from("platform_logs")
-        .select("*")
+        .select("id, event_type, severity, message, created_at, metadata")
         .order("created_at", { ascending: false })
         .limit(200);
       setLogs((data as any) || []);

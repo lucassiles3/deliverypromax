@@ -83,10 +83,11 @@ const CouponsSection = ({ storeId }: { storeId: string }) => {
 
   const { data: coupons = [] } = useQuery({
     queryKey: ["admin-coupons", storeId],
+    staleTime: 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("coupons")
-        .select("*")
+        .select("id, code, label, type, value, min_order, starts_at, expires_at, active, visibility, usage_limit, per_user_limit, used_count, category_ids")
         .eq("store_id", storeId)
         .order("created_at", { ascending: false });
       if (error) throw error;

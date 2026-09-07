@@ -10,10 +10,11 @@ export const useNotifications = () => {
   const query = useQuery({
     queryKey: ["notifications", user?.id],
     enabled: !!user,
+    staleTime: 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("notifications")
-        .select("*, stores:store_id(name, logo)")
+        .select("id, user_id, store_id, title, body, type, read, read_at, created_at, stores:store_id(name, logo)")
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;

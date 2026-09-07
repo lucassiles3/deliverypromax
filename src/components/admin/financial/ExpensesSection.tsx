@@ -30,18 +30,25 @@ export const ExpensesSection = ({ storeId }: { storeId: string }) => {
 
   const { data: categories = [] } = useQuery({
     queryKey: ["expense-cats", storeId],
+    staleTime: 2 * 60 * 1000,
     queryFn: async () => {
-      const { data } = await supabase.from("expense_categories").select("*").eq("store_id", storeId).eq("active", true).order("position");
+      const { data } = await supabase
+        .from("expense_categories")
+        .select("id, name, kind, position, active")
+        .eq("store_id", storeId)
+        .eq("active", true)
+        .order("position");
       return data ?? [];
     },
   });
 
   const { data: expenses = [] } = useQuery({
     queryKey: ["expenses", storeId, filterDays],
+    staleTime: 60 * 1000,
     queryFn: async () => {
       const { data } = await supabase
         .from("expenses")
-        .select("*, expense_categories(name, kind)")
+        .select("id, amount, description, expense_date, recurring, recurrence, category_id, expense_categories(name, kind)")
         .eq("store_id", storeId)
         .gte("expense_date", fromDate)
         .order("expense_date", { ascending: false });

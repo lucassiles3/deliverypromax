@@ -47,7 +47,10 @@ export default function MasterBillingAudit() {
   const load = async () => {
     setLoading(true);
     const [{ data: r }, { data: i }] = await Promise.all([
-      supabase.from("billing_job_runs").select("*").order("started_at", { ascending: false }).limit(100),
+      supabase.from("billing_job_runs")
+        .select("id, job_name, status, started_at, finished_at, duration_ms, processed, succeeded, failed, error_message, summary")
+        .order("started_at", { ascending: false })
+        .limit(100),
       supabase.from("monthly_invoices")
         .select("id,store_id,period_start,period_end,billing_model,orders_count,gross_sales,total_amount,status,due_date,asaas_payment_id,invoice_url,stores(name)")
         .order("period_start", { ascending: false }).limit(200),

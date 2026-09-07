@@ -25,10 +25,11 @@ export const RewardsSection = ({ storeId }: { storeId: string }) => {
 
   const { data: rewards = [] } = useQuery({
     queryKey: ["admin-rewards", storeId],
+    staleTime: 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("loyalty_rewards")
-        .select("*")
+        .select("id, store_id, name, description, cost_points, reward_type, reward_value, stock, active, position")
         .eq("store_id", storeId)
         .order("position");
       if (error) throw error;

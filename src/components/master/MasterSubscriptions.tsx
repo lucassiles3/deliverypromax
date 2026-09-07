@@ -24,7 +24,7 @@ export default function MasterSubscriptions() {
 
   const load = async () => {
     const [{ data: p }, { data: s }] = await Promise.all([
-      supabase.from("subscription_plans").select("*").order("sort_order"),
+      supabase.from("subscription_plans").select("id, name, slug, price_monthly, trial_days, sort_order").order("sort_order"),
       supabase
         .from("store_subscriptions")
         .select("id,store_id,plan_id,status,monthly_amount,trial_ends_at,next_payment_at,stores(name)")

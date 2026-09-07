@@ -138,6 +138,7 @@ export const useStoreBySlug = (slug: string) =>
   useQuery({
     queryKey: ["store", slug],
     enabled: !!slug,
+    staleTime: 1000 * 60 * 5,
     queryFn: async (): Promise<Store | null> => {
       // Paraleliza as duas queries — a de produtos filtra pela slug via inner-join
       // em stores, evitando o waterfall (fetch loja → fetch produtos).

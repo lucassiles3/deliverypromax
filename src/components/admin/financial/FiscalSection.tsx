@@ -21,18 +21,24 @@ export const FiscalSection = ({ storeId }: { storeId: string }) => {
 
   const { data: cfg } = useQuery({
     queryKey: ["fiscal-cfg", storeId],
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      const { data } = await supabase.from("store_fiscal_config").select("*").eq("store_id", storeId).maybeSingle();
+      const { data } = await supabase
+        .from("store_fiscal_config")
+        .select("id, store_id, enabled, provider, cnpj, ie, ie_isenta, regime_tributario, csc_id, csc_token_secret_name, certificate_secret_name, ambiente, serie, cfop_padrao, ncm_padrao, csosn_padrao")
+        .eq("store_id", storeId)
+        .maybeSingle();
       return data;
     },
   });
 
   const { data: invoices = [] } = useQuery({
     queryKey: ["fiscal-invoices", storeId],
+    staleTime: 15000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("fiscal_invoices")
-        .select("*, orders(customer_name, customer_phone, created_at)")
+        .select("id, store_id, order_id, numero, serie, total, status, access_key, pdf_url, customer_name, created_at, orders(customer_name, customer_phone, created_at)")
         .eq("store_id", storeId)
         .order("created_at", { ascending: false })
         .limit(100);

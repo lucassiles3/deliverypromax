@@ -99,7 +99,7 @@ export const TableSessionDrawer = ({ storeId, table, onClose }: Props) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("table_sessions")
-        .select("*")
+        .select("id, store_id, table_id, status, people, waiter_user_id, waiter_name, customer_name, customer_phone, notes, subtotal, service_fee, service_fee_percent, discount, total, paid_amount, opened_at, closed_at")
         .eq("table_id", table.id)
         .eq("status", "open")
         .maybeSingle();
@@ -114,7 +114,7 @@ export const TableSessionDrawer = ({ storeId, table, onClose }: Props) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("table_session_items")
-        .select("*")
+        .select("id, session_id, store_id, product_id, product_name, quantity, unit_price, total, notes, kitchen_status, destination, created_at, customer_requested")
         .eq("session_id", session!.id)
         .order("created_at");
       if (error) throw error;

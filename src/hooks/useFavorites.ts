@@ -36,10 +36,11 @@ export const useFavoriteProducts = () => {
   return useQuery({
     queryKey: ["favorite_products", user?.id],
     enabled: !!user,
+    staleTime: 2 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("favorite_products")
-        .select("id, product_id, store_id, created_at, products(*), stores(slug, name, logo)")
+        .select("id, product_id, store_id, created_at, products(id, name, price, image_url, description, active), stores(slug, name, logo)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -52,10 +53,11 @@ export const useFavoriteStores = () => {
   return useQuery({
     queryKey: ["favorite_stores", user?.id],
     enabled: !!user,
+    staleTime: 2 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("favorite_stores")
-        .select("id, store_id, created_at, stores(*)")
+        .select("id, store_id, created_at, stores(id, name, slug, logo, cover_url, active)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -111,10 +113,11 @@ export const useFavoriteListings = () => {
   return useQuery({
     queryKey: ["favorite_listings", user?.id],
     enabled: !!user,
+    staleTime: 2 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("favorite_external_listings" as any)
-        .select("id, listing_id, created_at, external_listings(*)")
+        .select("id, listing_id, created_at, external_listings(id, name, logo, category_key, catalog_url, address, delivery_time, delivery_fee)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as any[];

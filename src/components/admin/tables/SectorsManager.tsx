@@ -16,8 +16,13 @@ export const SectorsManager = ({ storeId }: { storeId: string }) => {
 
   const { data: sectors = [] } = useQuery({
     queryKey: ["sectors", storeId],
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await supabase.from("sectors").select("*").eq("store_id", storeId).order("position");
+      const { data, error } = await supabase
+        .from("sectors")
+        .select("id, store_id, name, color, position, active")
+        .eq("store_id", storeId)
+        .order("position");
       if (error) throw error;
       return data ?? [];
     },

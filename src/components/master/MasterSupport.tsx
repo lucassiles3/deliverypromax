@@ -43,7 +43,7 @@ export default function MasterSupport() {
     setSelected(t);
     const { data } = await supabase
       .from("support_ticket_messages")
-      .select("*").eq("ticket_id", t.id).order("created_at");
+      .select("id, ticket_id, body, author_id, author_role, created_at").eq("ticket_id", t.id).order("created_at");
     setMsgs((data as any) || []);
   };
 
