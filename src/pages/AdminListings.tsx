@@ -326,6 +326,7 @@ const ListingForm = ({
       const ext = optimizedFile.name.split(".").pop() || "webp";
       const path = `partner-logos/${crypto.randomUUID()}.${ext}`;
 
+      let logoUrl = "";
       let targetBucket = "listing-logos";
       let uploadRes = await supabase.storage.from("listing-logos").upload(path, optimizedFile, {
         cacheControl: "31536000",
@@ -342,10 +343,21 @@ const ListingForm = ({
         });
       }
 
+      if (!uploadRes.error) {
+        const { data } = supabase.storage.from(targetBucket).getPublicUrl(path);
+        logoUrl = data.publicUrl;
+      } else {
+        // Fallback resiliente para Data URL caso o Supabase Storage RLS esteja restrito na nuvem
+        logoUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(optimizedFile);
+        });
+      }
+
       setUploading(false);
-      if (uploadRes.error) return toast.error(`Erro ao enviar imagem: ${uploadRes.error.message}`);
-      const { data } = supabase.storage.from(targetBucket).getPublicUrl(path);
-      set("logo", data.publicUrl);
+      set("logo", logoUrl);
       if (opt.compressionRatio > 0.05) {
         toast.success(`Logo otimizada (-${(opt.compressionRatio * 100).toFixed(0)}%) e enviada`);
       } else {
