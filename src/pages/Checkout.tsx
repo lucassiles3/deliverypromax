@@ -59,7 +59,7 @@ const Checkout = () => {
   const { data: profile } = useProfile();
   const updateProfile = useUpdateProfile();
   const { data: store, isLoading } = useStoreBySlug(storeSlug ?? "");
-  const { data: coupons = [] } = useCoupons();
+  const { data: coupons = [] } = useCoupons(store?.id);
 
   const [method, setMethod] = useState<Method>("delivery");
   const [payment, setPayment] = useState<PaymentMethod>("pix");

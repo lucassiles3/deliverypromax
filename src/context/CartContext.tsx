@@ -72,13 +72,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("ff_cart", JSON.stringify({ items, storeSlug }));
   }, [items, storeSlug]);
 
-  // capture user
+  // capture user & reset cart on signout
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       userIdRef.current = data.session?.user.id ?? null;
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       userIdRef.current = session?.user.id ?? null;
+      if (event === "SIGNED_OUT") {
+        setItems([]);
+        setStoreSlug(null);
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, []);

@@ -34,30 +34,23 @@ export const persister = createSyncStoragePersister({
  *
  * Persistir:
  *  - Lojas (públicas), categorias, produtos
- *  - Perfil do usuário, endereços, favoritos
  *  - Configurações de loja, banners
- *  - Últimos pedidos do cliente
  *
- * NÃO persistir:
+ * NÃO persistir (ficar somente em RAM para isolamento multi-tenant):
+ *  - Perfil do usuário, endereços, favoritos, pedidos do cliente, pontos de fidelidade
  *  - Sessões/itens de mesa em tempo real
  *  - Caixa do PDV / movimentos
- *  - Pedidos do admin (kanban) — mudam constantemente
+ *  - Pedidos do admin (kanban)
  */
 const PERSIST_KEYS = new Set<string>([
   "stores",
   "store",
   "products",
   "categories",
-  "profile",
-  "addresses",
-  "favorites",
-  "favorite-products",
-  "favorite-stores",
   "store-toggles",
   "store-payment-methods",
   "store-loyalty",
-  "user-orders",
-  "loyalty",
+  "home-banners",
 ]);
 
 export const shouldPersistQuery = (queryKey: readonly unknown[]): boolean => {

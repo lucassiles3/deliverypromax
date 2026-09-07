@@ -249,14 +249,22 @@ export const useStoreBySlug = (slug: string) =>
     },
   });
 
-export const useCoupons = () =>
+export const useCoupons = (storeId?: string) =>
   useQuery({
-    queryKey: ["coupons"],
+    queryKey: ["coupons", storeId],
     queryFn: async (): Promise<Coupon[]> => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("coupons")
-        .select("code, type, value, min_order, label")
+        .select("code, type, value, min_order, label, store_id")
         .eq("active", true);
+
+      if (storeId) {
+        q = q.or(`store_id.eq.${storeId},store_id.is.null`);
+      } else {
+        q = q.is("store_id", null);
+      }
+
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []).map((c: any) => ({
         code: c.code,

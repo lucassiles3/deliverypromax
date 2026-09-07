@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { queryClient } from "@/lib/queryClient";
 
 type Role = "super_admin" | "admin" | "store_owner" | "customer";
 
@@ -9,6 +10,16 @@ type AuthState = {
   session: Session | null;
   roles: Role[];
   loading: boolean;
+};
+
+export const clearUserSessionState = () => {
+  try {
+    queryClient.clear();
+    localStorage.removeItem("ff_cart");
+    localStorage.removeItem("ff_last_contact");
+  } catch (err) {
+    console.warn("Erro ao limpar estado local de sessão:", err);
+  }
 };
 
 export const useAuth = (): AuthState & {
@@ -27,7 +38,10 @@ export const useAuth = (): AuthState & {
 
   useEffect(() => {
     // Listener FIRST
-    const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        clearUserSessionState();
+      }
       setState((s) => ({ ...s, session, user: session?.user ?? null }));
       if (session?.user) {
         // Defer role fetch to avoid deadlocks
@@ -120,6 +134,7 @@ export const useAuth = (): AuthState & {
   };
 
   const signOut = async () => {
+    clearUserSessionState();
     await supabase.auth.signOut();
   };
 
