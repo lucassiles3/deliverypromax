@@ -16,6 +16,7 @@ import {
   Shield,
   Image as ImageIcon,
   Receipt,
+  Building2,
 } from "lucide-react";
 import MasterDashboard from "@/components/master/MasterDashboard";
 import MasterStores from "@/components/master/MasterStores";
@@ -31,6 +32,7 @@ import MasterBillingAudit from "@/components/master/MasterBillingAudit";
 type View =
   | "dashboard"
   | "stores"
+  | "parceiros"
   | "subscriptions"
   | "billing"
   | "orders"
@@ -42,6 +44,7 @@ type View =
 const NAV: { key: View; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "stores", label: "Lojas", icon: StoreIcon },
+  { key: "parceiros", label: "Parceiros", icon: Building2 },
   { key: "subscriptions", label: "Assinaturas", icon: CreditCard },
   { key: "billing", label: "Faturamento", icon: Receipt },
   { key: "orders", label: "Pedidos", icon: ShoppingBag },
@@ -153,7 +156,13 @@ export default function Master() {
             return (
               <button
                 key={item.key}
-                onClick={() => setView(item.key)}
+                onClick={() => {
+                  if (item.key === "parceiros") {
+                    nav("/admin/parceiros");
+                  } else {
+                    setView(item.key);
+                  }
+                }}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
                   active
                     ? "bg-primary text-primary-foreground shadow-sm"

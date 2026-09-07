@@ -171,8 +171,12 @@ const AdminListings = () => {
     <div className="min-h-screen bg-muted/40 pb-16">
       <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
         <div className="container flex h-14 items-center gap-3">
+          <Link to="/master" className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" /> Master
+          </Link>
+          <span className="text-border">|</span>
           <Link to="/" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> App
+            App
           </Link>
           <span className="text-border">|</span>
           <h1 className="font-display text-lg font-bold">Estabelecimentos parceiros</h1>
