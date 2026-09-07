@@ -45,9 +45,9 @@ const Cadastro = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[hsl(20_14%_6%)] text-[hsl(30_20%_96%)]">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="container max-w-3xl py-10">
-        <Link to="/landing" className="text-sm text-white/60 hover:text-white inline-flex items-center gap-1 mb-6">
+        <Link to="/landing" className="text-sm font-medium text-slate-600 hover:text-slate-900 inline-flex items-center gap-1.5 mb-6 transition-colors">
           <ArrowLeft className="h-4 w-4" /> Voltar à página inicial
         </Link>
 
@@ -61,42 +61,42 @@ const Cadastro = () => {
               <div key={s.k} className="flex-1 flex items-center">
                 <div className="flex flex-col items-center flex-1">
                   <div
-                    className={`h-10 w-10 rounded-full grid place-items-center border transition ${
+                    className={`h-10 w-10 rounded-full grid place-items-center border transition-all ${
                       done
                         ? "bg-primary border-primary text-white"
                         : active
                           ? "bg-gradient-to-br from-primary to-secondary border-primary text-white shadow-glow"
-                          : "bg-white/5 border-white/10 text-white/40"
+                          : "bg-slate-100 border-slate-300 text-slate-400"
                     }`}
                   >
                     {done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                   </div>
-                  <span className={`text-xs mt-2 ${active ? "text-white" : "text-white/50"}`}>{s.t}</span>
+                  <span className={`text-xs mt-2 font-medium ${active ? "text-slate-900 font-bold" : "text-slate-500"}`}>{s.t}</span>
                 </div>
                 {i < STEPS.length - 1 && (
-                  <div className={`h-px flex-1 ${i < step ? "bg-primary" : "bg-white/10"}`} />
+                  <div className={`h-0.5 flex-1 ${i < step ? "bg-primary" : "bg-slate-200"}`} />
                 )}
               </div>
             );
           })}
         </div>
 
-        <Card className="bg-white/[0.03] border-white/10 p-8">
+        <Card className="bg-white border-slate-200 p-6 sm:p-8 shadow-card rounded-3xl">
           {step === 0 && (
             <div className="space-y-5">
-              <h2 className="font-display text-2xl font-bold">Cadastre sua empresa</h2>
+              <h2 className="font-display text-2xl font-bold text-slate-900">Cadastre sua empresa</h2>
               <div className="space-y-2">
-                <Label>Nome da empresa</Label>
-                <Input className="bg-white/5 border-white/10" value={data.company} onChange={(e) => setData({ ...data, company: e.target.value })} placeholder="Pizzaria Bella" />
+                <Label className="text-slate-700 font-bold text-xs uppercase tracking-wider">Nome da empresa</Label>
+                <Input className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-primary" value={data.company} onChange={(e) => setData({ ...data, company: e.target.value })} placeholder="Pizzaria Bella" />
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>E-mail</Label>
-                  <Input type="email" className="bg-white/5 border-white/10" value={data.email} onChange={(e) => setData({ ...data, email: e.target.value })} placeholder="voce@empresa.com" />
+                  <Label className="text-slate-700 font-bold text-xs uppercase tracking-wider">E-mail</Label>
+                  <Input type="email" className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-primary" value={data.email} onChange={(e) => setData({ ...data, email: e.target.value })} placeholder="voce@empresa.com" />
                 </div>
                 <div className="space-y-2">
-                  <Label>WhatsApp</Label>
-                  <Input className="bg-white/5 border-white/10" value={data.phone} onChange={(e) => setData({ ...data, phone: e.target.value })} placeholder="(11) 99999-9999" />
+                  <Label className="text-slate-700 font-bold text-xs uppercase tracking-wider">WhatsApp</Label>
+                  <Input className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-primary" value={data.phone} onChange={(e) => setData({ ...data, phone: e.target.value })} placeholder="(11) 99999-9999" />
                 </div>
               </div>
             </div>
@@ -104,16 +104,16 @@ const Cadastro = () => {
 
           {step === 1 && (
             <div className="space-y-5">
-              <h2 className="font-display text-2xl font-bold">Qual seu segmento?</h2>
+              <h2 className="font-display text-2xl font-bold text-slate-900">Qual seu segmento?</h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {SEGMENTS.map((s) => (
                   <button
                     key={s}
                     onClick={() => setData({ ...data, segment: s })}
-                    className={`p-4 rounded-xl border text-sm transition ${
+                    className={`p-4 rounded-xl border text-sm font-medium transition ${
                       data.segment === s
-                        ? "border-primary bg-primary/15 text-white shadow-glow"
-                        : "border-white/10 bg-white/5 text-white/70 hover:border-white/30"
+                        ? "border-primary bg-primary/10 text-primary font-bold shadow-sm"
+                        : "border-slate-200 bg-slate-50/50 text-slate-700 hover:border-slate-300 hover:bg-slate-100"
                     }`}
                   >
                     {s}
@@ -125,27 +125,27 @@ const Cadastro = () => {
 
           {step === 2 && (
             <div className="space-y-5">
-              <h2 className="font-display text-2xl font-bold">Escolha seu plano</h2>
+              <h2 className="font-display text-2xl font-bold text-slate-900">Escolha seu plano</h2>
               <div className="grid sm:grid-cols-2 gap-3">
                 {PLANS.map((p) => (
                   <button
                     key={p.id}
                     onClick={() => setData({ ...data, plan: p.id })}
-                    className={`relative p-5 rounded-xl border text-left transition ${
+                    className={`relative p-5 rounded-2xl border text-left transition ${
                       data.plan === p.id
-                        ? "border-primary bg-gradient-to-br from-primary/15 to-secondary/10 shadow-glow"
-                        : "border-white/10 bg-white/5 hover:border-white/30"
+                        ? "border-2 border-primary bg-primary/5 text-slate-900 shadow-glow"
+                        : "border-slate-200 bg-white text-slate-900 hover:border-primary/40"
                     }`}
                   >
                     {p.tag && (
-                      <Badge className="absolute -top-2 right-3 bg-gradient-to-r from-primary to-secondary text-white text-[10px]">
+                      <Badge className="absolute -top-2 right-3 bg-gradient-to-r from-primary to-secondary text-white text-[10px] font-bold">
                         {p.tag}
                       </Badge>
                     )}
-                    <div className="font-semibold">{p.name}</div>
-                    <div className="text-2xl font-display font-bold mt-1">
+                    <div className="font-bold text-base text-slate-900">{p.name}</div>
+                    <div className="text-2xl font-display font-bold mt-1 text-slate-900">
                       R$ {p.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                      <span className="text-xs text-white/50 font-normal">/mês</span>
+                      <span className="text-xs text-slate-500 font-normal">/mês</span>
                     </div>
                   </button>
                 ))}
@@ -155,24 +155,24 @@ const Cadastro = () => {
 
           {step === 3 && (
             <div className="space-y-5">
-              <h2 className="font-display text-2xl font-bold">Pagamento</h2>
-              <p className="text-sm text-white/60">Plano selecionado: <span className="text-white font-semibold">{PLANS.find(p => p.id === data.plan)?.name}</span></p>
-              <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/30 p-6">
-                <div className="text-sm text-white/70">Total mensal</div>
-                <div className="text-4xl font-display font-bold">
+              <h2 className="font-display text-2xl font-bold text-slate-900">Pagamento</h2>
+              <p className="text-sm text-slate-600">Plano selecionado: <span className="text-slate-900 font-bold">{PLANS.find(p => p.id === data.plan)?.name}</span></p>
+              <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20 p-6 rounded-2xl">
+                <div className="text-sm text-slate-600 font-medium">Total mensal</div>
+                <div className="text-4xl font-display font-bold text-slate-900">
                   R$ {PLANS.find(p => p.id === data.plan)?.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </div>
-                <p className="text-xs text-white/60 mt-3">
+                <p className="text-xs text-slate-500 mt-3">
                   Primeiros 7 dias grátis. Cancele quando quiser.
                 </p>
               </Card>
               <div className="space-y-2">
-                <Label>Cartão de crédito</Label>
-                <Input className="bg-white/5 border-white/10" placeholder="0000 0000 0000 0000" />
+                <Label className="text-slate-700 font-bold text-xs uppercase tracking-wider">Cartão de crédito</Label>
+                <Input className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-primary" placeholder="0000 0000 0000 0000" />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Input className="bg-white/5 border-white/10" placeholder="MM/AA" />
-                <Input className="bg-white/5 border-white/10" placeholder="CVV" />
+                <Input className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-primary" placeholder="MM/AA" />
+                <Input className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-primary" placeholder="CVV" />
               </div>
             </div>
           )}
@@ -182,22 +182,22 @@ const Cadastro = () => {
               <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-secondary grid place-items-center mx-auto shadow-glow mb-4">
                 <Check className="h-8 w-8 text-white" />
               </div>
-              <h2 className="font-display text-2xl font-bold">Tudo pronto!</h2>
-              <p className="text-white/70 mt-2">Sua conta foi criada. Acesse seu painel para começar.</p>
+              <h2 className="font-display text-2xl font-bold text-slate-900">Tudo pronto!</h2>
+              <p className="text-slate-600 mt-2">Sua conta foi criada. Acesse seu painel para começar.</p>
             </div>
           )}
 
-          <div className="flex justify-between mt-8 pt-6 border-t border-white/10">
-            <Button variant="ghost" onClick={prev} disabled={step === 0} className="text-white hover:bg-white/10">
-              <ArrowLeft className="h-4 w-4" /> Voltar
+          <div className="flex justify-between mt-8 pt-6 border-t border-slate-200">
+            <Button variant="outline" onClick={prev} disabled={step === 0} className="border-slate-300 text-slate-700 hover:bg-slate-100 font-medium">
+              <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
             </Button>
             {step < STEPS.length - 1 ? (
-              <Button onClick={next} className="bg-gradient-to-r from-primary to-secondary text-white shadow-glow hover:opacity-90">
-                Continuar <ArrowRight className="h-4 w-4" />
+              <Button onClick={next} className="bg-gradient-to-r from-primary to-secondary text-white shadow-glow hover:opacity-90 font-bold">
+                Continuar <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             ) : (
-              <Button onClick={finish} className="bg-gradient-to-r from-primary to-secondary text-white shadow-glow hover:opacity-90">
-                Acessar painel <Rocket className="h-4 w-4" />
+              <Button onClick={finish} className="bg-gradient-to-r from-primary to-secondary text-white shadow-glow hover:opacity-90 font-bold">
+                Acessar painel <Rocket className="h-4 w-4 ml-1" />
               </Button>
             )}
           </div>
