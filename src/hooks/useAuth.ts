@@ -13,7 +13,7 @@ type AuthState = {
 
 export const useAuth = (): AuthState & {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, displayName?: string, phone?: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, displayName?: string, phone?: string, birthday?: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   isOwner: boolean;
   isMaster: boolean;
@@ -88,12 +88,13 @@ export const useAuth = (): AuthState & {
     }
   };
 
-  const signUp = async (email: string, password: string, displayName?: string, phone?: string) => {
+  const signUp = async (email: string, password: string, displayName?: string, phone?: string, birthday?: string) => {
     try {
       const meta: Record<string, string> = {};
       if (displayName) meta.display_name = displayName;
       if (phone) meta.phone = phone;
-      const { error } = await supabase.auth.signUp({
+      if (birthday) meta.birthday = birthday;
+      const { data: authRes, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -101,6 +102,17 @@ export const useAuth = (): AuthState & {
           data: Object.keys(meta).length ? meta : undefined,
         },
       });
+
+      if (!error && authRes?.user) {
+        await supabase.from("profiles").upsert({
+          id: authRes.user.id,
+          display_name: displayName || null,
+          phone: phone || null,
+          birthday: birthday || null,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "id" });
+      }
+
       return { error: translateError(error?.message) };
     } catch (err: any) {
       return { error: translateError(err?.message || "Failed to fetch") };

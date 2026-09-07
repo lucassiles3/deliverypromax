@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Mail, Lock, User as UserIcon, Phone, Store as StoreIcon, ShoppingBag } from "lucide-react";
+import { Sparkles, Mail, Lock, User as UserIcon, Phone, Store as StoreIcon, ShoppingBag, Cake, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 type Mode = "signin" | "signup" | "forgot";
@@ -28,8 +28,10 @@ const Auth = () => {
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [birthday, setBirthday] = useState("");
   const [loading, setLoading] = useState(false);
   const [pendingOwner, setPendingOwner] = useState(false);
 
@@ -102,14 +104,13 @@ const Auth = () => {
     const { error } =
       mode === "signin"
         ? await signIn(email, password)
-        : await signUp(email, password, name, phone);
+        : await signUp(email, password, name, phone, birthday);
     setLoading(false);
     if (error) {
       setPendingOwner(false);
       toast.error(error);
       return;
     }
-    toast.success(mode === "signin" ? "Bem-vindo de volta! 🎉" : "Conta criada! Aproveite 🚀");
     toast.success(mode === "signin" ? "Bem-vindo de volta! 🎉" : "Conta criada! Aproveite 🚀");
   };
 
@@ -206,6 +207,15 @@ const Auth = () => {
                     className="w-full bg-transparent outline-none"
                   />
                 </Field>
+                <Field icon={Cake}>
+                  <input
+                    type="date"
+                    placeholder="Data de nascimento"
+                    value={birthday}
+                    onChange={(e) => setBirthday(e.target.value)}
+                    className="w-full bg-transparent text-sm outline-none text-foreground"
+                  />
+                </Field>
               </>
             )}
             <Field icon={Mail}>
@@ -223,13 +233,21 @@ const Auth = () => {
                 <Field icon={Lock}>
                   <input
                     required
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Senha (mín. 6 caracteres)"
                     minLength={6}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full bg-transparent outline-none"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="p-1 text-muted-foreground hover:text-foreground"
+                    title={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </Field>
                 {mode === "signup" && (
                   <PasswordStrength password={password} />

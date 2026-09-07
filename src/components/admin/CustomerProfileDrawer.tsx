@@ -11,6 +11,7 @@ import {
   Calendar,
   Package,
   Tag,
+  Cake,
 } from "lucide-react";
 
 const fmt = (n: number) =>
@@ -42,6 +43,23 @@ export const CustomerProfileDrawer = ({
       if (error) throw error;
 
       const userId = orders?.find((o) => o.user_id)?.user_id ?? null;
+      let userProfile: any = null;
+      if (userId) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("display_name, phone, birthday")
+          .eq("id", userId)
+          .maybeSingle();
+        userProfile = prof;
+      } else if (phone) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("display_name, phone, birthday")
+          .eq("phone", phone)
+          .maybeSingle();
+        userProfile = prof;
+      }
+
       let points = 0;
       let cashback = 0;
       let pointsLedger: any[] = [];
@@ -66,7 +84,7 @@ export const CustomerProfileDrawer = ({
         cashback = Number(loy?.cashback ?? 0);
       }
 
-      return { orders: orders ?? [], userId, points, cashback, pointsLedger };
+      return { orders: orders ?? [], userId, profile: userProfile, points, cashback, pointsLedger };
     },
   });
 
@@ -76,7 +94,10 @@ export const CustomerProfileDrawer = ({
   const valid = orders.filter((o) => o.status !== "cancelled");
   const total = valid.reduce((s, o) => s + Number(o.total), 0);
   const avg = valid.length ? total / valid.length : 0;
-  const customerName = orders[0]?.customer_name ?? phone;
+  const customerName = data?.profile?.display_name || orders[0]?.customer_name || phone;
+  const birthdayFormatted = data?.profile?.birthday
+    ? new Date(`${data.profile.birthday}T00:00:00`).toLocaleDateString("pt-BR")
+    : null;
 
   // Aggregate addresses & top items
   const addressUse = new Map<string, { addr: any; count: number; lastAt: Date }>();
@@ -124,9 +145,17 @@ export const CustomerProfileDrawer = ({
             </div>
             <div>
               <h2 className="font-display text-xl font-bold">{customerName}</h2>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Phone className="h-3.5 w-3.5" />
-                {phone}
+              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Phone className="h-3.5 w-3.5 text-primary" />
+                  {phone}
+                </span>
+                {birthdayFormatted && (
+                  <span className="flex items-center gap-1 font-semibold text-primary">
+                    <Cake className="h-3.5 w-3.5" />
+                    Aniversário: {birthdayFormatted} 🎉
+                  </span>
+                )}
               </div>
             </div>
           </div>

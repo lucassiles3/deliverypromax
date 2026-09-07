@@ -3,13 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Lock } from "lucide-react";
+import { Lock, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
 
@@ -59,25 +61,41 @@ const ResetPassword = () => {
                 <Lock className="h-4 w-4 text-muted-foreground" />
                 <input
                   required
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Nova senha"
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-transparent outline-none"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="p-1 text-muted-foreground hover:text-foreground"
+                  title={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </label>
               <label className="flex items-center gap-2 rounded-xl border-2 border-border bg-background p-3 text-sm transition-smooth focus-within:border-primary">
                 <Lock className="h-4 w-4 text-muted-foreground" />
                 <input
                   required
-                  type="password"
+                  type={showConfirm ? "text" : "password"}
                   placeholder="Confirme a senha"
                   minLength={6}
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   className="w-full bg-transparent outline-none"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm((v) => !v)}
+                  className="p-1 text-muted-foreground hover:text-foreground"
+                  title={showConfirm ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </label>
               <Button
                 type="submit"
