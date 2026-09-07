@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { optimizeImage } from "@/lib/imageOptimization";
 import {
   Store as StoreIcon,
   Clock,
@@ -145,19 +146,34 @@ const ProfileSection = ({ storeId, qc }: { storeId: string; qc: ReturnType<typeo
 
   const upload = async (kind: "logo" | "cover", file: File) => {
     if (!file.type.startsWith("image/")) return toast.error("Selecione uma imagem");
-    if (file.size > 5 * 1024 * 1024) return toast.error("Imagem deve ter até 5MB");
     setUploading(kind);
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `${storeId}/${kind}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
-    if (error) {
+    try {
+      const preset = kind === "logo" ? "logo" : "banner";
+      const opt = await optimizeImage(file, { preset });
+      const optimizedFile = opt.file;
+      const ext = optimizedFile.name.split(".").pop() || "webp";
+      const path = `${storeId}/${kind}-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("store-assets").upload(path, optimizedFile, {
+        cacheControl: "31536000",
+        upsert: true,
+        contentType: optimizedFile.type,
+      });
+      if (error) {
+        setUploading(null);
+        return toast.error(error.message);
+      }
+      const { data } = supabase.storage.from("store-assets").getPublicUrl(path);
+      setForm((f: any) => ({ ...f, [kind === "logo" ? "logo" : "cover_url"]: data.publicUrl }));
       setUploading(null);
-      return toast.error(error.message);
+      if (opt.compressionRatio > 0.05) {
+        toast.success(`Imagem otimizada (-${(opt.compressionRatio * 100).toFixed(0)}%) e enviada`);
+      } else {
+        toast.success("Imagem enviada");
+      }
+    } catch (err: any) {
+      setUploading(null);
+      toast.error(err.message ?? "Erro no upload");
     }
-    const { data } = supabase.storage.from("store-assets").getPublicUrl(path);
-    setForm((f: any) => ({ ...f, [kind === "logo" ? "logo" : "cover_url"]: data.publicUrl }));
-    setUploading(null);
-    toast.success("Imagem enviada");
   };
 
   const save = async () => {

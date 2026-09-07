@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { optimizeImage } from "@/lib/imageOptimization";
 import { Loader2, Plus, Trash2, Upload, ExternalLink, GripVertical } from "lucide-react";
 import type { HomeBanner } from "@/hooks/useHomeBanners";
 
@@ -47,21 +48,31 @@ export default function MasterBanners() {
 
   const upload = async (file: File) => {
     if (!file.type.startsWith("image/")) return toast.error("Selecione uma imagem");
-    if (file.size > 5 * 1024 * 1024) return toast.error("Máximo 5MB");
     setUploading(true);
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `banner-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage
-      .from("home-banners")
-      .upload(path, file, { upsert: true });
-    if (error) {
+    try {
+      const opt = await optimizeImage(file, { preset: "banner" });
+      const optimizedFile = opt.file;
+      const ext = optimizedFile.name.split(".").pop() || "webp";
+      const path = `banner-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage
+        .from("home-banners")
+        .upload(path, optimizedFile, { cacheControl: "31536000", upsert: true, contentType: optimizedFile.type });
+      if (error) {
+        setUploading(false);
+        return toast.error(error.message);
+      }
+      const { data } = supabase.storage.from("home-banners").getPublicUrl(path);
+      setForm((f: any) => ({ ...f, image_url: data.publicUrl }));
       setUploading(false);
-      return toast.error(error.message);
+      if (opt.compressionRatio > 0.05) {
+        toast.success(`Imagem otimizada (-${(opt.compressionRatio * 100).toFixed(0)}%) e enviada`);
+      } else {
+        toast.success("Imagem enviada");
+      }
+    } catch (err: any) {
+      setUploading(false);
+      toast.error(err.message ?? "Erro no upload");
     }
-    const { data } = supabase.storage.from("home-banners").getPublicUrl(path);
-    setForm((f: any) => ({ ...f, image_url: data.publicUrl }));
-    setUploading(false);
-    toast.success("Imagem enviada");
   };
 
   const save = async () => {

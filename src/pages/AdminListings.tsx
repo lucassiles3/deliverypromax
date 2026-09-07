@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { optimizeImage } from "@/lib/imageOptimization";
 
 const AUTHORIZED_EMAIL = "suporteitchat@gmail.com";
 
@@ -317,23 +318,31 @@ const ListingForm = ({
 
   const handleLogoUpload = async (file: File) => {
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Logo deve ter no máximo 2MB");
-      return;
-    }
+    if (!file.type.startsWith("image/")) return toast.error("Selecione uma imagem válida");
     setUploading(true);
-    const ext = file.name.split(".").pop() || "png";
-    const path = `${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("listing-logos").upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: file.type,
-    });
-    setUploading(false);
-    if (error) return toast.error(error.message);
-    const { data } = supabase.storage.from("listing-logos").getPublicUrl(path);
-    set("logo", data.publicUrl);
-    toast.success("Logo enviada");
+    try {
+      const opt = await optimizeImage(file, { preset: "logo" });
+      const optimizedFile = opt.file;
+      const ext = optimizedFile.name.split(".").pop() || "webp";
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("listing-logos").upload(path, optimizedFile, {
+        cacheControl: "31536000",
+        upsert: false,
+        contentType: optimizedFile.type,
+      });
+      setUploading(false);
+      if (error) return toast.error(error.message);
+      const { data } = supabase.storage.from("listing-logos").getPublicUrl(path);
+      set("logo", data.publicUrl);
+      if (opt.compressionRatio > 0.05) {
+        toast.success(`Logo otimizada (-${(opt.compressionRatio * 100).toFixed(0)}%) e enviada`);
+      } else {
+        toast.success("Logo enviada");
+      }
+    } catch (err: any) {
+      setUploading(false);
+      toast.error(err.message ?? "Erro no upload");
+    }
   };
 
   const isImageUrl = (s: string) => /^https?:\/\//i.test(s);

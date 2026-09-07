@@ -3,6 +3,7 @@ import { X, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { optimizeImage } from "@/lib/imageOptimization";
 import { resolveAsset } from "@/lib/assetMap";
 import { AddonGroupsEditor } from "./AddonGroupsEditor";
 import { ProductAddonGroupsLinker } from "./ProductAddonGroupsLinker";
@@ -83,18 +84,24 @@ export const ProductFormModal = ({
     setForm((f) => ({ ...f, [k]: v }));
 
   const handleUpload = async (file: File) => {
-    if (file.size > 5 * 1024 * 1024) return toast.error("Imagem maior que 5MB");
+    if (!file.type.startsWith("image/")) return toast.error("Selecione uma imagem válida");
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      const opt = await optimizeImage(file, { preset: "product" });
+      const optimizedFile = opt.file;
+      const ext = optimizedFile.name.split(".").pop()?.toLowerCase() ?? "webp";
       const path = `${storeId}/${crypto.randomUUID()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("product-images")
-        .upload(path, file, { cacheControl: "3600", upsert: false });
+        .upload(path, optimizedFile, { cacheControl: "31536000", upsert: false, contentType: optimizedFile.type });
       if (upErr) throw upErr;
       const { data } = supabase.storage.from("product-images").getPublicUrl(path);
       update("image_url", data.publicUrl);
-      toast.success("Imagem enviada!");
+      if (opt.compressionRatio > 0.05) {
+        toast.success(`Imagem otimizada (-${(opt.compressionRatio * 100).toFixed(0)}%) e enviada!`);
+      } else {
+        toast.success("Imagem enviada!");
+      }
     } catch (e: any) {
       toast.error(e.message ?? "Erro no upload");
     } finally {

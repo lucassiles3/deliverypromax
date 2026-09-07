@@ -22,6 +22,7 @@ export const ProductCard = memo(({ product, storeId, catalogMode, onOpen }: Prop
           src={product.image}
           alt={product.name}
           loading="lazy"
+          decoding="async"
           width={300}
           height={300}
           className="h-full w-full object-cover transition-bounce group-hover:scale-110"
