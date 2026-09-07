@@ -737,6 +737,24 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
 
   const isListingsManager = userEmail.toLowerCase() === "suporteitchat@gmail.com";
 
+  useEffect(() => {
+    if (userListing) {
+      if (userListing.name && !name) {
+        setName(userListing.name);
+        setSlug(slugify(userListing.name));
+      }
+      if (userListing.address && !location && userListing.lat != null && userListing.lng != null) {
+        setLocation({ lat: userListing.lat, lng: userListing.lng, address: userListing.address });
+      }
+      if (userListing.category_key && !categoryKey) {
+        setCategoryKey(userListing.category_key);
+      }
+      if (userListing.subcategory_key && !subKey) {
+        setSubKey(userListing.subcategory_key);
+      }
+    }
+  }, [userListing]);
+
   if (userListing && !forceCreateStore) {
     return (
       <ExternalCatalogAdmin
@@ -765,32 +783,64 @@ const CreateStoreOnboarding = ({ userId, userEmail }: { userId: string; userEmai
     // Garante role de lojista
     await supabase.functions.invoke("claim-owner-role").catch(() => null);
 
-    const { data: existing } = await supabase
+    const { data: existingStore } = await supabase
       .from("stores")
-      .select("id")
-      .eq("slug", finalSlug)
+      .select("id, slug")
+      .eq("owner_id", userId)
       .maybeSingle();
 
-    const slugToUse = existing ? `${finalSlug}-${Math.random().toString(36).slice(2, 6)}` : finalSlug;
+    if (existingStore) {
+      const { error } = await supabase
+        .from("stores")
+        .update({
+          name: name.trim(),
+          slug: slug ? slugify(slug) : existingStore.slug,
+          phone: phone.trim() || null,
+          whatsapp_phone: phone.trim() || null,
+          city: location?.city ?? location?.address ?? null,
+          lat: location?.lat ?? null,
+          lng: location?.lng ?? null,
+          cuisine: cuisine.trim() || null,
+          open: true,
+          catalog_mode: false,
+        })
+        .eq("id", existingStore.id);
 
-    const { error } = await supabase.from("stores").insert({
-      owner_id: userId,
-      name: name.trim(),
-      slug: slugToUse,
-      phone: phone.trim() || null,
-      whatsapp_phone: phone.trim() || null,
-      city: location?.city ?? null,
-      lat: location?.lat ?? null,
-      lng: location?.lng ?? null,
-      cuisine: cuisine.trim() || null,
-      open: true,
-    });
+      setSaving(false);
+      if (error) {
+        toast.error(error.message || "Não foi possível atualizar a loja");
+        return;
+      }
+    } else {
+      const { data: existingSlug } = await supabase
+        .from("stores")
+        .select("id")
+        .eq("slug", finalSlug)
+        .maybeSingle();
 
-    setSaving(false);
-    if (error) {
-      toast.error(error.message || "Não foi possível criar a loja");
-      return;
+      const slugToUse = existingSlug ? `${finalSlug}-${Math.random().toString(36).slice(2, 6)}` : finalSlug;
+
+      const { error } = await supabase.from("stores").insert({
+        owner_id: userId,
+        name: name.trim(),
+        slug: slugToUse,
+        phone: phone.trim() || null,
+        whatsapp_phone: phone.trim() || null,
+        city: location?.city ?? location?.address ?? null,
+        lat: location?.lat ?? null,
+        lng: location?.lng ?? null,
+        cuisine: cuisine.trim() || null,
+        open: true,
+        catalog_mode: false,
+      });
+
+      setSaving(false);
+      if (error) {
+        toast.error(error.message || "Não foi possível criar a loja");
+        return;
+      }
     }
+
     toast.success("Loja criada! Vamos configurar 🚀");
     try { sessionStorage.setItem("admin:initialTab", "store"); } catch {}
     await qc.invalidateQueries({ queryKey: ["store-access"] });
@@ -1044,7 +1094,12 @@ const ExternalCatalogOnboarding = ({
     if (!name.trim()) return toast.error("Informe o nome do estabelecimento");
     if (!catalogUrl.trim()) return toast.error("Informe o link do seu catálogo");
     setSaving(true);
-    const { error } = await supabase.from("external_listings" as any).insert({
+
+    // 1. Garantir role de lojista ao usuário
+    await supabase.functions.invoke("claim-owner-role").catch(() => null);
+
+    // 2. Cadastrar catálogo em external_listings
+    const { error: listingErr } = await supabase.from("external_listings" as any).insert({
       name: name.trim(),
       logo: logo.trim() || null,
       category_key: categoryKey,
@@ -1059,9 +1114,70 @@ const ExternalCatalogOnboarding = ({
       delivery_fee: deliveryFee,
       created_by: userId,
     });
+
+    if (listingErr) {
+      setSaving(false);
+      return toast.error(listingErr.message);
+    }
+
+    // 3. Provisionar/Atualizar loja na tabela stores para integração total com o modo lojista
+    const selectedCategory = CATEGORIES.find((c) => c.key === categoryKey);
+    const selectedSub = subOptions.find((s) => s.key === subKey);
+    const cuisine = selectedSub?.label || selectedCategory?.label || "";
+    const finalSlug = slugify(name);
+
+    const { data: existingStore } = await supabase
+      .from("stores")
+      .select("id")
+      .eq("owner_id", userId)
+      .maybeSingle();
+
+    if (existingStore) {
+      await supabase
+        .from("stores")
+        .update({
+          name: name.trim(),
+          logo: logo.trim() || null,
+          city: address.trim() || null,
+          lat: location?.lat ?? null,
+          lng: location?.lng ?? null,
+          cuisine: cuisine.trim() || null,
+          opening_hours: hours,
+          delivery_time: deliveryTime || null,
+          delivery_fee: deliveryFee,
+          open: true,
+          catalog_mode: true,
+        })
+        .eq("id", existingStore.id);
+    } else {
+      const { data: existingSlug } = await supabase
+        .from("stores")
+        .select("id")
+        .eq("slug", finalSlug)
+        .maybeSingle();
+      const slugToUse = existingSlug ? `${finalSlug}-${Math.random().toString(36).slice(2, 6)}` : finalSlug;
+
+      await supabase.from("stores").insert({
+        owner_id: userId,
+        name: name.trim(),
+        slug: slugToUse,
+        logo: logo.trim() || null,
+        city: address.trim() || null,
+        lat: location?.lat ?? null,
+        lng: location?.lng ?? null,
+        cuisine: cuisine.trim() || null,
+        opening_hours: hours,
+        delivery_time: deliveryTime || null,
+        delivery_fee: deliveryFee,
+        open: true,
+        catalog_mode: true,
+      });
+    }
+
     setSaving(false);
-    if (error) return toast.error(error.message);
     toast.success("Seu catálogo foi cadastrado no itChat! 🎉");
+    await qc.invalidateQueries({ queryKey: ["store-access"] });
+    await qc.invalidateQueries({ queryKey: ["stores"] });
     await qc.invalidateQueries({ queryKey: ["external-listings"] });
     await qc.invalidateQueries({ queryKey: ["user-external-listing", userId] });
     if (onSaved) {

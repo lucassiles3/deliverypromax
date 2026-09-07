@@ -132,8 +132,16 @@ export const ExternalCatalogAdmin = ({
       setActive(!newVal);
       return toast.error(error.message);
     }
+    if (listing.created_by) {
+      await supabase
+        .from("stores")
+        .update({ open: newVal })
+        .eq("owner_id", listing.created_by);
+    }
     toast.success(newVal ? "Catálogo ativado no itChat" : "Catálogo pausado");
     qc.invalidateQueries({ queryKey: ["external-listings"] });
+    qc.invalidateQueries({ queryKey: ["stores"] });
+    qc.invalidateQueries({ queryKey: ["store-access"] });
     onRefresh();
   };
 
@@ -165,12 +173,39 @@ export const ExternalCatalogAdmin = ({
       .update(payload)
       .eq("id", listing.id);
 
-    setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      setSaving(false);
+      return toast.error(error.message);
+    }
 
+    if (listing.created_by) {
+      const selectedCategory = CATEGORIES.find((c) => c.key === categoryKey);
+      const selectedSub = subOptions.find((s) => s.key === subKey);
+      const cuisine = selectedSub?.label || selectedCategory?.label || "";
+
+      await supabase
+        .from("stores")
+        .update({
+          name: name.trim(),
+          logo: logo.trim() || null,
+          city: address.trim() || null,
+          lat: location?.lat ?? listing.lat ?? null,
+          lng: location?.lng ?? listing.lng ?? null,
+          cuisine: cuisine.trim() || null,
+          opening_hours: hours,
+          delivery_time: deliveryTime.trim() || null,
+          delivery_fee: deliveryFee === "" ? null : Number(deliveryFee),
+          open: active,
+        })
+        .eq("owner_id", listing.created_by);
+    }
+
+    setSaving(false);
     toast.success("Catálogo atualizado com sucesso! 🎉");
     setIsEditing(false);
     qc.invalidateQueries({ queryKey: ["external-listings"] });
+    qc.invalidateQueries({ queryKey: ["stores"] });
+    qc.invalidateQueries({ queryKey: ["store-access"] });
     onRefresh();
   };
 
