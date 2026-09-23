@@ -10,6 +10,7 @@ import { StoreLogoRail } from "@/components/StoreLogoRail";
 import { StoreCard } from "@/components/StoreCard";
 import { ProductRail } from "@/components/ProductRail";
 import { HomeBannerCarousel } from "@/components/HomeBannerCarousel";
+import { HomeProductsShowcase } from "@/components/HomeProductsShowcase";
 import { TopVisitedRail } from "@/components/TopVisitedRail";
 import { useStores } from "@/hooks/useStores";
 import { useExternalListings } from "@/hooks/useExternalListings";
@@ -406,6 +407,11 @@ const Index = () => {
       {/* Banners promocionais */}
       <section className="container pb-2">
         <HomeBannerCarousel />
+      </section>
+
+      {/* Vitrine Paginada de Produtos da Home */}
+      <section className="container pb-2">
+        <HomeProductsShowcase />
       </section>
 
 
