@@ -13,11 +13,15 @@ import { useHomeProducts } from "@/hooks/useHomeProducts";
 
 const SEGMENT_OPTIONS = [
   { key: "all", label: "Todos" },
-  { key: "lanche", label: "🍔 Lanches" },
-  { key: "pizza", label: "🍕 Pizzas" },
-  { key: "doce", label: "🍦 Doces & Açaí" },
+  { key: "pizzaria", label: "🍕 Pizzaria" },
+  { key: "hamburgueria", label: "🍔 Hamburgueria" },
+  { key: "lanchonete", label: "🥪 Lanchonete" },
   { key: "japonesa", label: "🍣 Japonesa" },
-  { key: "refeiç", label: "🍲 Refeições" },
+  { key: "confeitaria", label: "🍦 Confeitaria" },
+  { key: "restaurante", label: "🍽️ Restaurante" },
+  { key: "marmitaria", label: "🍲 Marmitaria" },
+  { key: "quentinhas", label: "🍱 Quentinhas" },
+  { key: "a lacarte", label: "🥩 À La Carte" },
 ];
 
 export const HomeProductsShowcase = () => {
