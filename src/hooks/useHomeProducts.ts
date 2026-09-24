@@ -104,10 +104,10 @@ export function useHomeProducts({ pageSize = 8, segment, search }: UseHomeProduc
 
       // Nomes de tabelas possíveis que podem ter sido criados no Supabase
       const tablesToTry = [
+        "Produtos Home",
         "produtos_home",
         "produtos home",
         "home_products",
-        "Produtos Home",
         "produtoshome",
         "home_produtos",
         "produtos_destaque",
@@ -116,15 +116,20 @@ export function useHomeProducts({ pageSize = 8, segment, search }: UseHomeProduc
 
       for (const tableName of tablesToTry) {
         try {
+          console.log(`[useHomeProducts] Testando consulta na tabela: "${tableName}"...`);
           const { data, count, error } = await supabase
             .from(tableName as any)
             .select("*", { count: "exact" })
             .range(from, to);
 
           if (error) {
-            console.warn(`[useHomeProducts] Tabela "${tableName}" retornou erro:`, error.message);
+            console.warn(`[useHomeProducts] Erro na tabela "${tableName}":`, error);
             continue;
           }
+
+          console.log(`[useHomeProducts] SUCESSO na tabela "${tableName}"!`);
+          console.log(`[useHomeProducts] DADOS RETORNADOS:`, data);
+          console.log(`[useHomeProducts] TOTAL DE ITENS:`, data?.length);
 
           if (data && data.length > 0) {
             let items = data.map((row: any, idx: number) => normalizeHomeProductRow(row, idx));
@@ -150,12 +155,15 @@ export function useHomeProducts({ pageSize = 8, segment, search }: UseHomeProduc
               items,
               totalCount: count ?? items.length,
             };
+          } else {
+             console.log(`[useHomeProducts] Tabela "${tableName}" existe, mas está VAZIA ou bloqueada por RLS.`);
           }
         } catch (err: any) {
           console.warn(`[useHomeProducts] Exceção ao consultar "${tableName}":`, err?.message);
         }
       }
 
+      console.log(`[useHomeProducts] Nenhuma tabela válida retornou dados.`);
       // Retorna vazio se ainda não houver registros cadastrados na tabela do banco do usuário
       return {
         items: [] as HomeProduct[],
