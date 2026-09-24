@@ -117,15 +117,22 @@ export const HomeProductsShowcase = () => {
                   
                   {/* Image container: Compact aspect-ratio for mobile layout */}
                   <div className="relative mb-2 aspect-[4/3] w-full overflow-hidden rounded-lg sm:rounded-xl bg-muted">
-                    <img
-                      src={resolveAsset(item.image_url)}
-                      alt={item.product_name}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = "none";
-                      }}
-                    />
+                    {item.image_url ? (
+                      <img
+                        src={item.image_url}
+                        alt={item.product_name}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80";
+                        }}
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground text-xs font-medium">
+                        Sem imagem
+                      </div>
+                    )}
                     
                     {/* Discount Badge */}
                     {discountTag && (

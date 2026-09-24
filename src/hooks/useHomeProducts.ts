@@ -22,38 +22,69 @@ interface UseHomeProductsOptions {
 }
 
 /**
- * Normaliza valores de colunas independentemente se a tabela Supabase usa nomes em português ou inglês.
- * Ex: "Nome do Produto", "nome_do_produto", "product_name", "Promoção", "promocao", "promo_price", etc.
+ * Normaliza e extrai os valores de colunas independentemente do nome exato ou formato (Português/Inglês, com/sem acento).
+ * Suporta:
+ * - Nome do Produto / nome_do_produto / product_name / nome
+ * - Estabelecimento / estabelecimento / store_name / loja
+ * - Segmento / segmento / segment / categoria
+ * - Promoção / promocao / promo_price / preco_promocional / preco
+ * - Preço Antigo / preco_antigo / old_price
+ * - Descrição / descricao / description
+ * - Link do Produto / link_do_produto / product_link / link
+ * - Link da Imagem / link_da_imagem / image_url / imagem / foto
  */
 function getColumnValue(row: any, ...candidates: string[]) {
   if (!row || typeof row !== "object") return null;
 
+  // 1. Checagem exata da propriedade
   for (const key of candidates) {
-    // Busca exata
-    if (row[key] !== undefined && row[key] !== null) {
+    if (row[key] !== undefined && row[key] !== null && row[key] !== "") {
       return row[key];
     }
-    // Busca case-insensitive limpando acentos e caracteres especiais
-    const cleanCandidate = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+  }
+
+  // 2. Checagem insensível a maiúsculas/minúsculas e acentos
+  for (const key of candidates) {
+    const cleanCandidate = key
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "");
+
     for (const rk of Object.keys(row)) {
-      const cleanRowKey = rk.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
-      if (cleanRowKey === cleanCandidate && row[rk] !== undefined && row[rk] !== null) {
+      const cleanRowKey = rk
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, "");
+
+      if (cleanRowKey === cleanCandidate && row[rk] !== undefined && row[rk] !== null && row[rk] !== "") {
         return row[rk];
       }
     }
   }
+
   return null;
 }
 
 function normalizeHomeProductRow(row: any, index: number): HomeProduct {
-  const name = getColumnValue(row, "product_name", "nome_do_produto", "nomeDoProduto", "Nome do Produto", "name", "nome", "produto") || `Produto ${index + 1}`;
-  const store = getColumnValue(row, "store_name", "estabelecimento", "Estabelecimento", "loja", "store") || "Loja Parceira";
-  const segment = getColumnValue(row, "segment", "segmento", "Segmento", "categoria", "category");
-  const promo = Number(getColumnValue(row, "promo_price", "promocao", "Promoção", "preco_promocional", "preco", "price") ?? 0);
-  const oldPrice = getColumnValue(row, "old_price", "preco_antigo", "Preço Antigo", "oldPrice");
-  const desc = getColumnValue(row, "description", "descricao", "Descrição", "desc");
-  const link = getColumnValue(row, "product_link", "link_do_produto", "Link do Produto", "linkDoProduto", "link", "url") || "#";
-  const image = getColumnValue(row, "image_url", "link_da_imagem", "Link da Imagem", "linkDaImagem", "imagem", "image") || null;
+  const name = getColumnValue(row, "Nome do Produto", "nome_do_produto", "nomeDoProduto", "product_name", "name", "nome", "produto") || `Produto ${index + 1}`;
+  const store = getColumnValue(row, "Estabelecimento", "estabelecimento", "store_name", "loja", "store") || "Estabelecimento";
+  const segment = getColumnValue(row, "Segmento", "segmento", "segment", "categoria", "category");
+  
+  // Tratamento numérico para preço promocional (Promoção / promo_price)
+  const rawPromo = getColumnValue(row, "Promoção", "promocao", "promo_price", "preco_promocional", "preco", "price");
+  const promo = typeof rawPromo === "number" ? rawPromo : parseFloat(String(rawPromo ?? "0").replace("R$", "").replace(",", ".").trim()) || 0;
+
+  // Tratamento numérico para preço antigo (Preço Antigo / old_price)
+  const rawOld = getColumnValue(row, "Preço Antigo", "preco_antigo", "old_price", "precoAntigo");
+  const oldPrice = rawOld != null && rawOld !== "" 
+    ? (typeof rawOld === "number" ? rawOld : parseFloat(String(rawOld).replace("R$", "").replace(",", ".").trim()) || null)
+    : null;
+
+  const desc = getColumnValue(row, "Descrição", "descricao", "description", "desc");
+  const link = getColumnValue(row, "Link do Produto", "link_do_produto", "product_link", "link", "url") || "#";
+  const image = getColumnValue(row, "Link da Imagem", "link_da_imagem", "image_url", "linkdaimagem", "imagem", "image", "foto") || null;
 
   return {
     id: row.id || `home-prod-${index}`,
@@ -61,7 +92,7 @@ function normalizeHomeProductRow(row: any, index: number): HomeProduct {
     store_name: String(store),
     segment: segment ? String(segment) : null,
     promo_price: isNaN(promo) ? 0 : promo,
-    old_price: oldPrice != null && !isNaN(Number(oldPrice)) ? Number(oldPrice) : null,
+    old_price: oldPrice != null && !isNaN(oldPrice) ? oldPrice : null,
     description: desc ? String(desc) : null,
     product_link: String(link),
     image_url: image ? String(image) : null,
@@ -73,14 +104,14 @@ export function useHomeProducts({ pageSize = 8, segment, search }: UseHomeProduc
   const [page, setPage] = useState(1);
 
   const query = useQuery({
-    queryKey: ["home-products", page, pageSize, segment, search],
-    staleTime: 1000 * 60 * 5, // Cache de 5 minutos para evitar requisições repetidas e economizar egress
+    queryKey: ["home-products-real", page, pageSize, segment, search],
+    staleTime: 1000 * 60 * 3, // 3 minutos de cache
     queryFn: async () => {
       const from = 0;
       const to = page * pageSize - 1;
 
-      // Nomes de tabelas possíveis que o usuário pode ter criado no Supabase
-      const tablesToTry = ["produtos_home", "home_products", "produtos home"];
+      // Nomes de tabelas possíveis que podem ter sido criados no Supabase
+      const tablesToTry = ["produtos_home", "produtos home", "home_products", "Produtos Home"];
 
       for (const tableName of tablesToTry) {
         try {
@@ -92,13 +123,13 @@ export function useHomeProducts({ pageSize = 8, segment, search }: UseHomeProduc
           if (!error && data && data.length > 0) {
             let items = data.map((row: any, idx: number) => normalizeHomeProductRow(row, idx));
 
-            // Filtro local por segmento se selecionado
+            // Filtro por segmento se selecionado
             if (segment && segment !== "all") {
               const segLower = segment.toLowerCase();
               items = items.filter((i) => i.segment && i.segment.toLowerCase().includes(segLower));
             }
 
-            // Filtro local por busca se fornecido
+            // Filtro por termo de busca se fornecido
             if (search && search.trim()) {
               const sLower = search.trim().toLowerCase();
               items = items.filter(
@@ -115,41 +146,14 @@ export function useHomeProducts({ pageSize = 8, segment, search }: UseHomeProduc
             };
           }
         } catch {
-          /* tenta próxima tabela */
+          /* tenta a próxima variação de nome de tabela */
         }
       }
 
-      // Fallback para tabela de produtos padrão caso produtos_home ainda não tenha registros
-      let fallbackQ = supabase
-        .from("products")
-        .select("id, name, description, price, old_price, image_url, category, store_id, stores!inner(name, slug)", { count: "exact" })
-        .eq("active", true);
-
-      if (search && search.trim()) {
-        fallbackQ = fallbackQ.ilike("name", `%${search.trim()}%`);
-      }
-
-      const { data: fbData, count: fbCount, error: fbError } = await fallbackQ
-        .order("rating", { ascending: false })
-        .range(from, to);
-
-      if (fbError || !fbData) return { items: [], totalCount: 0 };
-
-      const items: HomeProduct[] = fbData.map((p: any) => ({
-        id: p.id,
-        product_name: p.name,
-        store_name: p.stores?.name ?? "Loja Parceira",
-        segment: p.category ?? "Geral",
-        promo_price: Number(p.price),
-        old_price: p.old_price != null ? Number(p.old_price) : null,
-        description: p.description,
-        product_link: `/loja/${p.stores?.slug ?? "parceiro"}/produto/${p.id}`,
-        image_url: p.image_url,
-      }));
-
+      // Retorna vazio se ainda não houver registros cadastrados na tabela do banco do usuário
       return {
-        items,
-        totalCount: fbCount ?? items.length,
+        items: [] as HomeProduct[],
+        totalCount: 0,
       };
     },
   });
