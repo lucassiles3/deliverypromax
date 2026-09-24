@@ -21,54 +21,105 @@ interface UseHomeProductsOptions {
   search?: string;
 }
 
+/**
+ * Normaliza valores de colunas independentemente se a tabela Supabase usa nomes em português ou inglês.
+ * Ex: "Nome do Produto", "nome_do_produto", "product_name", "Promoção", "promocao", "promo_price", etc.
+ */
+function getColumnValue(row: any, ...candidates: string[]) {
+  if (!row || typeof row !== "object") return null;
+
+  for (const key of candidates) {
+    // Busca exata
+    if (row[key] !== undefined && row[key] !== null) {
+      return row[key];
+    }
+    // Busca case-insensitive limpando acentos e caracteres especiais
+    const cleanCandidate = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+    for (const rk of Object.keys(row)) {
+      const cleanRowKey = rk.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+      if (cleanRowKey === cleanCandidate && row[rk] !== undefined && row[rk] !== null) {
+        return row[rk];
+      }
+    }
+  }
+  return null;
+}
+
+function normalizeHomeProductRow(row: any, index: number): HomeProduct {
+  const name = getColumnValue(row, "product_name", "nome_do_produto", "nomeDoProduto", "Nome do Produto", "name", "nome", "produto") || `Produto ${index + 1}`;
+  const store = getColumnValue(row, "store_name", "estabelecimento", "Estabelecimento", "loja", "store") || "Loja Parceira";
+  const segment = getColumnValue(row, "segment", "segmento", "Segmento", "categoria", "category");
+  const promo = Number(getColumnValue(row, "promo_price", "promocao", "Promoção", "preco_promocional", "preco", "price") ?? 0);
+  const oldPrice = getColumnValue(row, "old_price", "preco_antigo", "Preço Antigo", "oldPrice");
+  const desc = getColumnValue(row, "description", "descricao", "Descrição", "desc");
+  const link = getColumnValue(row, "product_link", "link_do_produto", "Link do Produto", "linkDoProduto", "link", "url") || "#";
+  const image = getColumnValue(row, "image_url", "link_da_imagem", "Link da Imagem", "linkDaImagem", "imagem", "image") || null;
+
+  return {
+    id: row.id || `home-prod-${index}`,
+    product_name: String(name),
+    store_name: String(store),
+    segment: segment ? String(segment) : null,
+    promo_price: isNaN(promo) ? 0 : promo,
+    old_price: oldPrice != null && !isNaN(Number(oldPrice)) ? Number(oldPrice) : null,
+    description: desc ? String(desc) : null,
+    product_link: String(link),
+    image_url: image ? String(image) : null,
+    position: row.position ?? index,
+  };
+}
+
 export function useHomeProducts({ pageSize = 8, segment, search }: UseHomeProductsOptions = {}) {
   const [page, setPage] = useState(1);
 
   const query = useQuery({
     queryKey: ["home-products", page, pageSize, segment, search],
-    staleTime: 1000 * 60 * 5, // 5 minutes cache to avoid redundant database reads/egress
+    staleTime: 1000 * 60 * 5, // Cache de 5 minutos para evitar requisições repetidas e economizar egress
     queryFn: async () => {
       const from = 0;
       const to = page * pageSize - 1;
 
-      let q = supabase
-        .from("home_products" as any)
-        .select("id, product_name, store_name, segment, promo_price, old_price, description, product_link, image_url, active, position", { count: "exact" })
-        .eq("active", true);
+      // Nomes de tabelas possíveis que o usuário pode ter criado no Supabase
+      const tablesToTry = ["produtos_home", "home_products", "produtos home"];
 
-      if (segment && segment !== "all") {
-        q = q.ilike("segment", `%${segment}%`);
+      for (const tableName of tablesToTry) {
+        try {
+          const { data, count, error } = await supabase
+            .from(tableName as any)
+            .select("*", { count: "exact" })
+            .range(from, to);
+
+          if (!error && data && data.length > 0) {
+            let items = data.map((row: any, idx: number) => normalizeHomeProductRow(row, idx));
+
+            // Filtro local por segmento se selecionado
+            if (segment && segment !== "all") {
+              const segLower = segment.toLowerCase();
+              items = items.filter((i) => i.segment && i.segment.toLowerCase().includes(segLower));
+            }
+
+            // Filtro local por busca se fornecido
+            if (search && search.trim()) {
+              const sLower = search.trim().toLowerCase();
+              items = items.filter(
+                (i) =>
+                  i.product_name.toLowerCase().includes(sLower) ||
+                  i.store_name.toLowerCase().includes(sLower) ||
+                  (i.description && i.description.toLowerCase().includes(sLower))
+              );
+            }
+
+            return {
+              items,
+              totalCount: count ?? items.length,
+            };
+          }
+        } catch {
+          /* tenta próxima tabela */
+        }
       }
 
-      if (search && search.trim()) {
-        const term = search.trim();
-        q = q.or(`product_name.ilike.%${term}%,store_name.ilike.%${term}%,description.ilike.%${term}%`);
-      }
-
-      const { data, count, error } = await q
-        .order("position", { ascending: true })
-        .order("created_at", { ascending: false })
-        .range(from, to);
-
-      if (!error && data && data.length > 0) {
-        return {
-          items: data.map((item: any) => ({
-            id: item.id,
-            product_name: item.product_name,
-            store_name: item.store_name,
-            segment: item.segment,
-            promo_price: Number(item.promo_price),
-            old_price: item.old_price != null ? Number(item.old_price) : null,
-            description: item.description,
-            product_link: item.product_link,
-            image_url: item.image_url,
-            position: item.position,
-          })) as HomeProduct[],
-          totalCount: count ?? data.length,
-        };
-      }
-
-      // Fallback para tabela de produtos padrão se home_products ainda estiver vazia
+      // Fallback para tabela de produtos padrão caso produtos_home ainda não tenha registros
       let fallbackQ = supabase
         .from("products")
         .select("id, name, description, price, old_price, image_url, category, store_id, stores!inner(name, slug)", { count: "exact" })
