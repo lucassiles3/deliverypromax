@@ -23,15 +23,6 @@ interface UseHomeProductsOptions {
 
 /**
  * Normaliza e extrai os valores de colunas independentemente do nome exato ou formato (Português/Inglês, com/sem acento).
- * Suporta:
- * - Nome do Produto / nome_do_produto / product_name / nome
- * - Estabelecimento / estabelecimento / store_name / loja
- * - Segmento / segmento / segment / categoria
- * - Promoção / promocao / promo_price / preco_promocional / preco
- * - Preço Antigo / preco_antigo / old_price
- * - Descrição / descricao / description
- * - Link do Produto / link_do_produto / product_link / link
- * - Link da Imagem / link_da_imagem / image_url / imagem / foto
  */
 function getColumnValue(row: any, ...candidates: string[]) {
   if (!row || typeof row !== "object") return null;
@@ -44,21 +35,22 @@ function getColumnValue(row: any, ...candidates: string[]) {
   }
 
   // 2. Checagem insensível a maiúsculas/minúsculas e acentos
-  for (const key of candidates) {
-    const cleanCandidate = key
+  const rowKeys = Object.keys(row);
+  for (const candidate of candidates) {
+    const normCandidate = candidate
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]/g, "");
 
-    for (const rk of Object.keys(row)) {
-      const cleanRowKey = rk
+    for (const rk of rowKeys) {
+      const normRowKey = rk
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .replace(/[^a-z0-9]/g, "");
 
-      if (cleanRowKey === cleanCandidate && row[rk] !== undefined && row[rk] !== null && row[rk] !== "") {
+      if (normRowKey === normCandidate && row[rk] !== undefined && row[rk] !== null && row[rk] !== "") {
         return row[rk];
       }
     }
@@ -68,23 +60,23 @@ function getColumnValue(row: any, ...candidates: string[]) {
 }
 
 function normalizeHomeProductRow(row: any, index: number): HomeProduct {
-  const name = getColumnValue(row, "Nome do Produto", "nome_do_produto", "nomeDoProduto", "product_name", "name", "nome", "produto") || `Produto ${index + 1}`;
-  const store = getColumnValue(row, "Estabelecimento", "estabelecimento", "store_name", "loja", "store") || "Estabelecimento";
-  const segment = getColumnValue(row, "Segmento", "segmento", "segment", "categoria", "category");
+  const name = getColumnValue(row, "Nome do Produto", "nome_do_produto", "nomeDoProduto", "product_name", "name", "nome", "produto", "titulo", "title") || `Produto ${index + 1}`;
+  const store = getColumnValue(row, "Estabelecimento", "estabelecimento", "store_name", "loja", "store", "parceiro", "empresa") || "Estabelecimento";
+  const segment = getColumnValue(row, "Segmento", "segmento", "segment", "categoria", "category", "tipo");
   
   // Tratamento numérico para preço promocional (Promoção / promo_price)
-  const rawPromo = getColumnValue(row, "Promoção", "promocao", "promo_price", "preco_promocional", "preco", "price");
+  const rawPromo = getColumnValue(row, "Promoção", "promocao", "promo_price", "preco_promocional", "preco", "price", "valor", "valor_promocional");
   const promo = typeof rawPromo === "number" ? rawPromo : parseFloat(String(rawPromo ?? "0").replace("R$", "").replace(",", ".").trim()) || 0;
 
   // Tratamento numérico para preço antigo (Preço Antigo / old_price)
-  const rawOld = getColumnValue(row, "Preço Antigo", "preco_antigo", "old_price", "precoAntigo");
+  const rawOld = getColumnValue(row, "Preço Antigo", "preco_antigo", "old_price", "precoAntigo", "preco_original", "valor_antigo");
   const oldPrice = rawOld != null && rawOld !== "" 
     ? (typeof rawOld === "number" ? rawOld : parseFloat(String(rawOld).replace("R$", "").replace(",", ".").trim()) || null)
     : null;
 
-  const desc = getColumnValue(row, "Descrição", "descricao", "description", "desc");
-  const link = getColumnValue(row, "Link do Produto", "link_do_produto", "product_link", "link", "url") || "#";
-  const image = getColumnValue(row, "Link da Imagem", "link_da_imagem", "image_url", "linkdaimagem", "imagem", "image", "foto") || null;
+  const desc = getColumnValue(row, "Descrição", "descricao", "description", "desc", "detalhes");
+  const link = getColumnValue(row, "Link do Produto", "link_do_produto", "product_link", "link", "url", "link_produto") || "#";
+  const image = getColumnValue(row, "Link da Imagem", "link_da_imagem", "image_url", "linkdaimagem", "imagem", "image", "foto", "picture", "url_imagem") || null;
 
   return {
     id: row.id || `home-prod-${index}`,
@@ -111,7 +103,16 @@ export function useHomeProducts({ pageSize = 8, segment, search }: UseHomeProduc
       const to = page * pageSize - 1;
 
       // Nomes de tabelas possíveis que podem ter sido criados no Supabase
-      const tablesToTry = ["produtos_home", "produtos home", "home_products", "Produtos Home"];
+      const tablesToTry = [
+        "produtos_home",
+        "produtos home",
+        "home_products",
+        "Produtos Home",
+        "produtoshome",
+        "home_produtos",
+        "produtos_destaque",
+        "destaques",
+      ];
 
       for (const tableName of tablesToTry) {
         try {
@@ -120,7 +121,12 @@ export function useHomeProducts({ pageSize = 8, segment, search }: UseHomeProduc
             .select("*", { count: "exact" })
             .range(from, to);
 
-          if (!error && data && data.length > 0) {
+          if (error) {
+            console.warn(`[useHomeProducts] Tabela "${tableName}" retornou erro:`, error.message);
+            continue;
+          }
+
+          if (data && data.length > 0) {
             let items = data.map((row: any, idx: number) => normalizeHomeProductRow(row, idx));
 
             // Filtro por segmento se selecionado
@@ -145,8 +151,8 @@ export function useHomeProducts({ pageSize = 8, segment, search }: UseHomeProduc
               totalCount: count ?? items.length,
             };
           }
-        } catch {
-          /* tenta a próxima variação de nome de tabela */
+        } catch (err: any) {
+          console.warn(`[useHomeProducts] Exceção ao consultar "${tableName}":`, err?.message);
         }
       }
 

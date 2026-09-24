@@ -26,7 +26,7 @@ const SEGMENT_OPTIONS = [
 
 export const HomeProductsShowcase = () => {
   const [selectedSegment, setSelectedSegment] = useState<string>("all");
-  const { products, totalCount, hasMore, isLoading, isFetching, loadMore } = useHomeProducts({
+  const { products, totalCount, hasMore, isLoading, isFetching, loadMore, refetch } = useHomeProducts({
     pageSize: 8,
     segment: selectedSegment === "all" ? null : selectedSegment,
   });
@@ -99,11 +99,35 @@ export const HomeProductsShowcase = () => {
         <div className="my-10 rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center">
           <ShoppingBag className="mx-auto h-8 w-8 text-muted-foreground/50" />
           <h3 className="mt-2 font-display text-sm font-bold text-foreground">
-            Nenhum produto em destaque nesta categoria
+            {selectedSegment !== "all"
+              ? `Nenhum produto encontrado no segmento "${selectedSegment}"`
+              : "Nenhum produto cadastrado nesta seção"}
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            Selecione "Todos" para visualizar mais ofertas.
+            {selectedSegment !== "all"
+              ? "Clique abaixo para visualizar todas as ofertas disponíveis."
+              : "Tente atualizar para carregar os produtos do banco de dados."}
           </p>
+          <div className="mt-4 flex justify-center">
+            {selectedSegment !== "all" ? (
+              <Button
+                onClick={() => setSelectedSegment("all")}
+                size="sm"
+                className="h-9 rounded-xl bg-primary px-5 text-xs font-bold text-primary-foreground"
+              >
+                Ver Todos os Produtos
+              </Button>
+            ) : (
+              <Button
+                onClick={() => refetch()}
+                size="sm"
+                variant="outline"
+                className="h-9 rounded-xl border-border px-5 text-xs font-bold"
+              >
+                Atualizar Ofertas 🔄
+              </Button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
