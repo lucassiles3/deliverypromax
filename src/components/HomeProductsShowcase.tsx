@@ -13,11 +13,11 @@ import { useHomeProducts } from "@/hooks/useHomeProducts";
 
 const SEGMENT_OPTIONS = [
   { key: "all", label: "Todos" },
-  { key: "Lanches", label: "🍔 Lanches" },
-  { key: "Pizzas", label: "🍕 Pizzas" },
-  { key: "Doces", label: "🍦 Doces & Açaí" },
-  { key: "Japonesa", label: "🍣 Japonesa" },
-  { key: "Refeições", label: "🍲 Refeições" },
+  { key: "lanche", label: "🍔 Lanches" },
+  { key: "pizza", label: "🍕 Pizzas" },
+  { key: "doce", label: "🍦 Doces & Açaí" },
+  { key: "japonesa", label: "🍣 Japonesa" },
+  { key: "refeiç", label: "🍲 Refeições" },
 ];
 
 export const HomeProductsShowcase = () => {
