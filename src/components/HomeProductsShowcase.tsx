@@ -134,7 +134,7 @@ export const HomeProductsShowcase = () => {
           {/* Row ListView with fixed container height */}
           <div
             ref={scrollRef}
-            className="scrollbar-hide flex w-full h-[280px] sm:h-[310px] snap-x snap-mandatory flex-row items-stretch gap-3 overflow-x-auto px-4 pb-2 pt-1 sm:gap-4 md:px-8"
+            className="scrollbar-hide flex w-full h-[320px] sm:h-[340px] snap-x snap-mandatory flex-row items-stretch gap-3 overflow-x-auto px-4 pb-2 pt-1 sm:gap-4 md:px-8"
           >
             {products.map((item) => {
               const discountTag = calculateDiscountPercent(item.promo_price, item.old_price);
