@@ -205,8 +205,9 @@ export const PDVTab = ({
         payment_method: mainPayment,
         status: "delivered",
         notes: "[PDV]",
+        source: "pdv",
         change_for: change > 0 ? paid : null,
-        user_id: user?.id ?? null,
+        user_id: null,
       })
       .select()
       .single();

@@ -117,16 +117,7 @@ const Admin = () => {
   const soundEnabled = toggles.sound_alerts_enabled;
   const autoPrintEnabled = toggles.auto_print_enabled;
 
-  // Filtros pedidos
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
-  const [methodFilter, setMethodFilter] = useState<MethodFilter>("all");
-  const [search, setSearch] = useState("");
   const [historyPhone, setHistoryPhone] = useState<string | null>(null);
-
-  // Produtos
-  const [productSearch, setProductSearch] = useState("");
-  const [productModalOpen, setProductModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const playDing = () => {
@@ -194,29 +185,13 @@ const Admin = () => {
     }
   }, [currentRole, tab]);
 
-  const { data: products = [] } = useQuery({
-    queryKey: ["admin-products", storeId],
-    enabled: !!storeId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, category, description, price, old_price, active, image_url, bestseller, promo, stock, track_stock")
-        .eq("store_id", storeId!)
-        .order("position");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
   const { data: orders = [] } = useQuery({
     queryKey: ["admin-orders", storeId],
     enabled: !!storeId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select(
-          "id, customer_name, customer_phone, total, subtotal, delivery_fee, coupon_code, coupon_discount, cashback_used, status, method, payment_method, change_for, address, delivery_lat, delivery_lng, created_at, order_items(id, product_name, quantity, unit_price, notes, customizations)",
-        )
+        .select("id, total, status, created_at")
         .eq("store_id", storeId!)
         .order("created_at", { ascending: false })
         .limit(100);
@@ -226,8 +201,6 @@ const Admin = () => {
     // Realtime cobre invalidação; refetch só a cada 60s como segurança contra desconexão.
     refetchInterval: 60_000,
   });
-
-  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
   const pendingCount = useMemo(
     () => orders.filter((o) => o.status !== "delivered" && o.status !== "cancelled").length,
@@ -246,87 +219,12 @@ const Admin = () => {
     qc.invalidateQueries({ queryKey: ["admin-orders", storeId] });
   });
 
-  const advanceStatus = async (id: string, current: DbStatus) => {
-    const next = statusConfig[current].next;
-    if (!next) return;
-    const { error } = await supabase.from("orders").update({ status: next }).eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success(`Pedido: ${statusConfig[next].label}`);
-    qc.invalidateQueries({ queryKey: ["admin-orders", storeId] });
-  };
-
-  const cancelOrder = async (id: string) => {
-    if (!confirm("Cancelar este pedido?")) return;
-    const { error } = await supabase.from("orders").update({ status: "cancelled" }).eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("Pedido cancelado");
-    qc.invalidateQueries({ queryKey: ["admin-orders", storeId] });
-  };
-
-  const togglePause = async (id: string, active: boolean) => {
-    const { error } = await supabase.from("products").update({ active: !active }).eq("id", id);
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["admin-products", storeId] });
-  };
-
-  const updatePrice = async (id: string, price: number) => {
-    const { error } = await supabase.from("products").update({ price }).eq("id", id);
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["admin-products", storeId] });
-  };
-
-  const updateStock = async (id: string, stock: number) => {
-    const { error } = await supabase.from("products").update({ stock }).eq("id", id);
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["admin-products", storeId] });
-  };
-
-  const deleteProduct = async (id: string, name: string) => {
-    if (!confirm(`Excluir "${name}"? Esta ação não pode ser desfeita.`)) return;
-    const { error } = await supabase.from("products").delete().eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("Produto excluído");
-    qc.invalidateQueries({ queryKey: ["admin-products", storeId] });
-  };
-
-  // criação/edição de produto vive dentro do MenuTab
-
-  const filteredOrders = useMemo(() => {
-    return orders.filter((o) => {
-      if (statusFilter === "active") {
-        if (o.status === "delivered" || o.status === "cancelled") return false;
-      } else if (statusFilter !== "all" && o.status !== statusFilter) {
-        return false;
-      }
-      if (methodFilter !== "all" && o.method !== methodFilter) return false;
-      if (search.trim()) {
-        const q = search.trim().toLowerCase();
-        const hit =
-          o.id.toLowerCase().startsWith(q) ||
-          o.id.toLowerCase().includes(q) ||
-          (o.customer_name ?? "").toLowerCase().includes(q) ||
-          (o.customer_phone ?? "").includes(q);
-        if (!hit) return false;
-      }
-      return true;
-    });
-  }, [orders, statusFilter, methodFilter, search]);
-
-  const filteredProducts = useMemo(() => {
-    if (!productSearch.trim()) return products;
-    const q = productSearch.trim().toLowerCase();
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        (p.category ?? "").toLowerCase().includes(q),
-    );
-  }, [products, productSearch]);
-
   const kpis = useMemo(() => {
-    const today = orders.reduce((s, o) => s + Number(o.total), 0);
+    const valid = orders.filter((o) => o.status !== "cancelled");
+    const revenue = valid.reduce((s, o) => s + Number(o.total), 0);
     const active = orders.filter((o) => o.status !== "delivered" && o.status !== "cancelled").length;
-    const avg = orders.length ? today / orders.length : 0;
-    return { revenue: today, active, avg, count: orders.length };
+    const avg = valid.length ? revenue / valid.length : 0;
+    return { revenue, active, avg, count: valid.length };
   }, [orders]);
 
   if (authLoading || (storesLoading && stores.length === 0)) {

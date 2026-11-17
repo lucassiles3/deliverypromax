@@ -123,16 +123,18 @@ export const MenuTab = ({ storeId }: { storeId: string }) => {
     },
   });
 
-  // Contagem de pedidos por produto
+  // Contagem de pedidos por produto (com cache de 5 min e limite seguro para poupar egress)
   const { data: orderCounts = {} } = useQuery({
     queryKey: ["menu-order-counts", storeId],
     enabled: !!storeId && products.length > 0,
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const ids = products.map((p) => p.id);
       const { data } = await supabase
         .from("order_items")
         .select("product_id")
-        .in("product_id", ids);
+        .in("product_id", ids)
+        .limit(2000);
       const map: Record<string, number> = {};
       (data ?? []).forEach((row: any) => {
         if (row.product_id) map[row.product_id] = (map[row.product_id] ?? 0) + 1;
@@ -140,6 +142,12 @@ export const MenuTab = ({ storeId }: { storeId: string }) => {
       return map;
     },
   });
+
+  const invalidateMenuAndPublicStore = () => {
+    qc.invalidateQueries({ queryKey: ["menu-products", storeId] });
+    qc.invalidateQueries({ queryKey: ["store"] });
+    qc.invalidateQueries({ queryKey: ["featured-products"] });
+  };
 
   const filtered = useMemo(() => {
     let list = products;
@@ -171,25 +179,25 @@ export const MenuTab = ({ storeId }: { storeId: string }) => {
     const { error } = await supabase.from("products").update({ active: !p.active }).eq("id", p.id);
     if (error) return toast.error(error.message);
     toast.success(p.active ? "Produto pausado" : "Produto ativo");
-    qc.invalidateQueries({ queryKey: ["menu-products", storeId] });
+    invalidateMenuAndPublicStore();
   };
 
   const updatePrice = async (id: string, price: number) => {
     const { error } = await supabase.from("products").update({ price }).eq("id", id);
     if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["menu-products", storeId] });
+    invalidateMenuAndPublicStore();
   };
 
   const updateStock = async (id: string, stock: number) => {
     const { error } = await supabase.from("products").update({ stock }).eq("id", id);
     if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["menu-products", storeId] });
+    invalidateMenuAndPublicStore();
   };
 
   const togglePromo = async (p: Product) => {
     const { error } = await supabase.from("products").update({ promo: !p.promo }).eq("id", p.id);
     if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["menu-products", storeId] });
+    invalidateMenuAndPublicStore();
   };
 
   const duplicate = async (p: Product) => {
@@ -206,7 +214,7 @@ export const MenuTab = ({ storeId }: { storeId: string }) => {
     const { error } = await supabase.from("products").insert(payload);
     if (error) return toast.error(error.message);
     toast.success("Produto duplicado");
-    qc.invalidateQueries({ queryKey: ["menu-products", storeId] });
+    invalidateMenuAndPublicStore();
   };
 
   const archive = async (p: Product) => {
@@ -217,7 +225,7 @@ export const MenuTab = ({ storeId }: { storeId: string }) => {
       .eq("id", p.id);
     if (error) return toast.error(error.message);
     toast.success(archive_now ? "Produto arquivado" : "Produto restaurado");
-    qc.invalidateQueries({ queryKey: ["menu-products", storeId] });
+    invalidateMenuAndPublicStore();
   };
 
   const moveCategory = async (newCatId: string | null) => {
@@ -230,7 +238,7 @@ export const MenuTab = ({ storeId }: { storeId: string }) => {
     if (error) return toast.error(error.message);
     toast.success("Categoria atualizada");
     setMovingProduct(null);
-    qc.invalidateQueries({ queryKey: ["menu-products", storeId] });
+    invalidateMenuAndPublicStore();
   };
 
   const openNew = () => {

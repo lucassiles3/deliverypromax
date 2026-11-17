@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useOrdersChannel } from "@/hooks/useOrdersChannel";
 import {
   DollarSign,
   ShoppingBag,
@@ -81,6 +82,7 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 export const DashboardTab = ({ storeId, onNavigate }: { storeId: string; onNavigate?: (tab: string) => void }) => {
+  const qc = useQueryClient();
   const go = (t: string) => onNavigate?.(t);
   const [, force] = useState(0);
   useEffect(() => {
@@ -143,20 +145,12 @@ export const DashboardTab = ({ storeId, onNavigate }: { storeId: string; onNavig
     },
   });
 
-  // Fila ao vivo
-  const { data: liveOrders = [] } = useQuery({
-    queryKey: ["dash-live", storeId],
-    enabled: !!storeId,
-    refetchInterval: 12000,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("orders")
-        .select("id, status, method, customer_name, total, created_at, updated_at, source")
-        .eq("store_id", storeId)
-        .order("created_at", { ascending: false })
-        .limit(60);
-      return data ?? [];
-    },
+  // Fila ao vivo derivada diretamente de monthOrders (já ordenado por created_at DESC),
+  // eliminando polling duplicado de 12s na mesma tabela `orders`.
+  const liveOrders = useMemo(() => monthOrders.slice(0, 60), [monthOrders]);
+
+  useOrdersChannel(storeId, () => {
+    qc.invalidateQueries({ queryKey: ["dash-month-orders", storeId] });
   });
 
   // Top produtos (mês)
