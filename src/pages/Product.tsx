@@ -59,7 +59,7 @@ const Product = () => {
       .map((g) => ({
         groupId: g.id,
         groupName: g.name,
-        selections: picks[g.id]!.filter((o) => o.price > 0 || g.type === "single"),
+        selections: picks[g.id]!,
       }))
       .filter((c) => c.selections.length > 0);
     addCustom(product, store.slug, customizations, qty, notes.trim() || undefined);

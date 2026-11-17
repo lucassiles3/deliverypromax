@@ -1,8 +1,6 @@
-// Link removed — cards are now non-clickable images
+import { Link } from "react-router-dom";
 import { Star, Flame, Plus } from "lucide-react";
 import type { Store, Product } from "@/data/stores";
-import { useCart } from "@/context/CartContext";
-import { toast } from "@/hooks/use-toast";
 
 type ProductWithStore = Product & { _store: Store };
 
@@ -15,8 +13,6 @@ export const ProductRail = ({
   subtitle?: string;
   products: ProductWithStore[];
 }) => {
-  const { add } = useCart();
-
   if (products.length === 0) return null;
 
   return (
@@ -31,8 +27,9 @@ export const ProductRail = ({
         {products.map((p) => {
           const catalogMode = !!(p._store as any).catalogMode;
           return (
-          <div
+          <Link
             key={`${p._store.id}-${p.id}`}
+            to={`/loja/${p._store.slug}/produto/${p.id}`}
             className="group relative w-[60%] shrink-0 snap-start overflow-hidden rounded-3xl bg-card shadow-card transition-smooth hover:-translate-y-1 hover:shadow-float sm:w-[42%] md:w-[30%] lg:w-[22%]"
           >
             <div className="relative aspect-[4/5] w-full overflow-hidden">
@@ -94,29 +91,17 @@ export const ProductRail = ({
                     </div>
                   </div>
                   {!catalogMode && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const hasRequired = (p.addonGroups ?? []).some((g) => g.required);
-                        if (hasRequired) {
-                          window.location.href = `/loja/${p._store.slug}/produto/${p.id}`;
-                          return;
-                        }
-                        add(p, p._store.slug);
-                        toast({ title: "Adicionado ao carrinho", description: p.name });
-                      }}
-                      aria-label={`Adicionar ${p.name}`}
-                      className="flex h-9 w-9 items-center justify-center rounded-full gradient-primary text-primary-foreground shadow-glow transition-bounce hover:scale-110 active:scale-95"
+                    <span
+                      aria-hidden="true"
+                      className="flex h-9 w-9 items-center justify-center rounded-full gradient-primary text-primary-foreground shadow-glow transition-bounce group-hover:scale-110"
                     >
                       <Plus className="h-4 w-4" strokeWidth={3} />
-                    </button>
+                    </span>
                   )}
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
           );
         })}
       </div>

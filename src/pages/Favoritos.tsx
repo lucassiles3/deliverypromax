@@ -37,28 +37,38 @@ const Favoritos = () => {
               <EmptyState text="Você ainda não favoritou nenhum produto." />
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {products.map((f: any) => (
-                  <Link
-                    key={f.id}
-                    to={`/loja/${f.stores?.slug ?? ""}`}
-                    className="flex gap-3 rounded-2xl bg-card p-3 shadow-soft hover:shadow-card transition-smooth"
-                  >
-                    {f.products?.image_url && (
-                      <img
-                        src={f.products.image_url}
-                        alt=""
-                        className="h-20 w-20 rounded-xl object-cover"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground">{f.stores?.logo} {f.stores?.name}</p>
-                      <h3 className="font-display font-semibold leading-tight truncate">{f.products?.name}</h3>
-                      <p className="mt-1 font-display text-base font-bold text-primary">
-                        R$ {Number(f.products?.price ?? 0).toFixed(2).replace(".", ",")}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
+                {products.map((f: any) => {
+                  const storeLogoIsUrl = typeof f.stores?.logo === "string" && /^https?:\/\//i.test(f.stores.logo);
+                  return (
+                    <Link
+                      key={f.id}
+                      to={f.product_id ? `/loja/${f.stores?.slug ?? ""}/produto/${f.product_id}` : `/loja/${f.stores?.slug ?? ""}`}
+                      className="flex gap-3 rounded-2xl bg-card p-3 shadow-soft hover:shadow-card transition-smooth"
+                    >
+                      {f.products?.image_url && (
+                        <img
+                          src={f.products.image_url}
+                          alt=""
+                          className="h-20 w-20 shrink-0 rounded-xl object-cover"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="flex items-center gap-1.5 text-xs text-muted-foreground truncate">
+                          {storeLogoIsUrl ? (
+                            <img src={f.stores.logo} alt="" className="h-4 w-4 shrink-0 rounded-full object-cover" />
+                          ) : (
+                            <span>{f.stores?.logo ?? "🏪"}</span>
+                          )}
+                          <span className="truncate">{f.stores?.name}</span>
+                        </p>
+                        <h3 className="font-display font-semibold leading-tight truncate">{f.products?.name}</h3>
+                        <p className="mt-1 font-display text-base font-bold text-primary">
+                          R$ {Number(f.products?.price ?? 0).toFixed(2).replace(".", ",")}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
@@ -70,21 +80,30 @@ const Favoritos = () => {
               <EmptyState text="Você ainda não favoritou nenhuma loja." />
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {stores.map((f: any) => (
-                  <Link
-                    key={f.id}
-                    to={`/loja/${f.stores?.slug ?? ""}`}
-                    className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-soft hover:shadow-card transition-smooth"
-                  >
-                    <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-muted text-3xl">
-                      {f.stores?.logo ?? "🏪"}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-display font-semibold truncate">{f.stores?.name}</h3>
-                      <p className="text-xs text-muted-foreground truncate">{f.stores?.tagline}</p>
-                    </div>
-                  </Link>
-                ))}
+                {stores.map((f: any) => {
+                  const s = f.stores;
+                  if (!s) return null;
+                  const isUrl = typeof s.logo === "string" && /^https?:\/\//i.test(s.logo);
+                  return (
+                    <Link
+                      key={f.id}
+                      to={`/loja/${s.slug ?? ""}`}
+                      className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-soft hover:shadow-card transition-smooth"
+                    >
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted text-3xl">
+                        {isUrl ? (
+                          <img src={s.logo} alt={s.name} className="h-full w-full object-cover" />
+                        ) : (
+                          s.logo ?? "🏪"
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-display font-semibold truncate">{s.name}</h3>
+                        <p className="text-xs text-muted-foreground truncate">{s.tagline}</p>
+                      </div>
+                    </Link>
+                  );
+                })}
                 {listings.map((f: any) => {
                   const l = f.external_listings;
                   if (!l) return null;

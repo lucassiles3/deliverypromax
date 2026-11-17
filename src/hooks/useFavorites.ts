@@ -1,31 +1,48 @@
-import { useEffect, useId } from "react";
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 
-/** Subscribe to realtime changes on a favorites table for the current user. */
+// Mapa de canais Realtime ativos por (tabela + user_id) com contagem de referência
+// para evitar abrir dezenas de canais WebSocket simultâneos quando muitos StoreCards estão na tela.
+const activeFavChannels = new Map<string, { channel: any; refs: number }>();
+
+/** Subscribe to realtime changes on a favorites table for the current user (shared channel). */
 function useFavoritesRealtime(
   table: "favorite_stores" | "favorite_external_listings" | "favorite_products",
   invalidateKeys: string[],
 ) {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const instanceId = useId();
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel(`rt-${table}-${user.id}-${instanceId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table, filter: `user_id=eq.${user.id}` },
-        () => {
-          invalidateKeys.forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
-        },
-      )
-      .subscribe();
+    const key = `rt-${table}-${user.id}`;
+    const existing = activeFavChannels.get(key);
+    if (existing) {
+      existing.refs += 1;
+    } else {
+      const channel = supabase
+        .channel(key)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table, filter: `user_id=eq.${user.id}` },
+          () => {
+            invalidateKeys.forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
+          },
+        )
+        .subscribe();
+      activeFavChannels.set(key, { channel, refs: 1 });
+    }
+
     return () => {
-      supabase.removeChannel(channel);
+      const entry = activeFavChannels.get(key);
+      if (!entry) return;
+      entry.refs -= 1;
+      if (entry.refs <= 0) {
+        activeFavChannels.delete(key);
+        supabase.removeChannel(entry.channel);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, table]);

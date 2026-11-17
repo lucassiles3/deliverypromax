@@ -45,18 +45,27 @@ export const OrderReviewPrompt = () => {
         .eq("status", "delivered")
         .order("updated_at", { ascending: false })
         .limit(5);
-      if (cancelled || !data) return;
-      for (const o of data) {
-        if (seen.includes(o.id)) continue;
-        // already reviewed?
-        const { data: rev } = await supabase
-          .from("store_reviews")
-          .select("id")
-          .eq("order_id", o.id)
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if (rev) { markSeen(o.id); continue; }
-        if (cancelled) return;
+      if (cancelled || !data || data.length === 0) return;
+      const unseenOrders = data.filter((o) => !seen.includes(o.id));
+      if (unseenOrders.length === 0) return;
+
+      // Busca todas as avaliações existentes de uma só vez (evita N+1 queries sequenciais)
+      const { data: existingReviews } = await supabase
+        .from("store_reviews")
+        .select("order_id")
+        .eq("user_id", user.id)
+        .in(
+          "order_id",
+          unseenOrders.map((o) => o.id),
+        );
+      if (cancelled) return;
+
+      const reviewedIds = new Set((existingReviews ?? []).map((r: any) => r.order_id));
+      for (const o of unseenOrders) {
+        if (reviewedIds.has(o.id)) {
+          markSeen(o.id);
+          continue;
+        }
         setPending({
           id: o.id,
           store_id: o.store_id,

@@ -22,6 +22,79 @@ export const clearUserSessionState = () => {
   }
 };
 
+// Estado global compartilhado em memória (Singleton) para evitar que dezenas de
+// componentes (ex.: botões de favorito em cada card) disparem getSession() e
+// queries duplicadas em user_roles simultaneamente.
+let sharedState: AuthState = {
+  user: null,
+  session: null,
+  roles: [],
+  loading: true,
+};
+
+const listeners = new Set<(state: AuthState) => void>();
+let authInitialized = false;
+let lastLoadedRoleUid: string | null = null;
+let roleFetchPromise: Promise<void> | null = null;
+
+function setSharedState(updater: (prev: AuthState) => AuthState) {
+  sharedState = updater(sharedState);
+  listeners.forEach((l) => l(sharedState));
+}
+
+async function loadRolesOnce(uid: string) {
+  if (lastLoadedRoleUid === uid && !sharedState.loading) return;
+  if (roleFetchPromise && lastLoadedRoleUid === uid) return roleFetchPromise;
+  lastLoadedRoleUid = uid;
+  roleFetchPromise = (async () => {
+    try {
+      const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", uid);
+      if (error) console.warn("Erro ao carregar papéis do usuário:", error);
+      setSharedState((s) => ({
+        ...s,
+        roles: (data?.map((r) => r.role) as Role[]) ?? [],
+        loading: false,
+      }));
+    } catch (err) {
+      console.error("Erro inesperado ao carregar papéis:", err);
+      setSharedState((s) => ({ ...s, loading: false }));
+    } finally {
+      roleFetchPromise = null;
+    }
+  })();
+  return roleFetchPromise;
+}
+
+function initAuthSingleton() {
+  if (authInitialized) return;
+  authInitialized = true;
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT") {
+      lastLoadedRoleUid = null;
+      clearUserSessionState();
+    }
+    setSharedState((s) => ({ ...s, session, user: session?.user ?? null }));
+    if (session?.user) {
+      setTimeout(() => loadRolesOnce(session.user.id), 0);
+    } else {
+      setSharedState((s) => ({ ...s, roles: [], loading: false }));
+    }
+  });
+
+  supabase.auth
+    .getSession()
+    .then(({ data: { session } }) => {
+      setSharedState((s) => ({ ...s, session, user: session?.user ?? null }));
+      if (session?.user) loadRolesOnce(session.user.id);
+      else setSharedState((s) => ({ ...s, loading: false }));
+    })
+    .catch((err) => {
+      console.error("Erro ao obter sessão:", err);
+      setSharedState((s) => ({ ...s, loading: false }));
+    });
+}
+
 export const useAuth = (): AuthState & {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, displayName?: string, phone?: string, birthday?: string) => Promise<{ error: string | null }>;
@@ -29,51 +102,16 @@ export const useAuth = (): AuthState & {
   isOwner: boolean;
   isMaster: boolean;
 } => {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    session: null,
-    roles: [],
-    loading: true,
-  });
+  initAuthSingleton();
+  const [state, setState] = useState<AuthState>(sharedState);
 
   useEffect(() => {
-    // Listener FIRST
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT") {
-        clearUserSessionState();
-      }
-      setState((s) => ({ ...s, session, user: session?.user ?? null }));
-      if (session?.user) {
-        // Defer role fetch to avoid deadlocks
-        setTimeout(() => loadRoles(session.user.id), 0);
-      } else {
-        setState((s) => ({ ...s, roles: [], loading: false }));
-      }
-    });
-
-    // THEN check existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setState((s) => ({ ...s, session, user: session?.user ?? null }));
-      if (session?.user) loadRoles(session.user.id);
-      else setState((s) => ({ ...s, loading: false }));
-    }).catch((err) => {
-      console.error("Erro ao obter sessão:", err);
-      setState((s) => ({ ...s, loading: false }));
-    });
-
-    return () => sub.subscription.unsubscribe();
+    setState(sharedState);
+    listeners.add(setState);
+    return () => {
+      listeners.delete(setState);
+    };
   }, []);
-
-  const loadRoles = async (uid: string) => {
-    try {
-      const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", uid);
-      if (error) console.warn("Erro ao carregar papéis do usuário:", error);
-      setState((s) => ({ ...s, roles: (data?.map((r) => r.role) as Role[]) ?? [], loading: false }));
-    } catch (err) {
-      console.error("Erro inesperado ao carregar papéis:", err);
-      setState((s) => ({ ...s, loading: false }));
-    }
-  };
 
   const translateError = (msg?: string): string | null => {
     if (!msg) return null;
