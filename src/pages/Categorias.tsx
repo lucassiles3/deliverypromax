@@ -7,6 +7,7 @@ import { useExternalListings } from "@/hooks/useExternalListings";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { isStoreInDeliveryRadius } from "@/lib/distance";
+import { isStoreOpen } from "@/lib/storeHours";
 import { CATEGORIES, SUBCATEGORIES, matchCategory, matchSubcategory } from "@/components/CategoryGrid";
 import { Loader2, Grid3x3, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
@@ -29,9 +30,13 @@ const Categorias = () => {
     const combined = [...storesData, ...(externalListings as any[])];
     return combined
       .map((s: any) => {
+        const manualOpen = s.open !== false;
+        const scheduleOpen = s._external ? s.open !== false : isStoreOpen(s.openingHours);
+        const open = manualOpen && scheduleOpen;
         const { inRange, distanceKm: distance, hasStoreCoords } = isStoreInDeliveryRadius(coords, s);
         return {
           ...s,
+          _open: open,
           _distance: distance,
           _radius: s.deliveryRadiusKm ?? s.delivery_radius_km ?? null,
           _hasCoords: hasStoreCoords,
@@ -94,7 +99,14 @@ const Categorias = () => {
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {list.map((s, i) => (
-                <StoreCard key={s.id} store={s} index={i} distanceKm={(s as any)._distance ?? null} inRange={(s as any)._inRange} />
+                <StoreCard
+                  key={s.id}
+                  store={s}
+                  index={i}
+                  distanceKm={(s as any)._distance ?? null}
+                  inRange={(s as any)._inRange}
+                  isOpen={(s as any)._open ?? true}
+                />
               ))}
             </div>
           )}

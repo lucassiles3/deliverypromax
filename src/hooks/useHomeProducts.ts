@@ -24,7 +24,7 @@ interface UseHomeProductsOptions {
 /**
  * Normaliza e extrai os valores de colunas independentemente do nome exato ou formato (Português/Inglês, com/sem acento).
  */
-function getColumnValue(row: any, ...candidates: string[]) {
+export function getColumnValue(row: any, ...candidates: string[]) {
   if (!row || typeof row !== "object") return null;
 
   // 1. Checagem exata da propriedade
@@ -59,7 +59,7 @@ function getColumnValue(row: any, ...candidates: string[]) {
   return null;
 }
 
-function normalizeHomeProductRow(row: any, index: number): HomeProduct {
+export function normalizeHomeProductRow(row: any, index: number): HomeProduct {
   const name = getColumnValue(row, "Nome do Produto", "nome_do_produto", "nomeDoProduto", "product_name", "name", "nome", "produto", "titulo", "title") || `Produto ${index + 1}`;
   const store = getColumnValue(row, "Estabelecimento", "estabelecimento", "store_name", "loja", "store", "parceiro", "empresa") || "Estabelecimento";
   const segment = getColumnValue(row, "Segmento", "segmento", "segment", "categoria", "category", "tipo");
@@ -92,18 +92,22 @@ function normalizeHomeProductRow(row: any, index: number): HomeProduct {
   };
 }
 
-export function useHomeProducts({ pageSize = 8, segment, search }: UseHomeProductsOptions = {}) {
+// Cache em memória do nome da tabela e coluna de segmento descobertos no Supabase
+let discoveredTableName: string | null = null;
+let discoveredSegmentCol: string | null | undefined = undefined;
+
+export function useHomeProducts({ pageSize = 10, segment, search }: UseHomeProductsOptions = {}) {
   const [page, setPage] = useState(1);
 
   const query = useQuery({
     queryKey: ["home-products-real", page, pageSize, segment, search],
     staleTime: 1000 * 60 * 3, // 3 minutos de cache
     queryFn: async () => {
-      const from = 0;
-      const to = page * pageSize - 1;
+      const limit = page * pageSize;
+      const isFiltering = (segment && segment !== "all") || (search && search.trim().length > 0);
 
       // Nomes de tabelas possíveis que podem ter sido criados no Supabase
-      const tablesToTry = [
+      const defaultTables = [
         "Produtos Home",
         "produtos_home",
         "produtos home",
@@ -114,30 +118,72 @@ export function useHomeProducts({ pageSize = 8, segment, search }: UseHomeProduc
         "destaques",
       ];
 
+      const tablesToTry = discoveredTableName
+        ? [discoveredTableName, ...defaultTables.filter((t) => t !== discoveredTableName)]
+        : defaultTables;
+
       for (const tableName of tablesToTry) {
         try {
-          console.log(`[useHomeProducts] Testando consulta na tabela: "${tableName}"...`);
-          const { data, count, error } = await supabase
-            .from(tableName as any)
-            .select("*", { count: "exact" })
-            .range(from, to);
+          // 1. Se houver filtro de segmento e já soubermos a coluna de segmento no banco,
+          // tentamos filtrar direto no PostgreSQL para economizar egress e paginar com precisão
+          if (segment && segment !== "all" && !search?.trim() && discoveredSegmentCol) {
+            const { data: filteredData, count: filteredCount, error: filteredErr } = await supabase
+              .from(tableName as any)
+              .select("*", { count: "exact" })
+              .ilike(discoveredSegmentCol, `%${segment.trim()}%`)
+              .range(0, limit - 1);
+
+            if (!filteredErr && filteredData) {
+              discoveredTableName = tableName;
+              const items = filteredData.map((row: any, idx: number) => normalizeHomeProductRow(row, idx));
+              return {
+                items,
+                totalCount: filteredCount ?? items.length,
+              };
+            }
+          }
+
+          // 2. Consulta padrão: se não houver filtro ativo, pagina estritamente no banco (0..limit-1).
+          // Se houver filtro ativo e a coluna ainda não foi mapeada no servidor, busca lote maior para filtrar com segurança.
+          let q = supabase.from(tableName as any).select("*", { count: "exact" });
+          if (!isFiltering) {
+            q = q.range(0, limit - 1);
+          } else {
+            q = q.range(0, Math.max(limit * 5, 100) - 1);
+          }
+
+          const { data, count, error } = await q;
 
           if (error) {
-            console.warn(`[useHomeProducts] Erro na tabela "${tableName}":`, error);
             continue;
           }
 
-          console.log(`[useHomeProducts] SUCESSO na tabela "${tableName}"!`);
-          console.log(`[useHomeProducts] DADOS RETORNADOS:`, data);
-          console.log(`[useHomeProducts] TOTAL DE ITENS:`, data?.length);
-
           if (data && data.length > 0) {
+            discoveredTableName = tableName;
+
+            // Descobre o nome real da coluna de segmento na primeira linha para futuras queries diretas no DB
+            if (discoveredSegmentCol === undefined && data[0]) {
+              const keys = Object.keys(data[0]);
+              discoveredSegmentCol =
+                keys.find((k) => ["segmento", "segment", "categoria", "category"].includes(k.toLowerCase())) ?? null;
+            }
+
             let items = data.map((row: any, idx: number) => normalizeHomeProductRow(row, idx));
 
             // Filtro por segmento se selecionado
             if (segment && segment !== "all") {
-              const segLower = segment.toLowerCase();
-              items = items.filter((i) => i.segment && i.segment.toLowerCase().includes(segLower));
+              const segNorm = segment
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "");
+              items = items.filter((i) => {
+                if (!i.segment) return false;
+                const itemSegNorm = i.segment
+                  .toLowerCase()
+                  .normalize("NFD")
+                  .replace(/[\u0300-\u036f]/g, "");
+                return itemSegNorm.includes(segNorm);
+              });
             }
 
             // Filtro por termo de busca se fornecido
@@ -151,19 +197,17 @@ export function useHomeProducts({ pageSize = 8, segment, search }: UseHomeProduc
               );
             }
 
+            const totalFiltered = isFiltering ? items.length : (count ?? items.length);
             return {
-              items,
-              totalCount: count ?? items.length,
+              items: items.slice(0, limit),
+              totalCount: totalFiltered,
             };
-          } else {
-             console.log(`[useHomeProducts] Tabela "${tableName}" existe, mas está VAZIA ou bloqueada por RLS.`);
           }
-        } catch (err: any) {
-          console.warn(`[useHomeProducts] Exceção ao consultar "${tableName}":`, err?.message);
+        } catch {
+          // tenta próxima variação de nome de tabela
         }
       }
 
-      console.log(`[useHomeProducts] Nenhuma tabela válida retornou dados.`);
       // Retorna vazio se ainda não houver registros cadastrados na tabela do banco do usuário
       return {
         items: [] as HomeProduct[],

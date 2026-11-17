@@ -92,37 +92,11 @@ const STORE_DETAIL_COLUMNS =
   "phone, instagram, website, short_description, address_cep, address_street, " +
   "address_number, address_complement, address_neighborhood, address_state, catalog_mode";
 
-export const useStores = (coords?: { lat: number; lng: number } | null) => {
-  const normLat = coords?.lat != null ? Number(coords.lat.toFixed(3)) : null;
-  const normLng = coords?.lng != null ? Number(coords.lng.toFixed(3)) : null;
-
+export const useStores = (_coords?: { lat: number; lng: number } | null) => {
   return useQuery({
-    queryKey: ["stores", normLat, normLng],
+    queryKey: ["stores"],
     staleTime: 1000 * 60 * 10, // lista de lojas muda pouco → 10 min
     queryFn: async (): Promise<Store[]> => {
-      if (normLat != null && normLng != null) {
-        const { data: rpcData, error: rpcErr } = await supabase.rpc("get_available_stores", {
-          user_lat: normLat,
-          user_lng: normLng,
-        });
-        if (!rpcErr && rpcData) {
-          return (rpcData as any[]).map((s) => mapStore({
-            ...s,
-            tagline: null,
-            cover_url: null,
-            city: null,
-            rating: 5,
-            reviews: 0,
-            delivery_time: null,
-            delivery_fee: null,
-            free_shipping_threshold: null,
-            min_order: null,
-            open: true,
-            promo: null,
-          }));
-        }
-      }
-      // Fallback padrão se não houver coordenadas
       const { data, error } = await supabase
         .from("stores")
         .select(STORE_LIST_COLUMNS)

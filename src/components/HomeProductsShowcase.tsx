@@ -26,12 +26,20 @@ const SEGMENT_OPTIONS = [
 
 export const HomeProductsShowcase = () => {
   const [selectedSegment, setSelectedSegment] = useState<string>("all");
-  const { products, hasMore, isLoading, isFetching, loadMore, refetch } = useHomeProducts({
+  const { products, hasMore, isLoading, isFetching, loadMore, resetPagination } = useHomeProducts({
     pageSize: 10,
     segment: selectedSegment === "all" ? null : selectedSegment,
   });
 
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleSelectSegment = (segKey: string) => {
+    setSelectedSegment(segKey);
+    resetPagination();
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+    }
+  };
 
   const formatPrice = (val: number) =>
     val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -71,7 +79,7 @@ export const HomeProductsShowcase = () => {
               <button
                 key={seg.key}
                 id={`home-product-seg-${seg.key}`}
-                onClick={() => setSelectedSegment(seg.key)}
+                onClick={() => handleSelectSegment(seg.key)}
                 className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-smooth ${
                   active
                     ? "gradient-primary text-primary-foreground shadow-glow"
@@ -102,7 +110,7 @@ export const HomeProductsShowcase = () => {
           </p>
           <div className="mt-4 flex justify-center">
             <Button
-              onClick={() => setSelectedSegment("all")}
+              onClick={() => handleSelectSegment("all")}
               size="sm"
               className="h-9 rounded-xl bg-primary px-5 text-xs font-bold text-primary-foreground"
             >

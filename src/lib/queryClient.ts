@@ -44,6 +44,8 @@ export const persister = createSyncStoragePersister({
  */
 const PERSIST_KEYS = new Set<string>([
   "stores",
+  "external-listings",
+  "home-products-real",
   "store",
   "products",
   "categories",

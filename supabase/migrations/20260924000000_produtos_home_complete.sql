@@ -50,4 +50,12 @@ BEGIN
     EXECUTE 'CREATE POLICY "Public select produtos home" ON public."produtos home" FOR SELECT USING (true)';
     EXECUTE 'GRANT SELECT ON public."produtos home" TO anon, authenticated';
   END IF;
+
+  -- 4. Grant select on "Produtos Home" (exact capitalized table name with space)
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'Produtos Home') THEN
+    EXECUTE 'ALTER TABLE public."Produtos Home" ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'DROP POLICY IF EXISTS "Public select Produtos Home" ON public."Produtos Home"';
+    EXECUTE 'CREATE POLICY "Public select Produtos Home" ON public."Produtos Home" FOR SELECT USING (true)';
+    EXECUTE 'GRANT SELECT ON public."Produtos Home" TO anon, authenticated';
+  END IF;
 END $$;
