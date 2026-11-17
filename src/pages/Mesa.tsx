@@ -62,7 +62,7 @@ const Mesa = () => {
         .maybeSingle();
       return data;
     },
-    refetchInterval: 8000,
+    refetchInterval: 20000,
   });
 
   // Produtos da loja
@@ -80,7 +80,7 @@ const Mesa = () => {
     },
   });
 
-  // Itens já lançados
+  // Itens já lançados (atualizados via Realtime + fallback suave de 30s para economizar egress)
   const { data: items = [] } = useQuery({
     queryKey: ["mesa-items", session?.id],
     enabled: !!session?.id,
@@ -92,8 +92,23 @@ const Mesa = () => {
         .order("created_at", { ascending: false });
       return data ?? [];
     },
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   });
+
+  useEffect(() => {
+    if (!session?.id) return;
+    const ch = supabase
+      .channel(`mesa-items:${session.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "table_session_items", filter: `session_id=eq.${session.id}` },
+        () => qc.invalidateQueries({ queryKey: ["mesa-items", session.id] }),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [session?.id, qc]);
 
   const categories = useMemo(() => {
     const set = new Set<string>();

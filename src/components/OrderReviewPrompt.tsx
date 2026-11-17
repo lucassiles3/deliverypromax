@@ -91,7 +91,7 @@ export const OrderReviewPrompt = () => {
       )
       .subscribe();
     return () => { cancelled = true; supabase.removeChannel(ch); };
-  }, [user]);
+  }, [user?.id]);
 
   if (!pending) return null;
 

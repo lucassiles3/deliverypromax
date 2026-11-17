@@ -25,28 +25,40 @@ export const useStaleCouriers = (storeId: string | null) => {
       reassignMin: number;
       alerts: StaleCourierAlert[];
     }> => {
-      const { data: store } = await supabase
-        .from("stores")
-        .select("courier_gps_alert_min, courier_gps_reassign_min")
-        .eq("id", storeId!)
-        .maybeSingle();
-
-      const alertMin = store?.courier_gps_alert_min ?? 5;
-      const reassignMin = store?.courier_gps_reassign_min ?? 10;
-
       const { data: rows } = await supabase
         .from("orders")
-        .select(
-          "id, courier_id, couriers:courier_id(name), courier_locations:courier_id(updated_at)",
-        )
+        .select("id, courier_id, couriers:courier_id(name)")
         .eq("store_id", storeId!)
         .eq("status", "out_for_delivery")
         .not("courier_id", "is", null);
 
+      if (!rows || rows.length === 0) {
+        return { alertMin: 5, reassignMin: 10, alerts: [] };
+      }
+
+      const courierIds = Array.from(new Set(rows.map((r: any) => r.courier_id).filter(Boolean)));
+      const [{ data: store }, { data: locs }] = await Promise.all([
+        supabase
+          .from("stores")
+          .select("courier_gps_alert_min, courier_gps_reassign_min")
+          .eq("id", storeId!)
+          .maybeSingle(),
+        supabase
+          .from("courier_locations")
+          .select("courier_id, updated_at")
+          .in("courier_id", courierIds),
+      ]);
+
+      const alertMin = store?.courier_gps_alert_min ?? 5;
+      const reassignMin = store?.courier_gps_reassign_min ?? 10;
+      const locMap = new Map<string, string>(
+        (locs ?? []).map((l: any) => [l.courier_id, l.updated_at]),
+      );
+
       const now = Date.now();
-      const alerts: StaleCourierAlert[] = (rows ?? [])
+      const alerts: StaleCourierAlert[] = rows
         .map((r: any) => {
-          const lastIso: string | null = r.courier_locations?.updated_at ?? null;
+          const lastIso: string | null = locMap.get(r.courier_id) ?? null;
           const minutes = lastIso
             ? Math.floor((now - new Date(lastIso).getTime()) / 60000)
             : 9999;

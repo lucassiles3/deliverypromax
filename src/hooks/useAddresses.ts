@@ -28,6 +28,7 @@ export const useAddresses = () => {
       const { data, error } = await supabase
         .from("user_addresses")
         .select("id, user_id, label, cep, street, number, complement, neighborhood, city, state, country, reference, lat, lng, is_default, created_at")
+        .eq("user_id", user!.id)
         .order("is_default", { ascending: false })
         .order("created_at", { ascending: false });
       if (error) throw error;

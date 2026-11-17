@@ -49,7 +49,7 @@ export const useLoyalty = (): LoyaltyState => {
       active = false;
       supabase.removeChannel(ch);
     };
-  }, [user, channelId]);
+  }, [user?.id, channelId]);
 
   return state;
 };

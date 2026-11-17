@@ -15,6 +15,7 @@ export const useNotifications = () => {
       const { data, error } = await supabase
         .from("notifications")
         .select("id, user_id, store_id, title, body, type, read, read_at, created_at, stores:store_id(name, logo)")
+        .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
@@ -37,7 +38,7 @@ export const useNotifications = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, qc, channelId]);
+  }, [user?.id, qc, channelId]);
 
   return query;
 };

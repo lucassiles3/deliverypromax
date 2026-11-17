@@ -28,6 +28,7 @@ import type { Coupon } from "@/data/stores";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
+import { useAddresses } from "@/hooks/useAddresses";
 import { isStoreOpen } from "@/lib/storeHours";
 import { lookupCep, geocodeAddress, formatCep, reverseGeocode, cepByAddress } from "@/lib/cep";
 import { distanceKm, formatDistance } from "@/lib/distance";
@@ -57,6 +58,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: profile } = useProfile();
+  const { data: savedAddresses } = useAddresses();
   const updateProfile = useUpdateProfile();
   const { data: store, isLoading } = useStoreBySlug(storeSlug ?? "");
   const { data: coupons = [] } = useCoupons(store?.id);
@@ -111,13 +113,20 @@ const Checkout = () => {
     };
   }, [store?.id]);
 
-  // Dados Pix estruturados + carteiras de cripto da loja (mostrados ao cliente)
+  // Dados Pix, carteiras cripto, métodos de recebimento e handle InfinitePay da loja em UMA única query
+  const [deliveryEnabled, setDeliveryEnabled] = useState(true);
+  const [pickupEnabled, setPickupEnabled] = useState(true);
+  const [logisticsEnabled, setLogisticsEnabled] = useState(false);
+  const [infinitepayHandle, setInfinitepayHandle] = useState<string | null>(null);
+
   useEffect(() => {
     if (!store?.id) return;
     let cancelled = false;
     supabase
       .from("stores")
-      .select("pix_key, pix_key_type, pix_beneficiary_name, pix_beneficiary_bank, crypto_wallets")
+      .select(
+        "pix_key, pix_key_type, pix_beneficiary_name, pix_beneficiary_bank, crypto_wallets, delivery_enabled, pickup_enabled, logistics_pickup_enabled, infinitepay_handle",
+      )
       .eq("id", store.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -131,11 +140,19 @@ const Checkout = () => {
         });
         const w = (d.crypto_wallets ?? {}) as Record<string, string>;
         setStoreWallets(w);
-        // pré-seleciona a primeira cripto disponível
         const firstCoin = (["btc", "eth", "usdc", "usdt"] as const).find((c) => w[c]);
         if (firstCoin) setSelectedCrypto(firstCoin);
+
+        setDeliveryEnabled(d.delivery_enabled !== false);
+        setPickupEnabled(d.pickup_enabled !== false);
+        setLogisticsEnabled(!!d.logistics_pickup_enabled);
+
+        const h = (d.infinitepay_handle ?? "").trim();
+        setInfinitepayHandle(h || null);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [store?.id]);
 
   // Verifica se a loja tem gateway PIX ativo (Mercado Pago / Asaas).
@@ -157,28 +174,6 @@ const Checkout = () => {
     return () => { cancelled = true; };
   }, [store?.id]);
 
-  // Métodos de recebimento habilitados pela loja
-  const [deliveryEnabled, setDeliveryEnabled] = useState(true);
-  const [pickupEnabled, setPickupEnabled] = useState(true);
-  const [logisticsEnabled, setLogisticsEnabled] = useState(false);
-  useEffect(() => {
-    if (!store?.id) return;
-    let cancelled = false;
-    supabase
-      .from("stores")
-      .select("delivery_enabled, pickup_enabled, logistics_pickup_enabled")
-      .eq("id", store.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (cancelled || !data) return;
-        const d = data as any;
-        setDeliveryEnabled(d.delivery_enabled !== false);
-        setPickupEnabled(d.pickup_enabled !== false);
-        setLogisticsEnabled(!!d.logistics_pickup_enabled);
-      });
-    return () => { cancelled = true; };
-  }, [store?.id]);
-
   // Garante que o método selecionado esteja habilitado pela loja
   useEffect(() => {
     const available: Method[] = [];
@@ -190,23 +185,6 @@ const Checkout = () => {
   }, [deliveryEnabled, pickupEnabled, logisticsEnabled, method]);
 
   const creditLinkTemplate = enabledMethods["credit_link"]?.notes ?? null;
-  // Handle InfinitePay da loja (preferido). Se houver, geramos link via API.
-  const [infinitepayHandle, setInfinitepayHandle] = useState<string | null>(null);
-  useEffect(() => {
-    if (!store?.id) return;
-    let cancelled = false;
-    supabase
-      .from("stores")
-      .select("infinitepay_handle")
-      .eq("id", store.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (cancelled) return;
-        const h = ((data as any)?.infinitepay_handle ?? "").trim();
-        setInfinitepayHandle(h || null);
-      });
-    return () => { cancelled = true; };
-  }, [store?.id]);
   const creditLinkEnabled =
     !!enabledMethods["credit_link"]?.enabled && (!!creditLinkTemplate || !!infinitepayHandle);
 
@@ -250,6 +228,29 @@ const Checkout = () => {
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.display_name, profile?.phone]);
+
+  // Pré-preenche endereço padrão salvo pelo cliente em /enderecos
+  const addressPrefilledRef = useRef(false);
+  useEffect(() => {
+    if (addressPrefilledRef.current) return;
+    if (!savedAddresses || savedAddresses.length === 0) return;
+    if (address.street || address.cep) return;
+    const def = savedAddresses.find((a: any) => a.is_default) ?? savedAddresses[0];
+    if (!def) return;
+    addressPrefilledRef.current = true;
+    syncRef.current = "pin";
+    setAddress({
+      cep: def.cep ? formatCep(def.cep) : "",
+      street: def.street ?? "",
+      number: def.number ?? "",
+      complement: def.complement ?? "",
+      neighborhood: def.neighborhood ?? "",
+      city: def.city ?? "",
+    });
+    if (def.lat != null && def.lng != null) {
+      setCoords({ lat: Number(def.lat), lng: Number(def.lng) });
+    }
+  }, [savedAddresses, address.street, address.cep]);
 
   // Auto-lookup on CEP complete
   useEffect(() => {
@@ -539,7 +540,11 @@ const Checkout = () => {
         description: "Selecione uma das formas de pagamento disponíveis para continuar.",
       });
     }
-    if (!enabledMethods[payment === "credit_link" ? "credit_link" : payment]) {
+    const hasConfiguredPaymentMethods = Object.keys(enabledMethods).length > 0;
+    const isPaymentEnabled = hasConfiguredPaymentMethods
+      ? !!enabledMethods[payment === "credit_link" ? "credit_link" : payment]?.enabled
+      : ["pix", "cash", "credit", "debit"].includes(payment);
+    if (!isPaymentEnabled) {
       return toast.error("Forma de pagamento indisponível", {
         description: "A loja não aceita esta forma de pagamento. Escolha outra opção.",
       });

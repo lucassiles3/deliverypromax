@@ -75,7 +75,7 @@ export const usePushNotifications = () => {
           if (typeof Notification !== "undefined" && Notification.permission === "granted") {
             try {
               const n = new Notification(row.title ?? "Atualização", {
-                body: row.message ?? "",
+                body: row.body ?? row.message ?? "",
                 icon: "/favicon.ico",
                 badge: "/favicon.ico",
                 tag: row.id,
@@ -99,7 +99,7 @@ export const usePushNotifications = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user?.id]);
 
   return { permission, request };
 };

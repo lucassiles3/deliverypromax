@@ -63,7 +63,7 @@ const MyOrders = () => {
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [user, qc]);
+  }, [user?.id, qc]);
 
   useEffect(() => {
     document.title = "Meus pedidos • Itchat Brasil";
