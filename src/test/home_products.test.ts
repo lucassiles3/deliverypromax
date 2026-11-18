@@ -32,6 +32,8 @@ describe("HomeProducts Data Normalization & Segment Matching", () => {
     expect(normalized.image_url).toBe(
       "https://firebasestorage.googleapis.com/v0/b/brendi-app.appspot.com/o/test.webp"
     );
+    expect(normalized.neighborhood).toBe("Centro");
+    expect(normalized.rating).toBeCloseTo(4.7, 1);
   });
 
   it("handles currency formatted strings with comma decimals (e.g. 'R$ 28,50')", () => {

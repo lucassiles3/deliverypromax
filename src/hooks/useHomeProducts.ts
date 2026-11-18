@@ -12,6 +12,8 @@ export interface HomeProduct {
   description?: string | null;
   product_link: string;
   image_url?: string | null;
+  neighborhood?: string | null;
+  rating?: number | null;
   position?: number;
 }
 
@@ -77,6 +79,11 @@ export function normalizeHomeProductRow(row: any, index: number): HomeProduct {
   const desc = getColumnValue(row, "Descrição", "descricao", "description", "desc", "detalhes");
   const link = getColumnValue(row, "Link do Produto", "link_do_produto", "product_link", "link", "url", "link_produto") || "#";
   const image = getColumnValue(row, "Link da Imagem", "link_da_imagem", "image_url", "linkdaimagem", "imagem", "image", "foto", "picture", "url_imagem") || null;
+  const neighborhood = getColumnValue(row, "Bairro", "bairro", "neighborhood");
+  const rawRating = getColumnValue(row, "Nota", "nota", "rating", "avaliacao", "avaliação");
+  const parsedRating = rawRating != null && rawRating !== ""
+    ? parseFloat(String(rawRating).replace(",", ".").trim())
+    : null;
 
   return {
     id: row.id || `home-prod-${index}`,
@@ -88,6 +95,8 @@ export function normalizeHomeProductRow(row: any, index: number): HomeProduct {
     description: desc ? String(desc) : null,
     product_link: String(link),
     image_url: image ? String(image) : null,
+    neighborhood: neighborhood ? String(neighborhood) : null,
+    rating: parsedRating != null && !isNaN(parsedRating) && parsedRating > 0 ? parsedRating : null,
     position: row.position ?? index,
   };
 }

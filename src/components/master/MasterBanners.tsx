@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ const empty = {
 };
 
 export default function MasterBanners() {
+  const qc = useQueryClient();
   const [banners, setBanners] = useState<HomeBanner[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<any>(empty);
@@ -92,6 +94,7 @@ export default function MasterBanners() {
     if (error) return toast.error(error.message);
     toast.success(editingId ? "Banner atualizado" : "Banner criado");
     resetForm();
+    qc.invalidateQueries({ queryKey: ["home-banners"] });
     load();
   };
 
@@ -111,6 +114,7 @@ export default function MasterBanners() {
     const { error } = await supabase.from("home_banners").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Banner removido");
+    qc.invalidateQueries({ queryKey: ["home-banners"] });
     load();
   };
 
@@ -120,6 +124,7 @@ export default function MasterBanners() {
       .update({ active: !b.active })
       .eq("id", b.id);
     if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["home-banners"] });
     load();
   };
 

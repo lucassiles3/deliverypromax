@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Plus,
   Loader2,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHomeProducts } from "@/hooks/useHomeProducts";
@@ -159,6 +160,14 @@ export const HomeProductsShowcase = () => {
                       {discountTag && (
                         <div className="absolute top-2 left-2 rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-extrabold text-primary-foreground shadow-sm">
                           {discountTag}
+                        </div>
+                      )}
+
+                      {/* Rating Badge */}
+                      {item.rating && (
+                        <div className="absolute top-2 right-2 flex items-center gap-0.5 rounded-md bg-background/90 px-1.5 py-0.5 text-[10px] font-bold text-foreground backdrop-blur shadow-sm">
+                          <Star className="h-2.5 w-2.5 fill-accent text-accent" />
+                          {item.rating.toFixed(1)}
                         </div>
                       )}
                     </div>

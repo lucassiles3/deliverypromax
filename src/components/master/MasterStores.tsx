@@ -34,21 +34,34 @@ export default function MasterStores() {
 
   const load = async () => {
     setLoading(true);
-    const { data: stores } = await supabase
-      .from("stores")
-      .select("id,name,city,created_at,lifecycle_status,store_subscriptions(status,monthly_amount,plan_id)")
-      .order("created_at", { ascending: false });
+    const [{ data: stores }, { data: deliveredOrders }] = await Promise.all([
+      supabase
+        .from("stores")
+        .select("id,name,city,created_at,lifecycle_status,store_subscriptions(status,monthly_amount,plan_id)")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("orders")
+        .select("store_id,total")
+        .eq("status", "delivered"),
+    ]);
 
-    const enriched: Row[] = [];
-    for (const s of stores || []) {
-      const { count } = await supabase
-        .from("orders").select("*", { count: "exact", head: true })
-        .eq("store_id", s.id).eq("status", "delivered");
-      const { data: sum } = await supabase
-        .from("orders").select("total").eq("store_id", s.id).eq("status", "delivered");
-      const revenue = (sum || []).reduce((a, b: any) => a + Number(b.total || 0), 0);
-      enriched.push({ ...(s as any), orders_count: count || 0, revenue });
-    }
+    const statsByStore = new Map<string, { count: number; revenue: number }>();
+    (deliveredOrders ?? []).forEach((o: any) => {
+      if (!o.store_id) return;
+      const cur = statsByStore.get(o.store_id) ?? { count: 0, revenue: 0 };
+      cur.count += 1;
+      cur.revenue += Number(o.total || 0);
+      statsByStore.set(o.store_id, cur);
+    });
+
+    const enriched: Row[] = (stores ?? []).map((s: any) => {
+      const st = statsByStore.get(s.id) ?? { count: 0, revenue: 0 };
+      return {
+        ...s,
+        orders_count: st.count,
+        revenue: st.revenue,
+      };
+    });
     setRows(enriched);
     setLoading(false);
   };

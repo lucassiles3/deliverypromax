@@ -9,6 +9,7 @@ import { isOpenNow } from "@/lib/openingHours";
 
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { isStoreInDeliveryRadius } from "@/lib/distance";
+import { normalizeHomeProductRow, type HomeProduct } from "@/hooks/useHomeProducts";
 
 type StoreHit = { id: string; slug: string; name: string; cuisine: string | null; logo: string | null; opening_hours?: any; open?: boolean; lat?: number | null; lng?: number | null; delivery_radius_km?: number | null };
 type ProductHit = {
@@ -30,7 +31,7 @@ type PartnerHit = {
   delivery_radius_km?: number | null;
 };
 
-const searchCache = new Map<string, { stores: StoreHit[]; products: ProductHit[]; partners: PartnerHit[] }>();
+const searchCache = new Map<string, { stores: StoreHit[]; products: ProductHit[]; partners: PartnerHit[]; homeOffers: HomeProduct[] }>();
 
 export const SmartSearch = ({
   onCategoryPick,
@@ -44,6 +45,7 @@ export const SmartSearch = ({
   const [stores, setStores] = useState<StoreHit[]>([]);
   const [products, setProducts] = useState<ProductHit[]>([]);
   const [partners, setPartners] = useState<PartnerHit[]>([]);
+  const [homeOffers, setHomeOffers] = useState<HomeProduct[]>([]);
   const [cuisines, setCuisines] = useState<string[]>([]);
   const wrapRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -67,6 +69,7 @@ export const SmartSearch = ({
       setStores([]);
       setProducts([]);
       setPartners([]);
+      setHomeOffers([]);
       setCuisines([]);
       return;
     }
@@ -76,6 +79,7 @@ export const SmartSearch = ({
       setStores(cached.stores);
       setProducts(cached.products);
       setPartners(cached.partners);
+      setHomeOffers(cached.homeOffers);
       const uniqCui = Array.from(
         new Set(cached.stores.map((s) => s.cuisine).filter((c): c is string => !!c)),
       ).slice(0, 4);
@@ -88,7 +92,7 @@ export const SmartSearch = ({
     const t = setTimeout(async () => {
       if (activeRequestRef.current !== requestId) return;
       const like = `%${term}%`;
-      const [{ data: ss }, { data: pp }, { data: ext }] = await Promise.all([
+      const [{ data: ss }, { data: pp }, { data: ext }, { data: hp }] = await Promise.all([
         supabase
           .from("stores")
           .select("id, slug, name, cuisine, logo, open, opening_hours, lat, lng, delivery_radius_km")
@@ -108,6 +112,12 @@ export const SmartSearch = ({
           .ilike("name", like)
           .eq("active", true)
           .limit(15),
+        supabase
+          .from("Produtos Home" as any)
+          .select("*")
+          .or(`"Nome do Produto".ilike.${like},"Estabelecimento".ilike.${like},"Segmento".ilike.${like}`)
+          .limit(8)
+          .then((res) => (res.error ? { data: [] } : res)),
       ]);
       if (activeRequestRef.current !== requestId) return;
       // Filtra lojas fechadas (toggle manual ou fora do horário) e fora do raio
@@ -126,8 +136,16 @@ export const SmartSearch = ({
         .filter((p) => isOpenNow(p.opening_hours))
         .filter((p) => (coords ? isStoreInDeliveryRadius(coords, p).inRange : true))
         .slice(0, 5);
+      const hpList = ((hp ?? []) as any[])
+        .map((row, idx) => normalizeHomeProductRow(row, idx))
+        .slice(0, 6);
 
-      const hitData = { stores: sList, products: pList as unknown as ProductHit[], partners: extList };
+      const hitData = {
+        stores: sList,
+        products: pList as unknown as ProductHit[],
+        partners: extList,
+        homeOffers: hpList,
+      };
       if (searchCache.size > 50) searchCache.clear();
       searchCache.set(term, hitData);
 
@@ -135,6 +153,7 @@ export const SmartSearch = ({
       setStores(sList);
       setProducts(pList as unknown as ProductHit[]);
       setPartners(extList);
+      setHomeOffers(hpList);
       const uniqCui = Array.from(
         new Set(sList.map((s) => s.cuisine).filter((c): c is string => !!c)),
       ).slice(0, 4);
@@ -144,7 +163,7 @@ export const SmartSearch = ({
     return () => clearTimeout(t);
   }, [q, coords]);
 
-  const hasResults = stores.length + products.length + cuisines.length + partners.length > 0;
+  const hasResults = stores.length + products.length + cuisines.length + partners.length + homeOffers.length > 0;
   const showDropdown = open && q.trim().length >= 2;
 
   const submit = (e?: React.FormEvent) => {
@@ -268,6 +287,48 @@ export const SmartSearch = ({
                     <p className="truncate text-xs text-muted-foreground">Parceiro externo</p>
                   </div>
                   <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                </a>
+              ))}
+            </Section>
+          )}
+
+          {homeOffers.length > 0 && (
+            <Section icon={<Package className="h-3.5 w-3.5" />} title="Ofertas dos Lojistas">
+              {homeOffers.map((item) => (
+                <a
+                  key={item.id}
+                  href={item.product_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-muted"
+                >
+                  {item.image_url ? (
+                    <img
+                      src={item.image_url}
+                      alt={item.product_name}
+                      className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{item.product_name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{item.store_name}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    {item.old_price && item.old_price > item.promo_price && (
+                      <span className="block text-[10px] text-muted-foreground line-through">
+                        {brl(item.old_price)}
+                      </span>
+                    )}
+                    <span className="text-sm font-bold text-primary">
+                      {brl(item.promo_price)}
+                    </span>
+                  </div>
                 </a>
               ))}
             </Section>
